@@ -20,6 +20,7 @@ export function PageContainer({
 
 /**
  * Page content wrapper with sidebar layout
+ * Supports independent scrolling for sidebar and main content
  */
 export function PageLayout({ 
   children, 
@@ -29,8 +30,8 @@ export function PageLayout({
   className?: string 
 }) {
   return (
-    <main className={cn('flex h-full lg:ml-64', className)}>
-      <div className="flex-1 overflow-auto">
+    <main className={cn('flex h-[calc(100vh-64px)] lg:ml-64 bg-background', className)}>
+      <div className="flex-1 overflow-y-auto overflow-x-hidden">
         {children}
       </div>
     </main>

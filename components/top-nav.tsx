@@ -108,9 +108,6 @@ export function TopNav() {
 
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-
-      {/* Content Offset */}
-      <div className="pt-16" />
     </>
   )
 }
