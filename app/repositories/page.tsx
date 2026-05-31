@@ -8,89 +8,29 @@ import { RepositoryDrawer } from '@/components/repositories/repository-drawer'
 import { Button } from '@/components/ui/button'
 import { Plus, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { mockRepositories } from '@/lib/mock-data'
 
-const REPOSITORIES = [
-  {
-    id: 'nexops-api',
-    name: 'nexops-api',
-    owner: 'Platform',
-    description: 'Core API server and gateway',
-    health: 98,
+// Transform mock repositories to page format
+const transformRepositories = () => {
+  return mockRepositories.map((repo) => ({
+    id: repo.id,
+    name: repo.name,
+    owner: repo.owner,
+    description: repo.description,
+    health: 90 + Math.floor(Math.random() * 10),
     status: 'healthy',
-    prs: 3,
-    commits30d: 47,
-    stars: 234,
-    securityIssues: 0,
-    dependencies: 24,
-    codeQuality: 92,
-    coverage: 87,
-    lastUpdated: '1 hour ago',
-  },
-  {
-    id: 'nexops-ui',
-    name: 'nexops-ui',
-    owner: 'Frontend',
-    description: 'React frontend application',
-    health: 95,
-    status: 'healthy',
-    prs: 2,
-    commits30d: 32,
-    stars: 156,
-    securityIssues: 0,
-    dependencies: 18,
-    codeQuality: 89,
-    coverage: 91,
-    lastUpdated: '45 minutes ago',
-  },
-  {
-    id: 'nexops-cli',
-    name: 'nexops-cli',
-    owner: 'Platform',
-    description: 'Command-line interface tool',
-    health: 88,
-    status: 'healthy',
-    prs: 1,
-    commits30d: 18,
-    stars: 89,
-    securityIssues: 1,
-    dependencies: 12,
-    codeQuality: 85,
-    coverage: 78,
-    lastUpdated: '3 days ago',
-  },
-  {
-    id: 'nexops-docs',
-    name: 'nexops-docs',
-    owner: 'Documentation',
-    description: 'Technical documentation',
-    health: 92,
-    status: 'healthy',
-    prs: 4,
-    commits30d: 56,
-    stars: 412,
-    securityIssues: 0,
-    dependencies: 5,
-    codeQuality: 94,
-    coverage: 0,
-    lastUpdated: '2 hours ago',
-  },
-  {
-    id: 'nexops-helm',
-    name: 'nexops-helm',
-    owner: 'Infrastructure',
-    description: 'Kubernetes Helm charts',
-    health: 91,
-    status: 'healthy',
-    prs: 2,
-    commits30d: 22,
-    stars: 67,
-    securityIssues: 0,
-    dependencies: 8,
-    codeQuality: 88,
-    coverage: 0,
-    lastUpdated: '5 days ago',
-  },
-]
+    prs: Math.floor(Math.random() * 10),
+    commits30d: repo.commits,
+    stars: repo.stars,
+    securityIssues: Math.floor(Math.random() * 2),
+    dependencies: Math.floor(Math.random() * 30) + 10,
+    codeQuality: 85 + Math.floor(Math.random() * 15),
+    coverage: 75 + Math.floor(Math.random() * 20),
+    lastUpdated: new Date(repo.lastCommit).toLocaleString(),
+  }));
+};
+
+const REPOSITORIES = transformRepositories();
 
 export default function RepositoriesPage() {
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null)

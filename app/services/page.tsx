@@ -7,94 +7,28 @@ import { ServiceCatalog } from '@/components/services/service-catalog'
 import { ServiceDetailsDrawer } from '@/components/services/service-details-drawer'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { mockServices } from '@/lib/mock-data'
 
-const SERVICES_DATA = [
-  {
-    id: 'api-gateway',
-    name: 'API Gateway',
-    team: 'Platform',
-    health: 98,
-    status: 'healthy',
-    deployments: 12,
-    dependencies: ['auth-service', 'rate-limiter', 'cache-layer'],
-    dependents: ['mobile-app', 'web-client', 'partner-api'],
-    lastDeployed: '2 hours ago',
-    owner: 'Sarah Chen',
-    criticality: 'critical',
-    changeFailureRate: 2.1,
-    deploymentFrequency: 'daily',
-    mttr: '15 min',
-    incidents30d: 1,
-  },
-  {
-    id: 'auth-service',
-    name: 'Authentication Service',
-    team: 'Identity',
-    health: 99,
-    status: 'healthy',
-    deployments: 8,
-    dependencies: ['database', 'redis', 'secrets-manager'],
-    dependents: ['api-gateway', 'admin-panel', 'user-dashboard'],
-    lastDeployed: '5 days ago',
-    owner: 'Marcus Johnson',
-    criticality: 'critical',
-    changeFailureRate: 0.8,
-    deploymentFrequency: 'weekly',
-    mttr: '5 min',
-    incidents30d: 0,
-  },
-  {
-    id: 'search-service',
-    name: 'Search Service',
-    team: 'Data',
-    health: 85,
-    status: 'warning',
-    deployments: 24,
-    dependencies: ['elasticsearch', 'kafka', 'cache-layer'],
-    dependents: ['api-gateway', 'analytics-dashboard'],
-    lastDeployed: '30 minutes ago',
-    owner: 'Elena Rodriguez',
-    criticality: 'high',
-    changeFailureRate: 5.2,
-    deploymentFrequency: 'multiple-daily',
-    mttr: '45 min',
-    incidents30d: 3,
-  },
-  {
-    id: 'notification-service',
-    name: 'Notification Service',
-    team: 'Platform',
-    health: 92,
-    status: 'healthy',
-    deployments: 16,
-    dependencies: ['kafka', 'email-provider', 'sms-provider'],
-    dependents: ['api-gateway', 'user-dashboard'],
-    lastDeployed: '3 hours ago',
-    owner: 'James Liu',
-    criticality: 'medium',
-    changeFailureRate: 3.5,
-    deploymentFrequency: 'daily',
-    mttr: '30 min',
-    incidents30d: 2,
-  },
-  {
-    id: 'analytics-engine',
-    name: 'Analytics Engine',
-    team: 'Data',
-    health: 88,
-    status: 'healthy',
-    deployments: 20,
-    dependencies: ['kafka', 'bigquery', 'data-warehouse'],
-    dependents: ['analytics-dashboard', 'reports-api'],
-    lastDeployed: '1 hour ago',
-    owner: 'Lisa Wang',
-    criticality: 'medium',
-    changeFailureRate: 4.1,
-    deploymentFrequency: 'daily',
-    mttr: '60 min',
-    incidents30d: 1,
-  },
-]
+// Transform mock services to the format expected by ServiceCatalog
+const SERVICES_DATA = mockServices.map((service) => ({
+  id: service.id,
+  name: service.name,
+  team: service.team,
+  health: Math.round(service.uptime),
+  status: service.status,
+  deployments: Math.floor(Math.random() * 20) + 5,
+  dependencies: service.dependencies,
+  dependents: [],
+  lastDeployed: service.lastDeployed,
+  owner: service.owner,
+  criticality: service.status === 'down' ? 'critical' : service.status === 'degraded' ? 'high' : 'medium',
+  changeFailureRate: service.errorRate * 100,
+  deploymentFrequency: 'daily',
+  mttr: '15 min',
+  incidents30d: service.status === 'down' ? 3 : service.status === 'degraded' ? 1 : 0,
+}));
+
+
 
 export default function ServicesPage() {
   const [selectedService, setSelectedService] = useState<string | null>(null)
@@ -105,7 +39,7 @@ export default function ServicesPage() {
     service.team.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
-  const selectedServiceData = SERVICES_DATA.find((s) => s.id === selectedService)
+  const selectedServiceData = SERVICES_DATA.find((s) => s.id === selectedService) as any
 
   return (
     <>

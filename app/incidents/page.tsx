@@ -7,73 +7,34 @@ import { IncidentTabs } from '@/components/incidents/incident-tabs'
 import { IncidentDrawer } from '@/components/incidents/incident-drawer'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { mockIncidents } from '@/lib/mock-data'
 
-const INCIDENTS = [
-  {
-    id: 'inc-001',
-    title: 'API Gateway Outage',
-    severity: 'critical',
-    status: 'open',
-    startTime: '2 hours ago',
-    duration: '2h 15m',
-    lead: 'Sarah Chen',
-    affectedServices: ['api-gateway', 'rate-limiter', 'auth-service'],
-    affectedClusters: ['prod-us-east-1'],
-    rootCause: 'Database connection pool exhaustion',
-    impactedUsers: 5234,
-    relatedDeployments: ['deploy-001'],
-    relatedAlerts: 5,
-    timeline: [
-      { time: '14:32', event: 'Alert triggered: High API errors', status: 'info' },
-      { time: '14:35', event: 'Investigation started', status: 'info' },
-      { time: '14:42', event: 'Root cause identified', status: 'success' },
-      { time: '14:55', event: 'Mitigation applied', status: 'success' },
-    ],
-    resolutionNotes: 'Increased database connection pool and optimized query performance',
-  },
-  {
-    id: 'inc-002',
-    title: 'Search Service Degradation',
-    severity: 'high',
-    status: 'investigating',
-    startTime: '45 minutes ago',
+// Transform mock incidents to page format
+const transformIncidents = () => {
+  return mockIncidents.map((inc) => ({
+    id: inc.id,
+    title: inc.title,
+    severity: inc.severity,
+    status: inc.status === 'investigating' ? 'open' : inc.status === 'monitoring' ? 'investigating' : 'resolved',
+    startTime: new Date(inc.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     duration: '45m',
-    lead: 'Marcus Johnson',
-    affectedServices: ['search-service', 'elasticsearch'],
-    affectedClusters: ['prod-eu-west-1'],
-    rootCause: 'Under investigation',
-    impactedUsers: 1234,
-    relatedDeployments: ['deploy-002'],
-    relatedAlerts: 3,
-    timeline: [
-      { time: '16:15', event: 'Performance degradation detected', status: 'warning' },
-      { time: '16:18', event: 'Escalated to on-call', status: 'warning' },
-    ],
-    resolutionNotes: '',
-  },
-  {
-    id: 'inc-003',
-    title: 'Authentication Service Intermittent Failures',
-    severity: 'medium',
-    status: 'resolved',
-    startTime: '5 days ago',
-    duration: '3h 20m',
-    lead: 'Elena Rodriguez',
-    affectedServices: ['auth-service'],
-    affectedClusters: ['prod-us-east-1', 'prod-eu-west-1'],
-    rootCause: 'Third-party OAuth provider timeout',
-    impactedUsers: 342,
+    lead: inc.assignee,
+    affectedServices: [inc.service],
+    affectedClusters: ['prod-us-east-1'],
+    rootCause: 'Investigation in progress',
+    impactedUsers: inc.affectedUsers,
     relatedDeployments: [],
-    relatedAlerts: 2,
-    timeline: [
-      { time: '10:15', event: 'Errors detected in auth logs', status: 'warning' },
-      { time: '10:22', event: 'Issue reproduced', status: 'warning' },
-      { time: '11:32', event: 'Fallback mechanism activated', status: 'success' },
-      { time: '13:35', event: 'Incident resolved', status: 'success' },
-    ],
-    resolutionNotes: 'Added timeout handling and fallback authentication method',
-  },
-]
+    relatedAlerts: Math.floor(Math.random() * 5) + 1,
+    timeline: inc.timeline.map((event) => ({
+      time: new Date(event.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      event: event.action,
+      status: 'info' as const,
+    })),
+    resolutionNotes: inc.description,
+  }));
+};
+
+const INCIDENTS = transformIncidents();
 
 export default function IncidentsPage() {
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null)
@@ -83,9 +44,10 @@ export default function IncidentsPage() {
     (inc) => statusFilter === 'all' || inc.status === statusFilter
   )
 
-  const selectedIncidentData = INCIDENTS.find((i) => i.id === selectedIncident)
+  const selectedIncidentData = INCIDENTS.find((i) => i.id === selectedIncident) as any
   const openCount = INCIDENTS.filter((i) => i.status === 'open' || i.status === 'investigating').length
   const criticalCount = INCIDENTS.filter((i) => i.severity === 'critical').length
+  const totalIncidents = INCIDENTS.length
   const avgMTTR = '18m'
 
   return (
@@ -113,8 +75,8 @@ export default function IncidentsPage() {
               <div className="text-2xl font-bold">{avgMTTR}</div>
             </Card>
             <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Total This Month</div>
-              <div className="text-2xl font-bold">12</div>
+              <div className="text-sm text-muted-foreground">Total</div>
+              <div className="text-2xl font-bold">{totalIncidents}</div>
             </Card>
           </div>
 
