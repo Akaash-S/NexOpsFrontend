@@ -7,79 +7,37 @@ import { AlertsList } from '@/components/alerts/alerts-list'
 import { AlertDrawer } from '@/components/alerts/alert-drawer'
 import { AlertFilters } from '@/components/alerts/alert-filters'
 import { Card } from '@/components/ui/card'
+import { mockAlerts } from '@/lib/mock-data'
 
-const ALERTS_DATA = [
-  {
-    id: 'alert-001',
-    title: 'High CPU usage on API Gateway',
-    severity: 'critical',
-    status: 'firing',
-    cluster: 'prod-us-east-1',
-    services: ['api-gateway', 'rate-limiter'],
-    value: '94%',
-    threshold: '80%',
-    createdAt: '5 minutes ago',
-    duration: '5m',
-    correlatedAlerts: 2,
-    suggestedActions: ['Scale up API Gateway', 'Check for runaway processes'],
-  },
-  {
-    id: 'alert-002',
-    title: 'Database connection pool exhausted',
-    severity: 'high',
-    status: 'firing',
-    cluster: 'prod-us-east-1',
-    services: ['database', 'api-gateway', 'search-service'],
-    value: '98%',
-    threshold: '90%',
-    createdAt: '12 minutes ago',
-    duration: '12m',
-    correlatedAlerts: 3,
-    suggestedActions: ['Increase pool size', 'Review long-running queries'],
-  },
-  {
-    id: 'alert-003',
-    title: 'Error rate spike on Search Service',
-    severity: 'high',
-    status: 'firing',
-    cluster: 'prod-eu-west-1',
-    services: ['search-service', 'elasticsearch'],
-    value: '8.5%',
-    threshold: '2%',
-    createdAt: '8 minutes ago',
-    duration: '8m',
-    correlatedAlerts: 1,
-    suggestedActions: ['Check Elasticsearch health', 'Review recent deployments'],
-  },
-  {
-    id: 'alert-004',
-    title: 'Memory leak detected',
-    severity: 'medium',
-    status: 'firing',
-    cluster: 'staging-us-west-2',
-    services: ['notification-service'],
-    value: '92%',
-    threshold: '85%',
-    createdAt: '1 hour ago',
-    duration: '1h',
-    correlatedAlerts: 0,
-    suggestedActions: ['Investigate memory usage trends', 'Review recent code changes'],
-  },
-  {
-    id: 'alert-005',
-    title: 'Disk space low',
-    severity: 'medium',
-    status: 'resolved',
-    cluster: 'dev-multi-region',
-    services: ['data-warehouse'],
-    value: '78%',
-    threshold: '80%',
-    createdAt: '2 hours ago',
-    duration: '30m',
-    correlatedAlerts: 0,
-    suggestedActions: ['Clean up old logs'],
-  },
-]
+// Transform mock alerts to page format
+const transformAlerts = () => {
+  return mockAlerts.map((alert) => {
+    const severityMap: { [key: string]: 'critical' | 'high' | 'medium' | 'low' } = {
+      'critical': 'critical',
+      'warning': 'high',
+      'info': 'low',
+    };
+    return {
+      id: alert.id,
+      title: alert.title,
+      severity: severityMap[alert.severity] || 'medium',
+      status: alert.status === 'active' ? 'firing' : 'resolved',
+      cluster: 'prod-us-east-1',
+      services: [alert.service],
+      value: alert.current,
+      threshold: alert.threshold,
+      createdAt: new Date(alert.createdAt).toLocaleString(),
+      duration: '5m',
+      correlatedAlerts: Math.floor(Math.random() * 3),
+      suggestedActions: [
+        `Review ${alert.service} metrics`,
+        `Check current load and trends`,
+      ],
+    };
+  });
+};
+
+const ALERTS_DATA = transformAlerts();
 
 export default function AlertsPage() {
   const [selectedAlert, setSelectedAlert] = useState<string | null>(null)
@@ -92,7 +50,7 @@ export default function AlertsPage() {
     return true
   })
 
-  const selectedAlertData = ALERTS_DATA.find((a) => a.id === selectedAlert)
+  const selectedAlertData = ALERTS_DATA.find((a) => a.id === selectedAlert) as any
   const firingCount = ALERTS_DATA.filter((a) => a.status === 'firing').length
   const criticalCount = ALERTS_DATA.filter((a) => a.severity === 'critical' && a.status === 'firing').length
 

@@ -30,10 +30,8 @@ export function PageLayout({
   className?: string 
 }) {
   return (
-    <main className={cn('flex h-[calc(100vh-64px)] lg:ml-64 bg-background', className)}>
-      <div className="flex-1 overflow-y-auto overflow-x-hidden">
-        {children}
-      </div>
+    <main className={cn('min-h-screen pt-20 lg:ml-64 bg-background', className)}>
+      {children}
     </main>
   )
 }
@@ -51,11 +49,11 @@ export function PageHeader({
   children?: ReactNode 
 }) {
   return (
-    <div className="flex items-start justify-between gap-4 mb-8">
+    <div className="flex items-start justify-between gap-4 mb-6">
       <div className="flex-1">
         <h1 className="text-3xl font-bold tracking-tight">{title}</h1>
         {description && (
-          <p className="text-muted-foreground mt-2">{description}</p>
+          <p className="text-muted-foreground mt-1">{description}</p>
         )}
       </div>
       {children && <div className="flex items-center gap-2">{children}</div>}
@@ -74,7 +72,7 @@ export function Section({
   className?: string 
 }) {
   return (
-    <section className={cn('p-6 lg:p-8', className)}>
+    <section className={cn('px-4 py-6 sm:px-6 lg:px-8', className)}>
       {children}
     </section>
   )

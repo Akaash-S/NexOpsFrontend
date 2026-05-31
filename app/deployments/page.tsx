@@ -7,69 +7,28 @@ import { DeploymentTable } from '@/components/deployments/deployment-table'
 import { DeploymentDrawer } from '@/components/deployments/deployment-drawer'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card } from '@/components/ui/card'
+import { mockDeployments, formatDuration } from '@/lib/mock-data'
 
-const DEPLOYMENTS_DATA = [
-  {
-    id: 'deploy-001',
-    service: 'API Gateway',
-    version: 'v2.4.1',
-    environment: 'production',
-    status: 'success',
-    riskScore: 12,
-    confidence: 98,
-    deployedAt: '5 minutes ago',
-    duration: '3m 24s',
-    changesCount: 12,
-    affectedServices: 8,
-    blastRadius: 'medium',
-    rollbackReady: true,
-  },
-  {
-    id: 'deploy-002',
-    service: 'Search Service',
-    version: 'v1.8.5',
-    environment: 'production',
-    status: 'success',
-    riskScore: 34,
-    confidence: 92,
-    deployedAt: '45 minutes ago',
-    duration: '5m 12s',
-    changesCount: 24,
-    affectedServices: 5,
-    blastRadius: 'high',
-    rollbackReady: true,
-  },
-  {
-    id: 'deploy-003',
-    service: 'Notification Service',
-    version: 'v3.1.0',
-    environment: 'staging',
-    status: 'pending',
-    riskScore: 8,
-    confidence: 99,
-    deployedAt: '2 hours ago',
-    duration: '2m 45s',
-    changesCount: 5,
-    affectedServices: 3,
-    blastRadius: 'low',
-    rollbackReady: true,
-  },
-  {
-    id: 'deploy-004',
-    service: 'Auth Service',
-    version: 'v4.2.1',
-    environment: 'production',
-    status: 'rollback',
-    riskScore: 78,
-    confidence: 45,
-    deployedAt: '1 day ago',
-    duration: '1m 15s',
-    changesCount: 8,
-    affectedServices: 12,
-    blastRadius: 'critical',
-    rollbackReady: false,
-  },
-]
+// Transform mock deployments to page format
+const transformDeployments = () => {
+  return mockDeployments.map((dep) => ({
+    id: dep.id,
+    service: dep.service,
+    version: dep.version,
+    environment: dep.environment,
+    status: dep.status === 'success' ? 'success' : dep.status === 'in-progress' ? 'pending' : 'failed',
+    riskScore: dep.status === 'failed' ? 85 : Math.floor(Math.random() * 40),
+    confidence: dep.status === 'failed' ? 45 : 95 - Math.floor(Math.random() * 10),
+    deployedAt: new Date(dep.deployedAt).toLocaleString(),
+    duration: formatDuration(dep.duration),
+    changesCount: dep.changes,
+    affectedServices: Math.floor(Math.random() * 10) + 2,
+    blastRadius: dep.changes > 10 ? 'high' : dep.changes > 5 ? 'medium' : 'low',
+    rollbackReady: dep.status !== 'in-progress',
+  }));
+};
+
+const DEPLOYMENTS_DATA = transformDeployments();
 
 const DEPLOYMENT_TREND = [
   { date: 'Mon', success: 8, failed: 1, rolled: 0 },
@@ -82,7 +41,7 @@ const DEPLOYMENT_TREND = [
 export default function DeploymentsPage() {
   const [selectedDeployment, setSelectedDeployment] = useState<string | null>(null)
 
-  const selectedDeploymentData = DEPLOYMENTS_DATA.find((d) => d.id === selectedDeployment)
+  const selectedDeploymentData = DEPLOYMENTS_DATA.find((d) => d.id === selectedDeployment) as any
 
   return (
     <>

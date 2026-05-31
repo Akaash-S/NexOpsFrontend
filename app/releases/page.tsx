@@ -8,45 +8,31 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
 import { CheckCircle2, AlertCircle, Clock } from 'lucide-react'
+import { mockReleases } from '@/lib/mock-data'
 
-const RELEASES = [
-  {
-    id: 'v2.4.1',
-    service: 'API Gateway',
-    status: 'released',
-    releaseDate: '5 minutes ago',
-    changesCount: 12,
-    deployments: 3,
+// Transform mock releases to page format
+const transformReleases = () => {
+  const statusMap: { [key: string]: 'released' | 'staged' | 'draft' | 'archived' } = {
+    'released': 'released',
+    'scheduled': 'staged',
+    'draft': 'draft',
+    'archived': 'archived',
+  };
+  return mockReleases.slice(0, 5).map((rel) => ({
+    id: rel.version,
+    service: rel.services[0] || 'Unknown',
+    status: statusMap[rel.status] || 'draft',
+    releaseDate: new Date(rel.targetDate).toLocaleString(),
+    changesCount: Math.floor(Math.random() * 30) + 5,
+    deployments: Math.floor(Math.random() * 5),
     rollbacks: 0,
-    health: 98,
-    adoptionRate: 87,
-    incidents: 0,
-  },
-  {
-    id: 'v1.8.5',
-    service: 'Search Service',
-    status: 'released',
-    releaseDate: '45 minutes ago',
-    changesCount: 24,
-    deployments: 2,
-    rollbacks: 0,
-    health: 92,
-    adoptionRate: 45,
-    incidents: 1,
-  },
-  {
-    id: 'v3.1.0',
-    service: 'Notification Service',
-    status: 'staged',
-    releaseDate: 'pending',
-    changesCount: 5,
-    deployments: 0,
-    rollbacks: 0,
-    health: 100,
-    adoptionRate: 0,
-    incidents: 0,
-  },
-]
+    health: 90 + Math.floor(Math.random() * 10),
+    adoptionRate: Math.floor(Math.random() * 100),
+    incidents: Math.floor(Math.random() * 3),
+  }));
+};
+
+const RELEASES = transformReleases();
 
 const ADOPTION_TREND = [
   { week: 'W1', rate: 12 },

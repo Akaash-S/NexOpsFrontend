@@ -4,8 +4,9 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Lightbulb, AlertCircle, TrendingDown, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { mockRecommendations } from '@/lib/mock-data'
 
-interface Recommendation {
+interface DisplayRecommendation {
   id: string
   title: string
   issue: string
@@ -17,80 +18,32 @@ interface Recommendation {
   relatedServices: string[]
 }
 
-const recommendations: Recommendation[] = [
-  {
-    id: 'REC-001',
-    title: 'Rollback Auth Service deployment',
-    issue: 'Auth Service v1.9.1 is causing 3.2% of requests to fail with 500 errors',
-    impact: 'critical',
-    confidence: 98,
-    suggestedOwner: 'Sarah Chen',
-    estimatedOutcome: 'Reduce API error rate from 2.1% to 0.3%',
-    action: 'Rollback to v1.9.0',
-    relatedServices: ['API Gateway', 'Auth Service', 'User Service', 'Payment Service'],
-  },
-  {
-    id: 'REC-002',
-    title: 'Apply security patch for log4j vulnerability',
-    issue: 'Critical CVE-2024-1234 detected in 4 services running vulnerable log4j versions',
-    impact: 'critical',
-    confidence: 100,
-    suggestedOwner: 'Marcus Johnson',
-    estimatedOutcome: 'Eliminate exposure to remote code execution vulnerability',
-    action: 'Apply patch and redeploy',
-    relatedServices: ['Auth Service', 'User Service', 'Payment Service', 'Admin Panel'],
-  },
-  {
-    id: 'REC-003',
-    title: 'Scale Database connection pool',
-    issue: 'Database connection pool at 87% capacity, approaching exhaustion threshold',
-    impact: 'high',
-    confidence: 92,
-    suggestedOwner: 'Alex Rodriguez',
-    estimatedOutcome: 'Prevent connection timeouts and improve latency by 15%',
-    action: 'Increase max_connections from 500 to 750',
-    relatedServices: ['Database Cluster'],
-  },
-  {
-    id: 'REC-004',
-    title: 'Investigate API Gateway latency spike',
-    issue: 'P95 latency increased by 240% in last 30 minutes, still investigating root cause',
-    impact: 'high',
-    confidence: 78,
-    suggestedOwner: 'Platform Team',
-    estimatedOutcome: 'Identify and resolve performance bottleneck',
-    action: 'Enable detailed tracing and analyze traces',
-    relatedServices: ['API Gateway', 'Payment Service', 'Cache Service'],
-  },
-  {
-    id: 'REC-005',
-    title: 'Eliminate single point of failure',
-    issue: 'Auth Service has no replica - outage affects all downstream services',
-    impact: 'high',
-    confidence: 88,
-    suggestedOwner: 'Infrastructure Team',
-    estimatedOutcome: 'Reduce critical incident risk by 65%',
-    action: 'Deploy secondary replica with active-active configuration',
-    relatedServices: ['Auth Service'],
-  },
-  {
-    id: 'REC-006',
-    title: 'Update stale dependency',
-    issue: 'Service mesh using deprecated Envoy 1.24, latest is 1.28 with 12 security fixes',
-    impact: 'medium',
-    confidence: 85,
-    suggestedOwner: 'DevOps Team',
-    estimatedOutcome: 'Gain improved performance and security patches',
-    action: 'Schedule upgrade during maintenance window',
-    relatedServices: ['All Services'],
-  },
-]
+// For display, we'll create some context around the mock recommendations
+const createDisplayRecommendations = (): DisplayRecommendation[] => {
+  return mockRecommendations.map((rec) => ({
+    id: rec.id,
+    title: rec.title,
+    issue: rec.description,
+    impact: rec.impact === 'high' ? 'high' : rec.impact === 'medium' ? 'medium' : 'low',
+    confidence: rec.effort === 'low' ? 95 : rec.effort === 'medium' ? 85 : 75,
+    suggestedOwner: undefined,
+    estimatedOutcome: `Improve ${rec.category} by implementing ${rec.title.toLowerCase()}`,
+    action: `Start implementation for ${rec.service}`,
+    relatedServices: [rec.service],
+  }));
+};
+
+const recommendations: DisplayRecommendation[] = createDisplayRecommendations().slice(0, 4);
 
 const impactConfig = {
   critical: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Critical' },
   high: { bg: 'bg-warning/10', text: 'text-warning', label: 'High' },
   medium: { bg: 'bg-accent/10', text: 'text-accent', label: 'Medium' },
   low: { bg: 'bg-success/10', text: 'text-success', label: 'Low' },
+  performance: { bg: 'bg-info/10', text: 'text-info', label: 'Performance' },
+  reliability: { bg: 'bg-success/10', text: 'text-success', label: 'Reliability' },
+  security: { bg: 'bg-destructive/10', text: 'text-destructive', label: 'Security' },
+  cost: { bg: 'bg-warning/10', text: 'text-warning', label: 'Cost' },
 }
 
 function ConfidenceBar({ value }: { value: number }) {
@@ -111,6 +64,9 @@ function ConfidenceBar({ value }: { value: number }) {
 }
 
 export function Recommendations() {
+  const allRecommendations = createDisplayRecommendations();
+  const criticalCount = allRecommendations.filter(r => r.impact === 'critical' || r.impact === 'high').length;
+  
   return (
     <Card className="p-6">
       <div className="flex items-center justify-between mb-6">
@@ -121,8 +77,8 @@ export function Recommendations() {
           </h3>
           <p className="text-sm text-muted-foreground mt-1">AI-powered suggestions for next steps</p>
         </div>
-        <Badge variant="default" className="bg-destructive">
-          {recommendations.filter(r => r.impact === 'critical').length} Critical
+        <Badge variant="default" className="bg-warning">
+          {criticalCount} Pending
         </Badge>
       </div>
 
