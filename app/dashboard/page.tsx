@@ -24,7 +24,7 @@ export default function DashboardPage() {
           />
           
           {/* Executive Health Overview Cards */}
-          <Grid columns={4} className="mb-8">
+          <Grid columns={4} className="mb-6">
             <MetricCard 
               label="Workspace Health"
               value="94%"
@@ -56,9 +56,9 @@ export default function DashboardPage() {
           </Grid>
 
           {/* Main Dashboard Content - 3 Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             {/* Left Column - Health and Incidents */}
-            <div className="lg:col-span-2 space-y-8">
+            <div className="lg:col-span-2 space-y-6">
               <HealthOverview />
               <ActiveIncidents />
             </div>
@@ -70,7 +70,7 @@ export default function DashboardPage() {
           </div>
 
           {/* Bottom Sections - Full Width */}
-          <div className="space-y-8">
+          <div className="space-y-6">
             {/* Recent Critical Changes */}
             <RecentChanges />
 
