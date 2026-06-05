@@ -1,127 +1,142 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { PageContent, PageHeader } from '@/components/layout'
 import { PipelineTable } from '@/components/pipelines/pipeline-table'
 import { PipelineDrawer } from '@/components/pipelines/pipeline-drawer'
+import { PipelineFilters } from '@/components/pipelines/pipeline-filters'
+import { ConnectPipelineDrawer } from '@/components/pipelines/connect-pipeline-drawer'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card } from '@/components/ui/card'
-
-const PIPELINES_DATA: any[] = [
-  {
-    id: 'api-build-deploy',
-    name: 'API Build & Deploy',
-    repository: 'nexops-api',
-    status: 'healthy',
-    successRate: 98,
-    failureRate: 2,
-    avgDuration: '8m 24s',
-    lastRun: '5 minutes ago',
-    runCount30d: 145,
-    avgFailureTime: '45s',
-    reliability: 98,
-  },
-  {
-    id: 'ui-build-test',
-    name: 'UI Build & Test',
-    repository: 'nexops-ui',
-    status: 'healthy',
-    successRate: 96,
-    failureRate: 4,
-    avgDuration: '12m 15s',
-    lastRun: '2 minutes ago',
-    runCount30d: 132,
-    avgFailureTime: '2m 30s',
-    reliability: 96,
-  },
-  {
-    id: 'infra-provision',
-    name: 'Infrastructure Provision',
-    repository: 'nexops-helm',
-    status: 'warning',
-    successRate: 91,
-    failureRate: 9,
-    avgDuration: '25m 45s',
-    lastRun: '30 minutes ago',
-    runCount30d: 64,
-    avgFailureTime: '8m 15s',
-    reliability: 91,
-  },
-]
-
-const FAILURE_TREND = [
-  { week: 'Week 1', failures: 3, recovered: 3 },
-  { week: 'Week 2', failures: 2, recovered: 2 },
-  { week: 'Week 3', failures: 5, recovered: 5 },
-  { week: 'Week 4', failures: 2, recovered: 2 },
-]
+import { Button } from '@/components/ui/button'
+import { Plus } from 'lucide-react'
+import { PIPELINES_DATA, PIPELINE_FAILURE_TREND } from '@/lib/mock-data'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 export default function PipelinesPage() {
+  const { setConnectPipelineOpen } = useAppState()
   const [selectedPipeline, setSelectedPipeline] = useState<string | null>(null)
+  
+  // Local state for dynamically added pipelines from wizard
+  const [pipelines, setPipelines] = useState<any[]>(PIPELINES_DATA)
 
-  const selectedPipelineData = PIPELINES_DATA.find((p) => p.id === selectedPipeline)
+  // Filters State
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
+    sortBy: 'success-desc',
+  })
+
+  // Filter and Sort Logic
+  const filteredAndSortedPipelines = useMemo(() => {
+    return pipelines
+      .filter((pipe) => {
+        const matchesSearch =
+          pipe.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+          pipe.repository.toLowerCase().includes(filters.search.toLowerCase())
+        const matchesStatus = filters.status === 'all' || pipe.status === filters.status
+        return matchesSearch && matchesStatus
+      })
+      .sort((a, b) => {
+        switch (filters.sortBy) {
+          case 'success-desc':
+            return b.successRate - a.successRate
+          case 'success-asc':
+            return a.successRate - b.successRate
+          case 'reliability-desc':
+            return b.reliability - a.reliability
+          case 'runs-desc':
+            return b.runCount30d - a.runCount30d
+          case 'name-asc':
+            return a.name.localeCompare(b.name)
+          default:
+            return 0
+        }
+      })
+  }, [pipelines, filters])
+
+  const selectedPipelineData = pipelines.find((p) => p.id === selectedPipeline)
+
+  const handlePipelinesImported = (newPipelines: any[]) => {
+    setPipelines([...newPipelines, ...pipelines])
+  }
 
   return (
     <>
-      
-      <>
-        <PageContent>
+      <PageContent>
+        <div className="flex items-center justify-between mb-6">
           <PageHeader
             title="Pipelines"
             description="Delivery intelligence with failure trends, success rates, and reliability scoring"
           />
+          <Button onClick={() => setConnectPipelineOpen(true)} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Connect Pipeline
+          </Button>
+        </div>
 
-          {/* Key Metrics */}
-          <div className="grid grid-cols-4 gap-4 mb-8">
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Avg Success Rate</div>
-              <div className="text-2xl font-bold">95%</div>
-            </Card>
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Total Runs (30d)</div>
-              <div className="text-2xl font-bold">341</div>
-            </Card>
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Failures (30d)</div>
-              <div className="text-2xl font-bold">12</div>
-            </Card>
-            <Card className="p-4">
-              <div className="text-sm text-muted-foreground">Avg Duration</div>
-              <div className="text-2xl font-bold">15m</div>
-            </Card>
-          </div>
-
-          {/* Failure Trend Chart */}
-          <Card className="p-6 mb-8">
-            <h3 className="font-semibold mb-4">Failure Trend (Last 4 Weeks)</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={FAILURE_TREND}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="week" />
-                <YAxis />
-                <Tooltip />
-                <Bar dataKey="failures" fill="hsl(var(--destructive))" />
-                <Bar dataKey="recovered" fill="hsl(var(--success))" />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Key Metrics */}
+        <div className="grid grid-cols-4 gap-4 mb-8">
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Avg Success Rate</div>
+            <div className="text-2xl font-bold">95%</div>
           </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Total Runs (30d)</div>
+            <div className="text-2xl font-bold">341</div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Failures (30d)</div>
+            <div className="text-2xl font-bold">12</div>
+          </Card>
+          <Card className="p-4">
+            <div className="text-sm text-muted-foreground">Avg Duration</div>
+            <div className="text-2xl font-bold">15m</div>
+          </Card>
+        </div>
 
-          {/* Pipelines Table */}
+        {/* Failure Trend Chart */}
+        <Card className="p-6 mb-8">
+          <h3 className="font-semibold mb-4">Failure Trend (Last 4 Weeks)</h3>
+          <ResponsiveContainer width="100%" height={250}>
+            <BarChart data={PIPELINE_FAILURE_TREND}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="week" />
+              <YAxis />
+              <Tooltip />
+              <Bar dataKey="failures" fill="hsl(var(--destructive))" />
+              <Bar dataKey="recovered" fill="hsl(var(--success))" />
+            </BarChart>
+          </ResponsiveContainer>
+        </Card>
+
+        {/* Filters */}
+        <PipelineFilters filters={filters} setFilters={setFilters} />
+
+        {/* Pipelines Table */}
+        {filteredAndSortedPipelines.length > 0 ? (
           <PipelineTable
-            pipelines={PIPELINES_DATA}
+            pipelines={filteredAndSortedPipelines}
             selectedPipeline={selectedPipeline}
             onSelectPipeline={setSelectedPipeline}
           />
-        </PageContent>
-      </>
+        ) : (
+          <Card className="p-12 text-center text-muted-foreground">
+            No pipelines found matching your filters.
+          </Card>
+        )}
+      </PageContent>
 
-      {/* Pipeline Drawer */}
+      {/* Details Drawer */}
       {selectedPipelineData && (
         <PipelineDrawer
           pipeline={selectedPipelineData}
           onClose={() => setSelectedPipeline(null)}
         />
       )}
+
+      {/* Connect Pipeline Wizard */}
+      <ConnectPipelineDrawer onSuccess={handlePipelinesImported} />
     </>
   )
 }

@@ -6,6 +6,8 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
+import { useState, useEffect } from 'react'
+import { cn } from '@/lib/utils'
 
 interface Deployment {
   id: string
@@ -46,21 +48,46 @@ const TIMELINE = [
   { time: '14:24', event: 'Deployment initiated', status: 'success' },
 ]
 
+
 export function DeploymentDrawer({ deployment, onClose }: DeploymentDrawerProps) {
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
+  const handleClose = () => {
+    setIsAnimatingOut(true)
+    setTimeout(() => {
+      onClose()
+    }, 300)
+  }
+
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
+      <div 
+        className={cn("fixed inset-0 z-40 bg-black/50 transition-opacity duration-300", isAnimatingOut ? "opacity-0" : "opacity-100")}
+        onClick={handleClose} 
+      />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-16 h-[calc(100vh-64px)] w-96 bg-background border-l border-border z-50 flex flex-col">
+      <div 
+        className={cn(
+          "fixed right-0 top-16 h-[calc(100vh-64px)] w-96 bg-background border-l border-border z-50 flex flex-col transform transition-transform duration-300",
+          isAnimatingOut ? "translate-x-full" : "translate-x-0"
+        )}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>
             <h2 className="font-semibold text-lg">{deployment.service}</h2>
             <p className="text-sm text-muted-foreground">{deployment.version}</p>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="w-4 h-4" />
           </Button>
         </div>

@@ -29,8 +29,6 @@ interface ServiceCatalogProps {
   services: Service[]
   selectedService: string | null
   onSelectService: (id: string) => void
-  searchQuery: string
-  onSearchChange: (query: string) => void
 }
 
 const statusColors = {
@@ -50,22 +48,9 @@ export function ServiceCatalog({
   services,
   selectedService,
   onSelectService,
-  searchQuery,
-  onSearchChange,
 }: ServiceCatalogProps) {
   return (
     <div className="space-y-6">
-      {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input
-          placeholder="Search services by name or team..."
-          value={searchQuery}
-          onChange={(e) => onSearchChange(e.target.value)}
-          className="pl-9 bg-background"
-        />
-      </div>
-
       {/* Services Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {services.length === 0 ? (

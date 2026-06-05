@@ -43,6 +43,16 @@ interface AppContextType {
   // Modals/Drawers
   isAddClusterOpen: boolean;
   setAddClusterOpen: (open: boolean) => void;
+  isRegisterServiceOpen: boolean;
+  setRegisterServiceOpen: (open: boolean) => void;
+  isConnectRepoOpen: boolean;
+  setConnectRepoOpen: (open: boolean) => void;
+  isConnectPipelineOpen: boolean;
+  setConnectPipelineOpen: (open: boolean) => void;
+  isCreateDeploymentOpen: boolean;
+  setCreateDeploymentOpen: (open: boolean) => void;
+  isCreateReleaseOpen: boolean;
+  setCreateReleaseOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -63,6 +73,11 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isAddClusterOpen, setAddClusterOpen] = useState(false);
+  const [isRegisterServiceOpen, setRegisterServiceOpen] = useState(false);
+  const [isConnectRepoOpen, setConnectRepoOpen] = useState(false);
+  const [isConnectPipelineOpen, setConnectPipelineOpen] = useState(false);
+  const [isCreateDeploymentOpen, setCreateDeploymentOpen] = useState(false);
+  const [isCreateReleaseOpen, setCreateReleaseOpen] = useState(false);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
@@ -106,6 +121,16 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setSidebarOpen,
     isAddClusterOpen,
     setAddClusterOpen,
+    isRegisterServiceOpen,
+    setRegisterServiceOpen,
+    isConnectRepoOpen,
+    setConnectRepoOpen,
+    isConnectPipelineOpen,
+    setConnectPipelineOpen,
+    isCreateDeploymentOpen,
+    setCreateDeploymentOpen,
+    isCreateReleaseOpen,
+    setCreateReleaseOpen,
   };
 
   return (

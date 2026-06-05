@@ -1,12 +1,13 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { ScrollArea } from '@/components/ui/scroll-area'
+import { cn } from '@/lib/utils'
 
 interface Repository {
   id: string
@@ -68,14 +69,39 @@ const SECURITY_ISSUES = [
 
 export function RepositoryDrawer({ repository, onClose }: RepositoryDrawerProps) {
   const [activeTab, setActiveTab] = useState('overview')
+  const [isOpen, setIsOpen] = useState(true)
+
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      setTimeout(onClose, 300)
+    }
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [isOpen, onClose])
+
+  const handleClose = () => {
+    setIsOpen(false)
+  }
 
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
+      <div 
+        className={cn("fixed inset-0 z-40 bg-black/50 transition-opacity duration-300", isOpen ? "opacity-100" : "opacity-0")} 
+        onClick={handleClose} 
+      />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-16 h-[calc(100vh-64px)] w-96 bg-background border-l border-border z-50 flex flex-col">
+      <div 
+        className={cn(
+          "fixed right-0 top-16 h-[calc(100vh-64px)] w-96 bg-background border-l border-border z-50 flex flex-col transform transition-transform duration-300",
+          isOpen ? "translate-x-0" : "translate-x-full"
+        )}
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-border">
           <div>

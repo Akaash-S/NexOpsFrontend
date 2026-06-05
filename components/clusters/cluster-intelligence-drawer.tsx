@@ -82,8 +82,14 @@ export function ClusterIntelligenceDrawer({ cluster, onClose }: ClusterIntellige
   const [activeRecommendations, setActiveRecommendations] = useState(initialRecommendations)
 
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
       setTimeout(onClose, 300); // Wait for transition
+    }
+    return () => {
+      document.body.style.overflow = ''
     }
   }, [isOpen, onClose])
 

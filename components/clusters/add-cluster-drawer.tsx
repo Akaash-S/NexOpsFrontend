@@ -65,9 +65,15 @@ export function AddClusterDrawer({ onSuccess }: AddClusterDrawerProps) {
 
   useEffect(() => {
     if (isAddClusterOpen) {
+      document.body.style.overflow = 'hidden'
       setStep(1)
       setIsSuccess(false)
       setIsAnimatingOut(false)
+    } else {
+      document.body.style.overflow = ''
+    }
+    return () => {
+      document.body.style.overflow = ''
     }
   }, [isAddClusterOpen])
 

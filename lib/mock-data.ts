@@ -299,6 +299,51 @@ export const mockIncidents: Incident[] = [
   },
 ];
 
+export const mockNotifications = [
+  {
+    id: 'n1',
+    title: 'High latency detected',
+    description: 'payment-service latency spiked to 2.5s',
+    type: 'warning',
+    timestamp: '5m ago',
+    read: false,
+  },
+  {
+    id: 'n2',
+    title: 'Deployment successful',
+    description: 'auth-service v1.4.2 deployed to production',
+    type: 'success',
+    timestamp: '15m ago',
+    read: false,
+  },
+  {
+    id: 'n3',
+    title: 'Cluster capacity alert',
+    description: 'us-east-1 memory usage exceeded 85%',
+    type: 'error',
+    timestamp: '1h ago',
+    read: true,
+  },
+] as const
+
+export const SERVICES_DATA = mockServices.map((service, index) => ({
+  id: service.id,
+  name: service.name,
+  team: service.team,
+  health: Math.round(service.uptime),
+  status: service.status as 'healthy' | 'critical' | 'warning',
+  deployments: (index * 7) % 20 + 5, // Deterministic mock data to prevent hydration errors
+  dependencies: service.dependencies,
+  dependents: [],
+  lastDeployed: service.lastDeployed,
+  owner: service.owner,
+  criticality: service.status === 'down' ? 'critical' : service.status === 'degraded' ? 'high' : 'medium',
+  changeFailureRate: service.errorRate * 100,
+  deploymentFrequency: 'daily',
+  mttr: '15 min',
+  incidents30d: service.status === 'down' ? 3 : service.status === 'degraded' ? 1 : 0,
+}));
+
 export const mockAlerts: Alert[] = [
   {
     id: 'alert-1',
@@ -804,3 +849,130 @@ export function formatDuration(seconds: number): string {
   if (minutes === 0) return `${remainingSeconds}s`;
   return `${minutes}m ${remainingSeconds}s`;
 }
+
+export const REPOSITORIES_DATA = mockRepositories.map((repo, index) => ({
+  id: repo.id,
+  name: repo.name,
+  owner: repo.owner,
+  description: repo.description,
+  health: 90 + ((index * 3) % 10),
+  status: 'healthy' as 'healthy' | 'critical' | 'warning',
+  prs: (index * 5) % 10,
+  commits30d: repo.commits,
+  stars: repo.stars,
+  securityIssues: index % 3 === 0 ? 1 : 0,
+  dependencies: 10 + ((index * 7) % 30),
+  codeQuality: 85 + ((index * 2) % 15),
+  coverage: 75 + ((index * 4) % 20),
+  lastUpdated: repo.lastCommit.split('T')[0] + ' ' + repo.lastCommit.split('T')[1].substring(0, 5),
+}));
+
+export const PIPELINES_DATA = [
+  {
+    id: 'api-build-deploy',
+    name: 'API Build & Deploy',
+    repository: 'nexops-api',
+    status: 'healthy',
+    successRate: 98,
+    failureRate: 2,
+    avgDuration: '8m 24s',
+    lastRun: '5 minutes ago',
+    runCount30d: 145,
+    avgFailureTime: '45s',
+    reliability: 98,
+  },
+  {
+    id: 'ui-build-test',
+    name: 'UI Build & Test',
+    repository: 'nexops-ui',
+    status: 'healthy',
+    successRate: 96,
+    failureRate: 4,
+    avgDuration: '12m 15s',
+    lastRun: '2 minutes ago',
+    runCount30d: 132,
+    avgFailureTime: '2m 30s',
+    reliability: 96,
+  },
+  {
+    id: 'infra-provision',
+    name: 'Infrastructure Provision',
+    repository: 'nexops-helm',
+    status: 'warning',
+    successRate: 91,
+    failureRate: 9,
+    avgDuration: '25m 45s',
+    lastRun: '30 minutes ago',
+    runCount30d: 64,
+    avgFailureTime: '8m 15s',
+    reliability: 91,
+  },
+];
+
+export const PIPELINE_FAILURE_TREND = [
+  { week: 'Week 1', failures: 3, recovered: 3 },
+  { week: 'Week 2', failures: 2, recovered: 2 },
+  { week: 'Week 3', failures: 5, recovered: 5 },
+  { week: 'Week 4', failures: 2, recovered: 2 },
+];
+
+export const DEPLOYMENTS_DATA = mockDeployments.map((dep, index) => ({
+  id: dep.id,
+  service: dep.service,
+  version: dep.version,
+  environment: dep.environment,
+  status: (dep.status === 'success' ? 'success' : dep.status === 'in-progress' ? 'pending' : 'failed') as 'success' | 'failed' | 'pending' | 'rollback',
+  riskScore: dep.status === 'failed' ? 85 : 10 + ((index * 7) % 30),
+  confidence: dep.status === 'failed' ? 45 : 95 - ((index * 3) % 10),
+  deployedAt: dep.deployedAt.split('T')[0] + ' ' + dep.deployedAt.split('T')[1].substring(0, 5),
+  duration: formatDuration(dep.duration),
+  changesCount: dep.changes,
+  affectedServices: 2 + (index % 5),
+  blastRadius: dep.changes > 10 ? 'high' : dep.changes > 5 ? 'medium' : 'low',
+  rollbackReady: dep.status !== 'in-progress',
+}));
+
+export const DEPLOYMENT_TREND = [
+  { date: 'Mon', success: 8, failed: 1, rolled: 0 },
+  { date: 'Tue', success: 12, failed: 0, rolled: 0 },
+  { date: 'Wed', success: 10, failed: 2, rolled: 1 },
+  { date: 'Thu', success: 15, failed: 1, rolled: 0 },
+  { date: 'Fri', success: 9, failed: 1, rolled: 0 },
+];
+
+export const RELEASES_DATA = mockReleases.map((rel, index) => {
+  const statusMap: { [key: string]: 'released' | 'staged' | 'draft' | 'archived' } = {
+    'released': 'released',
+    'scheduled': 'staged',
+    'draft': 'draft',
+    'archived': 'archived',
+  };
+  
+  return {
+    id: rel.version,
+    service: rel.services[0] || 'Unknown',
+    status: statusMap[rel.status] || 'draft',
+    releaseDate: rel.targetDate.split('T')[0],
+    changesCount: 5 + ((index * 13) % 30),
+    deployments: (index * 7) % 5,
+    rollbacks: index % 3 === 0 ? 1 : 0,
+    health: 90 + ((index * 11) % 10),
+    adoptionRate: 20 + ((index * 23) % 80),
+    incidents: (index * 5) % 3,
+  }
+});
+
+export const ADOPTION_TREND = [
+  { week: 'W1', rate: 12 },
+  { week: 'W2', rate: 28 },
+  { week: 'W3', rate: 54 },
+  { week: 'W4', rate: 87 },
+];
+
+export const RELEASE_TREND = [
+  { date: 'Mon', releases: 3, rollbacks: 0 },
+  { date: 'Tue', releases: 5, rollbacks: 1 },
+  { date: 'Wed', releases: 4, rollbacks: 0 },
+  { date: 'Thu', releases: 6, rollbacks: 0 },
+  { date: 'Fri', releases: 2, rollbacks: 0 },
+];

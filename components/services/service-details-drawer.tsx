@@ -5,8 +5,9 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { X, GitBranch, Clock, TrendingDown, AlertCircle } from 'lucide-react'
+import { X, GitBranch, Clock, TrendingDown, AlertCircle, ExternalLink, CheckCircle } from 'lucide-react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 interface Service {
   id: string
@@ -50,10 +51,32 @@ const reliabilityData = [
 
 export function ServiceDetailsDrawer({ service, onClose }: ServiceDetailsDrawerProps) {
   const [isOpen, setIsOpen] = useState(true)
+  const { addNotification } = useAppState()
+  
+  const [insights, setInsights] = useState([
+    { id: 'i1', type: 'warning', icon: AlertCircle, title: 'High deployment frequency', desc: `This service is deployed ${service.deploymentFrequency.replace('-', ' ')}. Monitor change failure rate closely.`, action: 'Create Ticket' },
+    { id: 'i2', type: 'primary', icon: Clock, title: 'MTTR Improvement Opportunity', desc: `Current MTTR is ${service.mttr}. Consider implementing better alerting and runbooks.`, action: 'Acknowledge' },
+    { id: 'i3', type: 'success', icon: TrendingDown, title: 'Strong reliability track record', desc: `Only ${service.incidents30d} incident(s) in the last 30 days. Service is well-maintained.`, action: '' }
+  ])
+
+  const handleAction = (id: string, actionName: string) => {
+    addNotification({
+      title: 'Action Initiated',
+      description: `${actionName} for "${insights.find(i => i.id === id)?.title}"`,
+      type: 'info'
+    })
+    setInsights(insights.filter(i => i.id !== id))
+  }
 
   useEffect(() => {
-    if (!isOpen) {
-      onClose()
+    if (isOpen) {
+      document.body.style.overflow = 'hidden'
+    } else {
+      document.body.style.overflow = ''
+      setTimeout(onClose, 300); // Wait for transition
+    }
+    return () => {
+      document.body.style.overflow = ''
     }
   }, [isOpen, onClose])
 
@@ -221,39 +244,37 @@ export function ServiceDetailsDrawer({ service, onClose }: ServiceDetailsDrawerP
 
             {/* Insights Tab */}
             <TabsContent value="insights" className="space-y-4">
-              <Card className="p-4 border-l-2 border-l-warning">
-                <div className="flex gap-3">
-                  <AlertCircle className="w-5 h-5 text-warning flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">High deployment frequency</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      This service is deployed {service.deploymentFrequency.replace('-', ' ')}. Monitor change failure rate closely.
-                    </p>
-                  </div>
+              {insights.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground border border-dashed rounded-lg bg-muted/5">
+                  No active insights for this service.
                 </div>
-              </Card>
-              <Card className="p-4 border-l-2 border-l-primary">
-                <div className="flex gap-3">
-                  <Clock className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">MTTR Improvement Opportunity</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Current MTTR is {service.mttr}. Consider implementing better alerting and runbooks.
-                    </p>
-                  </div>
-                </div>
-              </Card>
-              <Card className="p-4 border-l-2 border-l-success">
-                <div className="flex gap-3">
-                  <TrendingDown className="w-5 h-5 text-success flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-semibold text-foreground">Strong reliability track record</p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Only {service.incidents30d} incident(s) in the last 30 days. Service is well-maintained.
-                    </p>
-                  </div>
-                </div>
-              </Card>
+              ) : (
+                insights.map((insight) => (
+                  <Card key={insight.id} className={`p-4 border-l-2 border-l-${insight.type}`}>
+                    <div className="flex gap-3">
+                      <insight.icon className={`w-5 h-5 text-${insight.type} flex-shrink-0 mt-0.5`} />
+                      <div className="flex-1">
+                        <p className="font-semibold text-foreground">{insight.title}</p>
+                        <p className="text-sm text-muted-foreground mt-1">{insight.desc}</p>
+                        
+                        {insight.action && (
+                          <div className="mt-3">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="h-8 text-xs gap-1"
+                              onClick={() => handleAction(insight.id, insight.action)}
+                            >
+                              {insight.action === 'Create Ticket' ? <ExternalLink className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                              {insight.action}
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </TabsContent>
           </Tabs>
         </div>

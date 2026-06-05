@@ -4,84 +4,87 @@ import { useState } from 'react'
 import { PageContent, PageHeader } from '@/components/layout'
 import { RepositoryGrid } from '@/components/repositories/repository-grid'
 import { RepositoryDrawer } from '@/components/repositories/repository-drawer'
+import { RepositoryFilters } from '@/components/repositories/repository-filters'
+import { ConnectRepositoryDrawer } from '@/components/repositories/connect-repository-drawer'
 import { Button } from '@/components/ui/button'
-import { Plus, Search } from 'lucide-react'
-import { Input } from '@/components/ui/input'
-import { mockRepositories } from '@/lib/mock-data'
-
-// Transform mock repositories to page format
-const transformRepositories = () => {
-  return mockRepositories.map((repo) => ({
-    id: repo.id,
-    name: repo.name,
-    owner: repo.owner,
-    description: repo.description,
-    health: 90 + Math.floor(Math.random() * 10),
-    status: 'healthy' as 'healthy' | 'critical' | 'warning',
-    prs: Math.floor(Math.random() * 10),
-    commits30d: repo.commits,
-    stars: repo.stars,
-    securityIssues: Math.floor(Math.random() * 2),
-    dependencies: Math.floor(Math.random() * 30) + 10,
-    codeQuality: 85 + Math.floor(Math.random() * 15),
-    coverage: 75 + Math.floor(Math.random() * 20),
-    lastUpdated: new Date(repo.lastCommit).toLocaleString(),
-  }));
-};
-
-const REPOSITORIES = transformRepositories();
+import { Plus } from 'lucide-react'
+import { REPOSITORIES_DATA } from '@/lib/mock-data'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 export default function RepositoriesPage() {
+  const { setConnectRepoOpen } = useAppState()
+  const [repositories, setRepositories] = useState(REPOSITORIES_DATA)
   const [selectedRepo, setSelectedRepo] = useState<string | null>(null)
-  const [searchQuery, setSearchQuery] = useState('')
+  
+  const [filters, setFilters] = useState({
+    search: '',
+    status: 'all',
+    sortBy: 'health-asc',
+  })
 
-  const filteredRepos = REPOSITORIES.filter(
-    (repo) =>
-      repo.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      repo.description.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  // Filter and Sort Logic
+  const filteredAndSortedRepos = repositories
+    .filter((repo) => {
+      // Search
+      const searchMatch = repo.name.toLowerCase().includes(filters.search.toLowerCase()) || 
+                          repo.description.toLowerCase().includes(filters.search.toLowerCase());
+      if (!searchMatch) return false;
 
-  const selectedRepoData = REPOSITORIES.find((r) => r.id === selectedRepo)
+      // Status
+      if (filters.status !== 'all' && repo.status !== filters.status) return false;
+
+      return true;
+    })
+    .sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'health-asc': return a.health - b.health;
+        case 'health-desc': return b.health - a.health;
+        case 'quality-desc': return b.codeQuality - a.codeQuality;
+        case 'coverage-desc': return b.coverage - a.coverage;
+        case 'commits-desc': return b.commits30d - a.commits30d;
+        case 'prs-desc': return b.prs - a.prs;
+        case 'name-asc': return a.name.localeCompare(b.name);
+        default: return 0;
+      }
+    });
+
+  const selectedRepoData = repositories.find((r) => r.id === selectedRepo)
 
   return (
     <>
-      
-      <>
-        <PageContent>
-          <div className="flex items-center justify-between mb-8">
-            <PageHeader
-              title="Repositories"
-              description="Source control visibility with health, security, and code quality metrics"
-            />
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Connect Repository
-            </Button>
-          </div>
-
-          {/* Search */}
-          <div className="mb-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search repositories..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
-              />
-            </div>
-          </div>
-
-          {/* Repository Grid */}
-          <RepositoryGrid
-            repositories={filteredRepos}
-            selectedRepo={selectedRepo}
-            onSelectRepo={setSelectedRepo}
+      <PageContent>
+        <div className="flex items-center justify-between mb-8">
+          <PageHeader
+            title="Repositories"
+            description="Source control visibility with health, security, and code quality metrics"
           />
-        </PageContent>
-      </>
+          <Button 
+            className="gap-2"
+            onClick={() => setConnectRepoOpen(true)}
+          >
+            <Plus className="w-4 h-4" />
+            Connect Repository
+          </Button>
+        </div>
 
-      {/* Repository Drawer */}
+        <RepositoryFilters 
+          filters={filters}
+          setFilters={setFilters}
+        />
+
+        <RepositoryGrid
+          repositories={filteredAndSortedRepos}
+          selectedRepo={selectedRepo}
+          onSelectRepo={setSelectedRepo}
+        />
+      </PageContent>
+
+      {/* Connect Wizard */}
+      <ConnectRepositoryDrawer 
+        onSuccess={(newRepos) => setRepositories([...repositories, ...newRepos])} 
+      />
+
+      {/* Details Drawer */}
       {selectedRepoData && (
         <RepositoryDrawer
           repository={selectedRepoData}
