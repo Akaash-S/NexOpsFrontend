@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { AlertTriangle, Clock, Users, Link as LinkIcon } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { mockIncidents } from '@/lib/mock-data'
 
@@ -126,9 +127,9 @@ export function ActiveIncidents() {
         })}
       </div>
 
-      <button className="w-full mt-6 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
+      <Link href="/incidents" className="block text-center w-full mt-6 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
         View All Incidents →
-      </button>
+      </Link>
     </Card>
   )
 }

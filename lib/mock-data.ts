@@ -121,12 +121,16 @@ export interface Cluster {
   id: string;
   name: string;
   region: string;
-  status: 'healthy' | 'degraded' | 'down';
+  provider: string;
+  health: number;
+  status: 'healthy' | 'warning' | 'critical';
   nodes: number;
-  cpuUsage: number;
-  memoryUsage: number;
-  networkUsage: number;
   services: number;
+  incidents: number;
+  lastSync: string;
+  capacity: number;
+  version: string;
+  criticalDeps: number;
 }
 
 export interface Team {
@@ -622,48 +626,79 @@ export const mockWorkflowPipelines: WorkflowPipeline[] = [
 
 export const mockClusters: Cluster[] = [
   {
-    id: 'cluster-1',
-    name: 'US East Production',
+    id: 'prod-us-east-1',
+    name: 'Production US-East',
     region: 'us-east-1',
+    provider: 'aws',
+    health: 98,
     status: 'healthy',
-    nodes: 48,
-    cpuUsage: 65,
-    memoryUsage: 72,
-    networkUsage: 42,
-    services: 18,
-  },
-  {
-    id: 'cluster-2',
-    name: 'EU Central Production',
-    region: 'eu-central-1',
-    status: 'healthy',
-    nodes: 32,
-    cpuUsage: 58,
-    memoryUsage: 61,
-    networkUsage: 38,
-    services: 12,
-  },
-  {
-    id: 'cluster-3',
-    name: 'Asia Pacific Production',
-    region: 'ap-southeast-1',
-    status: 'degraded',
     nodes: 24,
-    cpuUsage: 81,
-    memoryUsage: 84,
-    networkUsage: 67,
-    services: 10,
+    services: 42,
+    incidents: 0,
+    lastSync: '2 minutes ago',
+    capacity: 87,
+    version: '1.27.5',
+    criticalDeps: 3,
   },
   {
-    id: 'cluster-4',
-    name: 'Staging Environment',
-    region: 'us-east-1',
+    id: 'prod-eu-west-1',
+    name: 'Production EU-West',
+    region: 'eu-west-1',
+    provider: 'aws',
+    health: 94,
+    status: 'healthy',
+    nodes: 18,
+    services: 38,
+    incidents: 1,
+    lastSync: '5 minutes ago',
+    capacity: 72,
+    version: '1.27.5',
+    criticalDeps: 2,
+  },
+  {
+    id: 'staging-us-west-2',
+    name: 'Staging US-West',
+    region: 'us-west-2',
+    provider: 'aws',
+    health: 78,
+    status: 'warning',
+    nodes: 12,
+    services: 28,
+    incidents: 3,
+    lastSync: '1 minute ago',
+    capacity: 65,
+    version: '1.26.8',
+    criticalDeps: 1,
+  },
+  {
+    id: 'dev-multi-region',
+    name: 'Development Multi-Region',
+    region: 'multi',
+    provider: 'gke',
+    health: 85,
     status: 'healthy',
     nodes: 8,
-    cpuUsage: 32,
-    memoryUsage: 28,
-    networkUsage: 15,
-    services: 6,
+    services: 15,
+    incidents: 2,
+    lastSync: '3 minutes ago',
+    capacity: 54,
+    version: '1.27.3',
+    criticalDeps: 0,
+  },
+  {
+    id: 'edge-global',
+    name: 'Edge CDN Network',
+    region: 'global',
+    provider: 'custom',
+    health: 92,
+    status: 'healthy',
+    nodes: 64,
+    services: 8,
+    incidents: 0,
+    lastSync: '10 seconds ago',
+    capacity: 91,
+    version: '2.1.0',
+    criticalDeps: 5,
   },
 ];
 

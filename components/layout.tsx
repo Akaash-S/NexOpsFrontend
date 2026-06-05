@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { ReactNode } from 'react'
 
@@ -113,6 +114,7 @@ export function MetricCard({
   change, 
   trend = 'up',
   icon,
+  href,
   className 
 }: { 
   label: string 
@@ -120,10 +122,15 @@ export function MetricCard({
   change?: string 
   trend?: 'up' | 'down' | 'neutral'
   icon?: ReactNode
+  href?: string
   className?: string 
 }) {
-  return (
-    <div className={cn('rounded-lg border border-border bg-card p-6', className)}>
+  const content = (
+    <div className={cn(
+      'rounded-lg border border-border bg-card p-6', 
+      href && 'hover:border-primary/50 cursor-pointer transition-colors hover:bg-accent/5',
+      className
+    )}>
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground">{label}</p>
@@ -147,6 +154,12 @@ export function MetricCard({
       </div>
     </div>
   )
+
+  if (href) {
+    return <Link href={href} className="block">{content}</Link>
+  }
+
+  return content
 }
 
 /**

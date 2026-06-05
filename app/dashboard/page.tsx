@@ -29,28 +29,29 @@ export default function DashboardPage() {
               value="94%"
               change="+2.1% from yesterday"
               trend="up"
-              icon={<Activity className="w-8 h-8" />}
+              icon={<Activity className="w-6 h-6 text-primary" />}
             />
             <MetricCard 
-              label="Active Incidents"
-              value="3"
-              change="1 critical"
-              trend="down"
-              icon={<AlertTriangle className="w-8 h-8" />}
-            />
-            <MetricCard 
-              label="Deployment Risk"
-              value="12%"
-              change="Low risk"
+              label="Active Incidents" 
+              value={4} 
+              change="-2 this week" 
               trend="up"
-              icon={<Zap className="w-8 h-8" />}
+              icon={<AlertTriangle className="w-6 h-6 text-warning" />} 
+              href="/incidents"
+            />
+            <MetricCard 
+              label="Health Score" 
+              value="98.5%" 
+              change="+2.4%" 
+              icon={<Activity className="w-6 h-6 text-success" />} 
+              href="/health"
             />
             <MetricCard 
               label="Change Failure Rate"
               value="3.2%"
               change="-0.8% from last week"
               trend="up"
-              icon={<TrendingUp className="w-8 h-8" />}
+              icon={<TrendingUp className="w-6 h-6 text-destructive" />}
             />
           </Grid>
 

@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { GitBranch, Package, Settings, AlertCircle, CheckCircle } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface Change {
@@ -147,9 +148,9 @@ export function RecentChanges() {
         })}
       </div>
 
-      <button className="w-full mt-6 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
+      <Link href="/deployments" className="block text-center w-full mt-6 p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
         View All Changes →
-      </button>
+      </Link>
     </Card>
   )
 }

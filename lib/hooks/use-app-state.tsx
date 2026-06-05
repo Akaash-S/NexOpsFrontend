@@ -39,6 +39,10 @@ interface AppContextType {
   // Sidebar state
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
+  
+  // Modals/Drawers
+  isAddClusterOpen: boolean;
+  setAddClusterOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -58,6 +62,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     { name: 'John Doe', email: 'john@example.com' }
   );
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [isAddClusterOpen, setAddClusterOpen] = useState(false);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
@@ -99,6 +104,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setCurrentUser,
     sidebarOpen,
     setSidebarOpen,
+    isAddClusterOpen,
+    setAddClusterOpen,
   };
 
   return (

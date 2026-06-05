@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { X, AlertTriangle, TrendingUp, Zap, Clock } from 'lucide-react'
+import { X, AlertTriangle, TrendingUp, Zap } from 'lucide-react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 interface Cluster {
   id: string
@@ -35,20 +35,23 @@ const healthData = [
   { time: '24:00', health: 98 },
 ]
 
-const insights = [
+const initialInsights = [
   {
+    id: 'insight-1',
     type: 'warning',
     title: 'High memory pressure detected',
     description: 'Node pool us-east-1a showing 87% memory utilization',
     action: 'Review & Scale',
   },
   {
+    id: 'insight-2',
     type: 'info',
     title: '3 services need updates',
     description: 'Deprecated library versions detected in 3 services',
     action: 'View Details',
   },
   {
+    id: 'insight-3',
     type: 'success',
     title: 'All critical dependencies healthy',
     description: 'Database clusters and message queues operating nominally',
@@ -56,24 +59,64 @@ const insights = [
   },
 ]
 
+const initialRecommendations = [
+  {
+    id: 'rec-1',
+    title: 'Scale nodes in us-east-1a',
+    reason: 'Memory pressure: 87%',
+    actionText: 'Execute'
+  },
+  {
+    id: 'rec-2',
+    title: 'Update Kubernetes version',
+    reason: 'Current: v1.27.5 → Available: v1.28.2',
+    actionText: 'Schedule'
+  }
+]
+
 export function ClusterIntelligenceDrawer({ cluster, onClose }: ClusterIntelligenceDrawerProps) {
   const [isOpen, setIsOpen] = useState(true)
+  const { addNotification } = useAppState()
+
+  const [activeInsights, setActiveInsights] = useState(initialInsights)
+  const [activeRecommendations, setActiveRecommendations] = useState(initialRecommendations)
 
   useEffect(() => {
     if (!isOpen) {
-      onClose()
+      setTimeout(onClose, 300); // Wait for transition
     }
   }, [isOpen, onClose])
+
+  const handleInsightAction = (insightId: string, title: string) => {
+    addNotification({
+      title: 'Opening Insight',
+      description: `Viewing details for: ${title}`,
+      type: 'info'
+    })
+    setActiveInsights((prev) => prev.filter(i => i.id !== insightId))
+  }
+
+  const handleRecommendationAction = (recId: string, title: string, isDismiss: boolean = false) => {
+    if (isDismiss) {
+      setActiveRecommendations((prev) => prev.filter(r => r.id !== recId))
+      return;
+    }
+
+    addNotification({
+      title: 'Action Initiated',
+      description: `Started: ${title}`,
+      type: 'success'
+    })
+    setActiveRecommendations((prev) => prev.filter(r => r.id !== recId))
+  }
 
   return (
     <>
       {/* Overlay */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/50 z-40"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
+      <div
+        className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${isOpen ? 'opacity-100' : 'opacity-0'}`}
+        onClick={() => setIsOpen(false)}
+      />
 
       {/* Drawer */}
       <div
@@ -155,62 +198,61 @@ export function ClusterIntelligenceDrawer({ cluster, onClose }: ClusterIntellige
           </div>
 
           {/* Insights */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">AI Insights</h3>
-            <div className="space-y-2">
-              {insights.map((insight, idx) => (
-                <Card key={idx} className="p-3 border-l-2 border-l-primary">
-                  <div className="flex gap-3">
-                    <div className="mt-0.5">
-                      {insight.type === 'warning' && (
-                        <AlertTriangle className="w-4 h-4 text-warning" />
-                      )}
-                      {insight.type === 'info' && (
-                        <Zap className="w-4 h-4 text-primary" />
-                      )}
-                      {insight.type === 'success' && (
-                        <TrendingUp className="w-4 h-4 text-success" />
-                      )}
+          {activeInsights.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">AI Insights</h3>
+              <div className="space-y-2">
+                {activeInsights.map((insight) => (
+                  <Card key={insight.id} className="p-3 border-l-2 border-l-primary">
+                    <div className="flex gap-3">
+                      <div className="mt-0.5">
+                        {insight.type === 'warning' && (
+                          <AlertTriangle className="w-4 h-4 text-warning" />
+                        )}
+                        {insight.type === 'info' && (
+                          <Zap className="w-4 h-4 text-primary" />
+                        )}
+                        {insight.type === 'success' && (
+                          <TrendingUp className="w-4 h-4 text-success" />
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{insight.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{insight.description}</p>
+                        <Button
+                          variant="link"
+                          size="sm"
+                          onClick={() => handleInsightAction(insight.id, insight.title)}
+                          className="h-auto p-0 mt-2 text-xs"
+                        >
+                          {insight.action} →
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{insight.title}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{insight.description}</p>
-                      <Button
-                        variant="link"
-                        size="sm"
-                        className="h-auto p-0 mt-2 text-xs"
-                      >
-                        {insight.action} →
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-              ))}
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Recommendations */}
-          <div>
-            <h3 className="text-sm font-semibold text-foreground mb-3">Recommendations</h3>
-            <div className="space-y-2">
-              <Card className="p-3">
-                <p className="text-sm text-foreground">Scale nodes in us-east-1a</p>
-                <p className="text-xs text-muted-foreground mt-1">Memory pressure: 87%</p>
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline">Dismiss</Button>
-                  <Button size="sm">Execute</Button>
-                </div>
-              </Card>
-              <Card className="p-3">
-                <p className="text-sm text-foreground">Update Kubernetes version</p>
-                <p className="text-xs text-muted-foreground mt-1">Current: v1.27.5 → Available: v1.28.2</p>
-                <div className="flex gap-2 mt-2">
-                  <Button size="sm" variant="outline">Dismiss</Button>
-                  <Button size="sm">Schedule</Button>
-                </div>
-              </Card>
+          {activeRecommendations.length > 0 && (
+            <div>
+              <h3 className="text-sm font-semibold text-foreground mb-3">Recommendations</h3>
+              <div className="space-y-2">
+                {activeRecommendations.map(rec => (
+                  <Card key={rec.id} className="p-3">
+                    <p className="text-sm text-foreground">{rec.title}</p>
+                    <p className="text-xs text-muted-foreground mt-1">{rec.reason}</p>
+                    <div className="flex gap-2 mt-2">
+                      <Button size="sm" variant="outline" onClick={() => handleRecommendationAction(rec.id, rec.title, true)}>Dismiss</Button>
+                      <Button size="sm" onClick={() => handleRecommendationAction(rec.id, rec.title, false)}>{rec.actionText}</Button>
+                    </div>
+                  </Card>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>

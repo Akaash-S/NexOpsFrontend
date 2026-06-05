@@ -5,105 +5,49 @@ import { PageContent, PageHeader } from '@/components/layout'
 import { ClusterTable } from '@/components/clusters/cluster-table'
 import { ClusterFilters } from '@/components/clusters/cluster-filters'
 import { ClusterIntelligenceDrawer } from '@/components/clusters/cluster-intelligence-drawer'
+import { AddClusterDrawer } from '@/components/clusters/add-cluster-drawer'
 import { Button } from '@/components/ui/button'
-import { Plus } from 'lucide-react'
+import { Plus, Server } from 'lucide-react'
+import { mockClusters } from '@/lib/mock-data'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
-const CLUSTER_DATA: any[] = [
-  {
-    id: 'prod-us-east-1',
-    name: 'Production US-East',
-    region: 'us-east-1',
-    provider: 'aws',
-    health: 98,
-    status: 'healthy',
-    nodes: 24,
-    services: 42,
-    incidents: 0,
-    lastSync: '2 minutes ago',
-    capacity: 87,
-    version: '1.27.5',
-    criticalDeps: 3,
-  },
-  {
-    id: 'prod-eu-west-1',
-    name: 'Production EU-West',
-    region: 'eu-west-1',
-    provider: 'aws',
-    health: 94,
-    status: 'healthy',
-    nodes: 18,
-    services: 38,
-    incidents: 1,
-    lastSync: '5 minutes ago',
-    capacity: 72,
-    version: '1.27.5',
-    criticalDeps: 2,
-  },
-  {
-    id: 'staging-us-west-2',
-    name: 'Staging US-West',
-    region: 'us-west-2',
-    provider: 'aws',
-    health: 78,
-    status: 'warning',
-    nodes: 12,
-    services: 28,
-    incidents: 3,
-    lastSync: '1 minute ago',
-    capacity: 65,
-    version: '1.26.8',
-    criticalDeps: 1,
-  },
-  {
-    id: 'dev-multi-region',
-    name: 'Development Multi-Region',
-    region: 'multi',
-    provider: 'gke',
-    health: 85,
-    status: 'healthy',
-    nodes: 8,
-    services: 15,
-    incidents: 2,
-    lastSync: '3 minutes ago',
-    capacity: 54,
-    version: '1.27.3',
-    criticalDeps: 0,
-  },
-  {
-    id: 'edge-global',
-    name: 'Edge CDN Network',
-    region: 'global',
-    provider: 'custom',
-    health: 92,
-    status: 'healthy',
-    nodes: 64,
-    services: 8,
-    incidents: 0,
-    lastSync: '10 seconds ago',
-    capacity: 91,
-    version: '2.1.0',
-    criticalDeps: 5,
-  },
-]
 
 export default function ClustersPage() {
+  const { addNotification, setAddClusterOpen } = useAppState()
+  const [clusters, setClusters] = useState(mockClusters)
   const [selectedCluster, setSelectedCluster] = useState<string | null>(null)
   const [filters, setFilters] = useState({
     status: 'all',
     region: 'all',
     provider: 'all',
     search: '',
+    sortBy: 'health-asc',
   })
 
-  const filteredClusters = CLUSTER_DATA.filter((cluster) => {
-    if (filters.status !== 'all' && cluster.status !== filters.status) return false
-    if (filters.region !== 'all' && cluster.region !== filters.region) return false
-    if (filters.provider !== 'all' && cluster.provider !== filters.provider) return false
-    if (filters.search && !cluster.name.toLowerCase().includes(filters.search.toLowerCase())) return false
-    return true
-  })
+  const filteredClusters = clusters
+    .filter((cluster) => {
+      if (filters.status !== 'all' && cluster.status !== filters.status) return false
+      if (filters.region !== 'all' && cluster.region !== filters.region) return false
+      if (filters.provider !== 'all' && cluster.provider !== filters.provider) return false
+      if (filters.search && !cluster.name.toLowerCase().includes(filters.search.toLowerCase())) return false
+      return true
+    })
+    .sort((a, b) => {
+      switch (filters.sortBy) {
+        case 'health-asc': return a.health - b.health;
+        case 'health-desc': return b.health - a.health;
+        case 'capacity-desc': return b.capacity - a.capacity;
+        case 'incidents-desc': return b.incidents - a.incidents;
+        case 'name-asc': return a.name.localeCompare(b.name);
+        default: return 0;
+      }
+    })
 
-  const selectedClusterData = CLUSTER_DATA.find((c) => c.id === selectedCluster)
+  const selectedClusterData = clusters.find((c) => c.id === selectedCluster)
+
+  const handleClusterAdded = (newCluster: any) => {
+    setClusters([newCluster, ...clusters])
+  }
 
   return (
     <>
@@ -115,7 +59,10 @@ export default function ClustersPage() {
               title="Clusters"
               description="Infrastructure health and deployment status across regions"
             />
-            <Button className="gap-2">
+            <Button 
+              className="gap-2"
+              onClick={() => setAddClusterOpen(true)}
+            >
               <Plus className="w-4 h-4" />
               Add Cluster
             </Button>
@@ -124,13 +71,29 @@ export default function ClustersPage() {
           {/* Filters */}
           <ClusterFilters filters={filters} setFilters={setFilters} />
 
-          {/* Cluster Table */}
+          {/* Cluster Table or Empty State */}
           <div className="mt-8">
-            <ClusterTable
-              clusters={filteredClusters}
-              selectedCluster={selectedCluster}
-              onSelectCluster={setSelectedCluster}
-            />
+            {clusters.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed rounded-lg bg-muted/10">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
+                  <Server className="w-8 h-8 text-primary" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">No Clusters Found</h3>
+                <p className="text-muted-foreground max-w-md mx-auto mb-6">
+                  Get started by creating your first engineering domain to organize services, intelligence, and deployments.
+                </p>
+                <Button onClick={() => setAddClusterOpen(true)} className="gap-2">
+                  <Plus className="w-4 h-4" />
+                  Create Cluster
+                </Button>
+              </div>
+            ) : (
+              <ClusterTable
+                clusters={filteredClusters}
+                selectedCluster={selectedCluster}
+                onSelectCluster={setSelectedCluster}
+              />
+            )}
           </div>
         </PageContent>
       </>
@@ -142,6 +105,9 @@ export default function ClustersPage() {
           onClose={() => setSelectedCluster(null)}
         />
       )}
+
+      {/* Add Cluster Flow */}
+      <AddClusterDrawer onSuccess={handleClusterAdded} />
     </>
   )
 }

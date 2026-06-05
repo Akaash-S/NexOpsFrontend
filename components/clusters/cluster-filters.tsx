@@ -17,6 +17,7 @@ interface ClusterFiltersProps {
     region: string
     provider: string
     search: string
+    sortBy: string
   }
   setFilters: (filters: any) => void
 }
@@ -27,6 +28,14 @@ export function ClusterFilters({ filters, setFilters }: ClusterFiltersProps) {
   const regions = ['us-east-1', 'eu-west-1', 'us-west-2', 'multi', 'global']
   const providers = ['aws', 'gke', 'custom']
   const statuses = ['healthy', 'warning', 'critical']
+  
+  const sortOptions = [
+    { value: 'health-asc', label: 'Health (Low to High)' },
+    { value: 'health-desc', label: 'Health (High to Low)' },
+    { value: 'capacity-desc', label: 'Capacity (High to Low)' },
+    { value: 'incidents-desc', label: 'Incidents (High to Low)' },
+    { value: 'name-asc', label: 'Name (A-Z)' },
+  ]
 
   return (
     <div className="flex flex-col gap-4 mb-6">
@@ -121,12 +130,31 @@ export function ClusterFilters({ filters, setFilters }: ClusterFiltersProps) {
           </DropdownMenuContent>
         </DropdownMenu>
 
+        {/* Sort By Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              Sort: {sortOptions.find((o) => o.value === filters.sortBy)?.label || 'Health (Low to High)'}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            {sortOptions.map((option) => (
+              <DropdownMenuItem
+                key={option.value}
+                onClick={() => setFilters({ ...filters, sortBy: option.value })}
+              >
+                {option.label}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+
         {/* Clear Filters */}
         {hasActiveFilters && (
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setFilters({ status: 'all', region: 'all', provider: 'all', search: '' })}
+            onClick={() => setFilters({ status: 'all', region: 'all', provider: 'all', search: '', sortBy: 'health-asc' })}
             className="gap-1"
           >
             <X className="w-4 h-4" />

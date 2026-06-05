@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Menu, Search, Bell, Settings, User, Command, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -34,12 +35,12 @@ export function TopNav() {
             </Button>
 
             {/* Logo */}
-            <div className="flex items-center gap-2 whitespace-nowrap">
+            <Link href="/dashboard" className="flex items-center gap-2 whitespace-nowrap">
               <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
                 <span className="text-xs font-bold text-primary-foreground">N</span>
               </div>
               <span className="hidden sm:inline text-sm font-semibold">NexOps</span>
-            </div>
+            </Link>
 
             {/* Workspace Switcher */}
             <div className="hidden sm:block">

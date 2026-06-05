@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Network } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 interface Node {
@@ -138,9 +139,9 @@ export function ImpactMap() {
         </div>
       </div>
 
-      <button className="w-full p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
+      <Link href="/risk-analysis" className="block text-center w-full p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
         Open Full Impact Analysis →
-      </button>
+      </Link>
     </Card>
   )
 }
