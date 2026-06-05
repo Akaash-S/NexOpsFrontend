@@ -1,11 +1,13 @@
 'use client'
 
-import { X, Clock, AlertCircle, Users } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, Activity, MessageSquare, Plus, GitBranch, ArrowRight, AlertCircle, Clock, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { cn } from '@/lib/utils'
 
 interface Incident {
   id: string
@@ -22,7 +24,7 @@ interface Incident {
   relatedDeployments: string[]
   relatedAlerts: number
   timeline: { time: string; event: string; status: 'info' | 'warning' | 'success' }[]
-  resolutionNotes: string
+  resolutionNotes?: string
 }
 
 interface IncidentDrawerProps {
@@ -31,20 +33,51 @@ interface IncidentDrawerProps {
 }
 
 export function IncidentDrawer({ incident, onClose }: IncidentDrawerProps) {
+  const [isAnimatingOut, setIsAnimatingOut] = useState(false)
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.body.style.overflow = ''
+    }
+  }, [])
+
+  const handleClose = () => {
+    setIsAnimatingOut(true)
+    setTimeout(() => {
+      onClose()
+    }, 300)
+  }
+
   return (
     <>
       {/* Overlay */}
-      <div className="fixed inset-0 z-40 bg-black/50" onClick={onClose} />
+      <div 
+        className={cn("fixed inset-0 z-40 bg-black/50 transition-opacity duration-300", isAnimatingOut ? "opacity-0" : "opacity-100")} 
+        onClick={handleClose} 
+      />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-16 h-[calc(100vh-64px)] w-96 bg-background border-l border-border z-50 flex flex-col">
+      <div 
+        className={cn(
+          "fixed right-0 top-16 h-[calc(100vh-64px)] w-[600px] bg-background border-l border-border z-50 flex flex-col transform transition-transform duration-300",
+          isAnimatingOut ? "translate-x-full" : "translate-x-0"
+        )}
+      >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
+        <div className="flex items-center justify-between p-6 border-b border-border bg-muted/30">
           <div>
-            <h2 className="font-semibold text-lg">{incident.title}</h2>
-            <p className="text-sm text-muted-foreground">Lead: {incident.lead}</p>
+            <div className="flex items-center gap-3 mb-1">
+              <h2 className="font-semibold text-lg">{incident.title}</h2>
+              <Badge variant="outline" className="font-mono">{incident.id}</Badge>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Started {incident.startTime}</span>
+              <span>•</span>
+              <span>Lead: {incident.lead}</span>
+            </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="w-4 h-4" />
           </Button>
         </div>

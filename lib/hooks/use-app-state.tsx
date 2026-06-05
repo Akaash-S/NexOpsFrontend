@@ -53,6 +53,10 @@ interface AppContextType {
   setCreateDeploymentOpen: (open: boolean) => void;
   isCreateReleaseOpen: boolean;
   setCreateReleaseOpen: (open: boolean) => void;
+  isCreateAlertRuleOpen: boolean;
+  setCreateAlertRuleOpen: (open: boolean) => void;
+  isDeclareIncidentOpen: boolean;
+  setDeclareIncidentOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -78,6 +82,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [isConnectPipelineOpen, setConnectPipelineOpen] = useState(false);
   const [isCreateDeploymentOpen, setCreateDeploymentOpen] = useState(false);
   const [isCreateReleaseOpen, setCreateReleaseOpen] = useState(false);
+  const [isCreateAlertRuleOpen, setCreateAlertRuleOpen] = useState(false);
+  const [isDeclareIncidentOpen, setDeclareIncidentOpen] = useState(false);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
@@ -131,6 +137,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setCreateDeploymentOpen,
     isCreateReleaseOpen,
     setCreateReleaseOpen,
+    isCreateAlertRuleOpen,
+    setCreateAlertRuleOpen,
+    isDeclareIncidentOpen,
+    setDeclareIncidentOpen,
   };
 
   return (

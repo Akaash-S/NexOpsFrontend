@@ -976,3 +976,51 @@ export const RELEASE_TREND = [
   { date: 'Thu', releases: 6, rollbacks: 0 },
   { date: 'Fri', releases: 2, rollbacks: 0 },
 ];
+
+export const ALERTS_DATA = mockAlerts.map((alert, index) => {
+  const severityMap: { [key: string]: 'critical' | 'high' | 'medium' | 'low' } = {
+    'critical': 'critical',
+    'warning': 'high',
+    'info': 'low',
+  };
+  return {
+    id: alert.id,
+    title: alert.title,
+    severity: severityMap[alert.severity] || 'medium',
+    status: (alert.status === 'active' ? 'firing' : 'resolved') as 'firing' | 'resolved',
+    cluster: 'prod-us-east-1',
+    services: [alert.service],
+    value: alert.current,
+    threshold: alert.threshold,
+    createdAt: alert.createdAt.split('T')[0] + ' ' + alert.createdAt.split('T')[1].substring(0, 5),
+    duration: `${5 + (index * 7) % 60}m`,
+    correlatedAlerts: (index * 3) % 4,
+    suggestedActions: [
+      `Review ${alert.service} metrics`,
+      `Check current load and trends`,
+    ],
+  };
+});
+
+export const INCIDENTS_DATA = mockIncidents.map((inc, index) => ({
+  id: inc.id,
+  title: inc.title,
+  severity: (inc.severity === 'low' ? 'medium' : inc.severity) as 'critical' | 'high' | 'medium',
+  status: (inc.status === 'investigating' ? 'open' : inc.status === 'monitoring' ? 'investigating' : 'resolved') as 'resolved' | 'open' | 'investigating',
+  startTime: inc.startedAt.split('T')[0] + ' ' + inc.startedAt.split('T')[1].substring(0, 5),
+  duration: `${45 + (index * 13) % 120}m`,
+  durationMins: 45 + (index * 13) % 120, // For sorting
+  lead: inc.assignee,
+  affectedServices: [inc.service],
+  affectedClusters: ['prod-us-east-1'],
+  rootCause: inc.status === 'resolved' ? inc.description : 'Investigation in progress',
+  impactedUsers: inc.affectedUsers,
+  relatedDeployments: [],
+  relatedAlerts: 1 + (index % 5),
+  timeline: inc.timeline.map((event) => ({
+    time: event.timestamp.split('T')[1].substring(0, 5),
+    event: event.action,
+    status: 'info' as const,
+  })),
+  resolutionNotes: inc.description,
+}));
