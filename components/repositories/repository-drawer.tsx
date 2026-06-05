@@ -96,7 +96,7 @@ export function RepositoryDrawer({ repository, onClose }: RepositoryDrawerProps)
             <TabsTrigger value="security">Security</TabsTrigger>
           </TabsList>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             {/* Overview Tab */}
             <TabsContent value="overview" className="p-6 space-y-6">
               <div>

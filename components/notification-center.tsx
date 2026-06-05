@@ -107,7 +107,7 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
           </div>
 
           {/* Content */}
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             {notifications.length === 0 ? (
               <div className="p-6 text-center">
                 <CheckCircle className="w-12 h-12 text-success/50 mx-auto mb-3" />
