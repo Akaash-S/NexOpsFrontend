@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { ServiceCatalog } from '@/components/services/service-catalog'
 import { ServiceDetailsDrawer } from '@/components/services/service-details-drawer'
 import { Button } from '@/components/ui/button'
@@ -15,7 +14,7 @@ const SERVICES_DATA = mockServices.map((service) => ({
   name: service.name,
   team: service.team,
   health: Math.round(service.uptime),
-  status: service.status,
+  status: service.status as 'healthy' | 'critical' | 'warning',
   deployments: Math.floor(Math.random() * 20) + 5,
   dependencies: service.dependencies,
   dependents: [],
@@ -43,9 +42,9 @@ export default function ServicesPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <div className="flex items-center justify-between">
             <PageHeader
               title="Services"
@@ -65,8 +64,8 @@ export default function ServicesPage() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Service Details Drawer */}
       {selectedServiceData && (

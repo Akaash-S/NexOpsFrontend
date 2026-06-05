@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -58,9 +57,9 @@ const TEAM_MEMBERS = [
 export default function TeamsPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Teams"
             description="Enterprise team management with ownership mapping, on-call assignments, and collaboration"
@@ -175,8 +174,8 @@ export default function TeamsPage() {
               </div>
             </Card>
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

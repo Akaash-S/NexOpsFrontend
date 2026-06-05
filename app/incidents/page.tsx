@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { IncidentTabs } from '@/components/incidents/incident-tabs'
 import { IncidentDrawer } from '@/components/incidents/incident-drawer'
 import { Card } from '@/components/ui/card'
@@ -14,8 +13,8 @@ const transformIncidents = () => {
   return mockIncidents.map((inc) => ({
     id: inc.id,
     title: inc.title,
-    severity: inc.severity,
-    status: inc.status === 'investigating' ? 'open' : inc.status === 'monitoring' ? 'investigating' : 'resolved',
+    severity: (inc.severity === 'low' ? 'medium' : inc.severity) as 'critical' | 'high' | 'medium',
+    status: (inc.status === 'investigating' ? 'open' : inc.status === 'monitoring' ? 'investigating' : 'resolved') as 'resolved' | 'open' | 'investigating',
     startTime: new Date(inc.startedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
     duration: '45m',
     lead: inc.assignee,
@@ -52,9 +51,9 @@ export default function IncidentsPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Incidents"
             description="Operational investigation center with timeline, root cause analysis, and incident intelligence"
@@ -87,8 +86,8 @@ export default function IncidentsPage() {
             onSelectIncident={setSelectedIncident}
             onStatusFilterChange={setStatusFilter}
           />
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Incident Drawer */}
       {selectedIncidentData && (

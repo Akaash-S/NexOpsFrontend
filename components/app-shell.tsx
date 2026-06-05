@@ -2,6 +2,7 @@
 
 import { ReactNode } from 'react'
 import { TopNav } from './top-nav'
+import { PageLayout } from './layout'
 
 /**
  * Main application shell wrapper
@@ -11,7 +12,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <>
       <TopNav />
-      {children}
+      <PageLayout>
+        {children}
+      </PageLayout>
     </>
   )
 }

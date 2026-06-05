@@ -1,14 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { PipelineTable } from '@/components/pipelines/pipeline-table'
 import { PipelineDrawer } from '@/components/pipelines/pipeline-drawer'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { Card } from '@/components/ui/card'
 
-const PIPELINES_DATA = [
+const PIPELINES_DATA: any[] = [
   {
     id: 'api-build-deploy',
     name: 'API Build & Deploy',
@@ -64,9 +63,9 @@ export default function PipelinesPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Pipelines"
             description="Delivery intelligence with failure trends, success rates, and reliability scoring"
@@ -113,8 +112,8 @@ export default function PipelinesPage() {
             selectedPipeline={selectedPipeline}
             onSelectPipeline={setSelectedPipeline}
           />
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Pipeline Drawer */}
       {selectedPipelineData && (

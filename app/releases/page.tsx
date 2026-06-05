@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -54,9 +53,9 @@ export default function ReleasesPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Releases"
             description="Release management with version history, impact analysis, and adoption metrics"
@@ -163,8 +162,8 @@ export default function ReleasesPage() {
               </Card>
             ))}
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

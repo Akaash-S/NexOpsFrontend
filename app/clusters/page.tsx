@@ -1,15 +1,14 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { ClusterTable } from '@/components/clusters/cluster-table'
 import { ClusterFilters } from '@/components/clusters/cluster-filters'
 import { ClusterIntelligenceDrawer } from '@/components/clusters/cluster-intelligence-drawer'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 
-const CLUSTER_DATA = [
+const CLUSTER_DATA: any[] = [
   {
     id: 'prod-us-east-1',
     name: 'Production US-East',
@@ -108,9 +107,9 @@ export default function ClustersPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <div className="flex items-center justify-between">
             <PageHeader
               title="Clusters"
@@ -133,8 +132,8 @@ export default function ClustersPage() {
               onSelectCluster={setSelectedCluster}
             />
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Intelligence Drawer */}
       {selectedClusterData && (

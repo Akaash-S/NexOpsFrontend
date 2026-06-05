@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -77,9 +76,9 @@ const RELIABILITY_COMPARISON = [
 export default function HealthPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Health Center"
             description="System health intelligence with reliability forecasting, SLO/SLA tracking, and operational insights"
@@ -215,8 +214,8 @@ export default function HealthPage() {
               ))}
             </div>
           </Card>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

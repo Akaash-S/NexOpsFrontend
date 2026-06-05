@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AppStateProvider } from '@/lib/hooks/use-app-state'
+import { AppShell } from '@/components/app-shell'
 import './globals.css'
 
 const geist = Geist({ subsets: ["latin"] })
@@ -41,7 +42,9 @@ export default function RootLayout({
       <body className={`${geist.className} font-sans antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem disableTransitionOnChange>
           <AppStateProvider>
-            {children}
+            <AppShell>
+              {children}
+            </AppShell>
           </AppStateProvider>
         </ThemeProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}

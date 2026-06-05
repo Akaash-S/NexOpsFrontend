@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
@@ -12,9 +11,9 @@ import { Lock, Bell, Globe, Shield } from 'lucide-react'
 export default function SettingsPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Settings"
             description="Workspace configuration, security policies, and administrative controls"
@@ -151,8 +150,8 @@ export default function SettingsPage() {
               </Card>
             </TabsContent>
           </Tabs>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

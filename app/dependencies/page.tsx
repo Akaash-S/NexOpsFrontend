@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, PageHeader } from '@/components/layout'
+import { PageHeader } from '@/components/layout'
 import { DependencyGraph } from '@/components/dependencies/dependency-graph'
 import { DependencyControls } from '@/components/dependencies/dependency-controls'
 import { DependencyIntelligence } from '@/components/dependencies/dependency-intelligence'
@@ -14,8 +13,8 @@ export default function DependenciesPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
+      
+      <>
         <div className="flex flex-col h-full gap-4 p-4">
           {/* Header */}
           <div>
@@ -53,7 +52,7 @@ export default function DependenciesPage() {
             )}
           </div>
         </div>
-      </PageLayout>
+      </>
     </>
   )
 }

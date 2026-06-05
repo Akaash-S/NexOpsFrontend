@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -64,9 +63,9 @@ const RULES = [
 export default function RulesPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Rules"
             description="Enterprise automation rules for operational governance and incident response"
@@ -143,8 +142,8 @@ export default function RulesPage() {
               </Card>
             ))}
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

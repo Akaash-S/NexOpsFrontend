@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -95,9 +94,9 @@ export default function RecommendationsPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Recommendations"
             description="AI-powered decision support system with actionable intelligence prioritized by impact and confidence"
@@ -224,8 +223,8 @@ export default function RecommendationsPage() {
               )
             })}
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

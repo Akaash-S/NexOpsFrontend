@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
@@ -74,9 +73,9 @@ const RISK_MATRIX = [
 export default function RiskAnalysisPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Risk Analysis"
             description="Predictive engineering intelligence with risk scoring, trend forecasting, and mitigation recommendations"
@@ -220,8 +219,8 @@ export default function RiskAnalysisPage() {
               ))}
             </div>
           </Card>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

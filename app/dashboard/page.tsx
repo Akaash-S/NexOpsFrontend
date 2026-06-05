@@ -1,5 +1,4 @@
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader, Grid, MetricCard } from '@/components/layout'
+import { PageContent, PageHeader, Grid, MetricCard } from '@/components/layout'
 import { HealthOverview } from '@/components/dashboard/health-overview'
 import { ActiveIncidents } from '@/components/dashboard/active-incidents'
 import { RecentChanges } from '@/components/dashboard/recent-changes'
@@ -15,9 +14,9 @@ export const metadata = {
 export default function DashboardPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader 
             title="Dashboard"
             description="Engineering command center - What needs attention today?"
@@ -77,8 +76,8 @@ export default function DashboardPage() {
             {/* Recommended Actions - Highest Priority */}
             <Recommendations />
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

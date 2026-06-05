@@ -30,7 +30,7 @@ export function PageLayout({
   className?: string 
 }) {
   return (
-    <main className={cn('min-h-screen pt-20 lg:ml-64 bg-background', className)}>
+    <main className={cn('pt-16 lg:ml-64 bg-background', className)}>
       {children}
     </main>
   )
@@ -64,7 +64,7 @@ export function PageHeader({
 /**
  * Content section with padding
  */
-export function Section({ 
+export function PageContent({ 
   children, 
   className 
 }: { 

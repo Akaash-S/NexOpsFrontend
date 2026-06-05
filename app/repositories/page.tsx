@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { RepositoryGrid } from '@/components/repositories/repository-grid'
 import { RepositoryDrawer } from '@/components/repositories/repository-drawer'
 import { Button } from '@/components/ui/button'
@@ -18,7 +17,7 @@ const transformRepositories = () => {
     owner: repo.owner,
     description: repo.description,
     health: 90 + Math.floor(Math.random() * 10),
-    status: 'healthy',
+    status: 'healthy' as 'healthy' | 'critical' | 'warning',
     prs: Math.floor(Math.random() * 10),
     commits30d: repo.commits,
     stars: repo.stars,
@@ -46,9 +45,9 @@ export default function RepositoriesPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <div className="flex items-center justify-between mb-8">
             <PageHeader
               title="Repositories"
@@ -79,8 +78,8 @@ export default function RepositoriesPage() {
             selectedRepo={selectedRepo}
             onSelectRepo={setSelectedRepo}
           />
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Repository Drawer */}
       {selectedRepoData && (

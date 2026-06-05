@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -67,9 +66,9 @@ const IMPACT_ANALYSIS = [
 export default function ChangeImpactPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Change Impact Analysis"
             description="Correlate what changed with what was affected across your infrastructure"
@@ -189,8 +188,8 @@ export default function ChangeImpactPage() {
               ))}
             </div>
           </Card>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }

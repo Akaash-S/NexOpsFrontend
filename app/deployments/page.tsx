@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { DeploymentTable } from '@/components/deployments/deployment-table'
 import { DeploymentDrawer } from '@/components/deployments/deployment-drawer'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
@@ -16,7 +15,7 @@ const transformDeployments = () => {
     service: dep.service,
     version: dep.version,
     environment: dep.environment,
-    status: dep.status === 'success' ? 'success' : dep.status === 'in-progress' ? 'pending' : 'failed',
+    status: (dep.status === 'success' ? 'success' : dep.status === 'in-progress' ? 'pending' : 'failed') as 'success' | 'failed' | 'pending' | 'rollback',
     riskScore: dep.status === 'failed' ? 85 : Math.floor(Math.random() * 40),
     confidence: dep.status === 'failed' ? 45 : 95 - Math.floor(Math.random() * 10),
     deployedAt: new Date(dep.deployedAt).toLocaleString(),
@@ -45,9 +44,9 @@ export default function DeploymentsPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Deployments"
             description="Release intelligence with risk analysis, environment health, and rollback readiness"
@@ -95,8 +94,8 @@ export default function DeploymentsPage() {
             selectedDeployment={selectedDeployment}
             onSelectDeployment={setSelectedDeployment}
           />
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Deployment Drawer */}
       {selectedDeploymentData && (

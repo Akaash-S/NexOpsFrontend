@@ -177,7 +177,7 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-sidebar border-r border-sidebar-border z-50 lg:relative lg:top-0 lg:h-[calc(100vh-64px)] transition-all duration-300',
+          'fixed left-0 top-16 h-[calc(100vh-64px)] w-64 bg-sidebar border-r border-sidebar-border z-50 transition-all duration-300',
           !isOpen && '-translate-x-full lg:translate-x-0'
         )}
       >

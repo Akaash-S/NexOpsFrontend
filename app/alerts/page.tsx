@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { AlertsList } from '@/components/alerts/alerts-list'
 import { AlertDrawer } from '@/components/alerts/alert-drawer'
 import { AlertFilters } from '@/components/alerts/alert-filters'
@@ -21,7 +20,7 @@ const transformAlerts = () => {
       id: alert.id,
       title: alert.title,
       severity: severityMap[alert.severity] || 'medium',
-      status: alert.status === 'active' ? 'firing' : 'resolved',
+      status: (alert.status === 'active' ? 'firing' : 'resolved') as 'firing' | 'resolved',
       cluster: 'prod-us-east-1',
       services: [alert.service],
       value: alert.current,
@@ -56,9 +55,9 @@ export default function AlertsPage() {
 
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Alerts"
             description="Operational signals with correlation, impact analysis, and intelligent routing"
@@ -98,8 +97,8 @@ export default function AlertsPage() {
             selectedAlert={selectedAlert}
             onSelectAlert={setSelectedAlert}
           />
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
 
       {/* Alert Drawer */}
       {selectedAlertData && (

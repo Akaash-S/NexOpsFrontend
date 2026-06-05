@@ -89,7 +89,7 @@ export function RepositoryDrawer({ repository, onClose }: RepositoryDrawerProps)
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-          <TabsList className="rounded-none border-b border-border px-6" variant="underline">
+          <TabsList className="rounded-none border-b border-border px-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="quality">Quality</TabsTrigger>
             <TabsTrigger value="commits">Commits</TabsTrigger>

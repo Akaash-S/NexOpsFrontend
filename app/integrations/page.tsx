@@ -1,7 +1,6 @@
 'use client'
 
-import { TopNav } from '@/components/top-nav'
-import { PageLayout, Section, PageHeader } from '@/components/layout'
+import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -77,9 +76,9 @@ const INTEGRATIONS = [
 export default function IntegrationsPage() {
   return (
     <>
-      <TopNav />
-      <PageLayout>
-        <Section>
+      
+      <>
+        <PageContent>
           <PageHeader
             title="Integrations"
             description="Enterprise integration hub for GitHub, Kubernetes, cloud providers, monitoring, and collaboration platforms"
@@ -166,8 +165,8 @@ export default function IntegrationsPage() {
               )
             })}
           </div>
-        </Section>
-      </PageLayout>
+        </PageContent>
+      </>
     </>
   )
 }
