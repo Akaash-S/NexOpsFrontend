@@ -57,6 +57,23 @@ interface AppContextType {
   setCreateAlertRuleOpen: (open: boolean) => void;
   isDeclareIncidentOpen: boolean;
   setDeclareIncidentOpen: (open: boolean) => void;
+  isConfigureSloOpen: boolean;
+  setConfigureSloOpen: (open: boolean) => void;
+  isRunSimulationOpen: boolean;
+  setRunSimulationOpen: (open: boolean) => void;
+  isRunRiskAssessmentOpen: boolean;
+  setRunRiskAssessmentOpen: (open: boolean) => void;
+  isImplementRecOpen: boolean;
+  setImplementRecOpen: (open: boolean, recId?: string) => void;
+  selectedRecToImplement: string | null;
+  isCreateRuleOpen: boolean;
+  setCreateRuleOpen: (open: boolean) => void;
+  isCreateWorkflowOpen: boolean;
+  setCreateWorkflowOpen: (open: boolean) => void;
+  isCreateTeamOpen: boolean;
+  setCreateTeamOpen: (open: boolean) => void;
+  isConnectIntegrationOpen: boolean;
+  setConnectIntegrationOpen: (open: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -84,6 +101,24 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [isCreateReleaseOpen, setCreateReleaseOpen] = useState(false);
   const [isCreateAlertRuleOpen, setCreateAlertRuleOpen] = useState(false);
   const [isDeclareIncidentOpen, setDeclareIncidentOpen] = useState(false);
+  const [isConfigureSloOpen, setConfigureSloOpen] = useState(false);
+  const [isRunSimulationOpen, setRunSimulationOpen] = useState(false);
+  const [isRunRiskAssessmentOpen, setRunRiskAssessmentOpen] = useState(false);
+  const [isImplementRecOpen, setIsImplementRecOpen] = useState(false);
+  const [selectedRecToImplement, setSelectedRecToImplement] = useState<string | null>(null);
+  const [isCreateRuleOpen, setCreateRuleOpen] = useState(false);
+  const [isCreateWorkflowOpen, setCreateWorkflowOpen] = useState(false);
+  const [isCreateTeamOpen, setCreateTeamOpen] = useState(false);
+  const [isConnectIntegrationOpen, setConnectIntegrationOpen] = useState(false);
+
+  const setImplementRecOpen = useCallback((open: boolean, recId?: string) => {
+    setIsImplementRecOpen(open);
+    if (open && recId) {
+      setSelectedRecToImplement(recId);
+    } else if (!open) {
+      // Don't immediately clear the ID so the exit animation has context
+    }
+  }, []);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
@@ -141,6 +176,23 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setCreateAlertRuleOpen,
     isDeclareIncidentOpen,
     setDeclareIncidentOpen,
+    isConfigureSloOpen,
+    setConfigureSloOpen,
+    isRunSimulationOpen,
+    setRunSimulationOpen,
+    isRunRiskAssessmentOpen,
+    setRunRiskAssessmentOpen,
+    isImplementRecOpen,
+    setImplementRecOpen,
+    selectedRecToImplement,
+    isCreateRuleOpen,
+    setCreateRuleOpen,
+    isCreateWorkflowOpen,
+    setCreateWorkflowOpen,
+    isCreateTeamOpen,
+    setCreateTeamOpen,
+    isConnectIntegrationOpen,
+    setConnectIntegrationOpen,
   };
 
   return (

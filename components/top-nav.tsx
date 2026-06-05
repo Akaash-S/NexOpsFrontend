@@ -13,10 +13,15 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Input } from '@/components/ui/input'
 import { Sidebar } from './sidebar'
+import { CommandPalette } from './command-palette'
+import { useAppState } from '@/lib/hooks/use-app-state'
 import { cn } from '@/lib/utils'
 
 export function TopNav() {
+  const { setCommandPaletteOpen, getUnreadCount } = useAppState()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  
+  const unreadCount = getUnreadCount()
 
   return (
     <>
@@ -62,14 +67,15 @@ export function TopNav() {
 
           {/* Center Section - Global Search */}
           <div className="hidden md:flex items-center flex-1 max-w-md">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Search services, clusters, repositories..."
-                className="w-full pl-9 pr-3 h-9 text-sm"
-              />
+            <div className="relative w-full cursor-text group" onClick={() => setCommandPaletteOpen(true)}>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
+              <div
+                className="w-full pl-9 pr-3 h-9 text-sm flex items-center text-muted-foreground bg-muted/50 border border-border rounded-md hover:bg-muted/80 transition-colors"
+              >
+                Search pages, services, incidents...
+              </div>
               <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                <kbd className="px-2 py-1 text-xs bg-muted rounded border border-border">
+                <kbd className="px-2 py-0.5 text-xs bg-background rounded border border-border font-medium text-muted-foreground">
                   ⌘K
                 </kbd>
               </div>
@@ -79,14 +85,16 @@ export function TopNav() {
           {/* Right Section */}
           <div className="flex items-center gap-2">
             {/* Search Icon (Mobile) */}
-            <Button variant="ghost" size="icon" className="md:hidden">
+            <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setCommandPaletteOpen(true)}>
               <Search className="w-5 h-5" />
             </Button>
 
             {/* Notifications */}
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
+              {unreadCount > 0 && (
+                <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
+              )}
             </Button>
 
             {/* User Profile */}
@@ -109,6 +117,9 @@ export function TopNav() {
 
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
+      
+      {/* Command Palette */}
+      <CommandPalette />
     </>
   )
 }
