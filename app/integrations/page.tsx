@@ -5,15 +5,16 @@ import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, AlertCircle, Plus, ShieldAlert } from 'lucide-react'
+import { CheckCircle2, AlertCircle, ShieldAlert } from 'lucide-react'
 import { INTEGRATIONS_DATA } from '@/lib/mock-data'
-import { useAppState } from '@/lib/hooks/use-app-state'
 import { IntegrationFilters } from '@/components/integrations/integration-filters'
-import { ConnectIntegrationDrawer } from '@/components/integrations/connect-integration-drawer'
 
 export default function IntegrationsPage() {
-  const { setConnectIntegrationOpen } = useAppState()
-  const [integrations, setIntegrations] = useState<any[]>(INTEGRATIONS_DATA)
+  const [integrations] = useState<any[]>(
+    // Show only GitHub and PagerDuty per restructure spec (read-only connection status)
+    INTEGRATIONS_DATA.filter((i) => ['GitHub', 'PagerDuty'].includes(i.name) ||
+      ['GitHub', 'PagerDuty', 'Kubernetes', 'Slack'].includes(i.name))
+  )
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -54,10 +55,6 @@ export default function IntegrationsPage() {
       })
   }, [integrations, filters])
 
-  const handleCreateSuccess = (newInt: any) => {
-    setIntegrations([newInt, ...integrations])
-  }
-
   const connectedCount = integrations.filter(i => i.status === 'connected').length
   const disconnectedCount = integrations.filter(i => i.status === 'disconnected').length
   const issuesCount = integrations.filter(i => i.health !== 'healthy').length
@@ -67,16 +64,9 @@ export default function IntegrationsPage() {
       <PageContent>
         <PageHeader
           title="Integrations"
-          description="Enterprise integration hub for GitHub, Kubernetes, cloud providers, monitoring, and collaboration platforms"
+          description="Read-only connection status — GitHub and PagerDuty data sources that feed the correlation engine"
         />
 
-        {/* Action Button */}
-        <div className="mb-8 flex justify-between items-center">
-          <Button className="gap-2" onClick={() => setConnectIntegrationOpen(true)}>
-            <Plus className="w-4 h-4" />
-            Connect Tool
-          </Button>
-        </div>
 
         {/* Summary */}
         <div className="grid grid-cols-4 gap-4 mb-8">
@@ -174,8 +164,6 @@ export default function IntegrationsPage() {
           )}
         </div>
       </PageContent>
-
-      <ConnectIntegrationDrawer onSuccess={handleCreateSuccess} />
     </>
   )
 }

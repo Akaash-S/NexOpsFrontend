@@ -4,81 +4,74 @@ import { ActiveIncidents } from '@/components/dashboard/active-incidents'
 import { RecentChanges } from '@/components/dashboard/recent-changes'
 import { Recommendations } from '@/components/dashboard/recommendations'
 import { ImpactMap } from '@/components/dashboard/impact-map'
-import { Activity, AlertTriangle, Zap, TrendingUp } from 'lucide-react'
+import { Activity, AlertTriangle, GitCommitHorizontal, Search } from 'lucide-react'
 
 export const metadata = {
   title: 'Dashboard | NexOps',
-  description: 'Engineering command center - understand what needs attention today',
+  description: 'NexOps correlation engine — what caused this incident, and how do we know?',
 }
 
 export default function DashboardPage() {
   return (
-    <>
-      
-      <>
-        <PageContent>
-          <PageHeader 
-            title="Dashboard"
-            description="Engineering command center - What needs attention today?"
-          />
-          
-          {/* Executive Health Overview Cards */}
-          <Grid columns={4} className="mb-6">
-            <MetricCard 
-              label="Workspace Health"
-              value="94%"
-              change="+2.1% from yesterday"
-              trend="up"
-              icon={<Activity className="w-6 h-6 text-primary" />}
-            />
-            <MetricCard 
-              label="Active Incidents" 
-              value={4} 
-              change="-2 this week" 
-              trend="up"
-              icon={<AlertTriangle className="w-6 h-6 text-warning" />} 
-              href="/incidents"
-            />
-            <MetricCard 
-              label="Health Score" 
-              value="98.5%" 
-              change="+2.4%" 
-              icon={<Activity className="w-6 h-6 text-success" />} 
-              href="/health"
-            />
-            <MetricCard 
-              label="Change Failure Rate"
-              value="3.2%"
-              change="-0.8% from last week"
-              trend="up"
-              icon={<TrendingUp className="w-6 h-6 text-destructive" />}
-            />
-          </Grid>
+    <PageContent>
+      <PageHeader
+        title="Dashboard"
+        description="Correlation engine — active incidents with ranked causal candidates, change blast radius, and dependency topology"
+      />
 
-          {/* Main Dashboard Content - 3 Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            {/* Left Column - Health and Incidents */}
-            <div className="lg:col-span-2 space-y-6">
-              <HealthOverview />
-              <ActiveIncidents />
-            </div>
+      {/* Top-level signal cards */}
+      <Grid columns={4} className="mb-6">
+        <MetricCard
+          label="Active Incidents"
+          value={2}
+          change="2 investigating"
+          trend="down"
+          icon={<AlertTriangle className="w-6 h-6 text-destructive" />}
+          href="/incidents"
+        />
+        <MetricCard
+          label="Unconfirmed Candidates"
+          value={4}
+          change="Awaiting human review"
+          icon={<Search className="w-6 h-6 text-warning" />}
+          href="/incidents"
+        />
+        <MetricCard
+          label="Changes (24h)"
+          value={4}
+          change="1 linked to incident"
+          icon={<GitCommitHorizontal className="w-6 h-6 text-primary" />}
+          href="/recent-changes"
+        />
+        <MetricCard
+          label="Services Healthy"
+          value="6/9"
+          change="3 degraded or critical"
+          trend="down"
+          icon={<Activity className="w-6 h-6 text-success" />}
+          href="/services"
+        />
+      </Grid>
 
-            {/* Right Column - Impact Map */}
-            <div>
-              <ImpactMap />
-            </div>
-          </div>
+      {/* Primary layout: Incidents + Causal Review (2/3) + Dependency Graph (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+        {/* Left: the two core correlation widgets — primary real estate */}
+        <div className="lg:col-span-2 space-y-6">
+          <ActiveIncidents />
+          <Recommendations />
+        </div>
 
-          {/* Bottom Sections - Full Width */}
-          <div className="space-y-6">
-            {/* Recent Critical Changes */}
-            <RecentChanges />
+        {/* Right: dependency graph + recent changes preview */}
+        <div className="space-y-6">
+          <ImpactMap />
+          <RecentChanges />
+        </div>
+      </div>
 
-            {/* Recommended Actions - Highest Priority */}
-            <Recommendations />
-          </div>
-        </PageContent>
-      </>
-    </>
+      {/* Bottom: Health Overview — deprioritized, reduced visual weight */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <HealthOverview />
+      </div>
+    </PageContent>
   )
 }

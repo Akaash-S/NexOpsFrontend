@@ -2,145 +2,181 @@
 
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Network } from 'lucide-react'
+import { Network, BellOff, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { serviceNodes, dependencyEdges, ServiceNode } from '@/lib/graph'
 
-interface Node {
-  id: string
-  label: string
-  type: 'cluster' | 'service' | 'external'
-  health: 'healthy' | 'warning' | 'critical'
-  dependents: number
-  dependencies: number
+const healthMock: Record<string, 'healthy' | 'warning' | 'critical'> = {
+  'api-gateway': 'warning',
+  'auth-service': 'critical',
+  'user-service': 'healthy',
+  'payment-service': 'warning',
+  'notification-service': 'healthy',
+  'analytics-engine': 'healthy',
+  'database': 'warning',
+  'redis-cache': 'healthy',
+  'kafka-queue': 'healthy',
 }
 
-// Simplified topology visualization
-const nodes: Node[] = [
-  { id: 'api-gw', label: 'API Gateway', type: 'service', health: 'warning', dependents: 8, dependencies: 2 },
-  { id: 'auth-svc', label: 'Auth Service', type: 'service', health: 'critical', dependents: 6, dependencies: 1 },
-  { id: 'user-svc', label: 'User Service', type: 'service', health: 'healthy', dependents: 4, dependencies: 2 },
-  { id: 'payment-svc', label: 'Payment Service', type: 'service', health: 'healthy', dependents: 2, dependencies: 3 },
-  { id: 'db-cluster', label: 'Database Cluster', type: 'cluster', health: 'warning', dependents: 12, dependencies: 0 },
-  { id: 'cache-svc', label: 'Cache Service', type: 'service', health: 'healthy', dependents: 5, dependencies: 0 },
-]
-
 const healthConfig = {
-  healthy: { bg: 'bg-success/20', text: 'text-success', border: 'border-success/40' },
-  warning: { bg: 'bg-warning/20', text: 'text-warning', border: 'border-warning/40' },
-  critical: { bg: 'bg-destructive/20', text: 'text-destructive', border: 'border-destructive/40' },
+  healthy: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/30', dot: 'bg-success' },
+  warning: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/30', dot: 'bg-warning' },
+  critical: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', dot: 'bg-destructive' },
+}
+
+const tierLabels = {
+  ingress: 'Ingress',
+  service: 'Services',
+  data: 'Data',
+}
+
+function getDownstreamCount(nodeId: string): number {
+  return dependencyEdges.filter((e) => e.to === nodeId).length
+}
+
+function ServiceNodeCard({ node }: { node: ServiceNode }) {
+  const health = healthMock[node.id] ?? 'healthy'
+  const cfg = healthConfig[health]
+  const downstreamCount = getDownstreamCount(node.id)
+  const noisyCount = node.alertHistory.noisyRuleIds?.length ?? 0
+
+  return (
+    <div
+      className={cn(
+        'px-3 py-2.5 rounded-lg border-2 transition-colors cursor-default relative',
+        cfg.bg,
+        cfg.border
+      )}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 mb-0.5">
+            <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
+            <span className="font-semibold text-xs leading-tight">{node.name}</span>
+          </div>
+          {downstreamCount > 0 && (
+            <p className="text-[10px] text-muted-foreground">{downstreamCount} upstream dependent{downstreamCount !== 1 ? 's' : ''}</p>
+          )}
+        </div>
+        {/* Alert noise badge */}
+        {noisyCount > 0 && (
+          <Badge
+            variant="outline"
+            className="text-[10px] px-1.5 py-0.5 bg-muted/50 text-muted-foreground border-border flex-shrink-0 gap-0.5"
+            title={`${noisyCount} alert rule${noisyCount > 1 ? 's' : ''} on this service rarely correlate with real incidents`}
+          >
+            <BellOff className="w-2.5 h-2.5" />
+            {noisyCount} noisy
+          </Badge>
+        )}
+      </div>
+    </div>
+  )
 }
 
 export function ImpactMap() {
+  const tiers = ['ingress', 'service', 'data'] as const
+
+  // Build stats from graph
+  const criticalNodes = serviceNodes.filter((n) => healthMock[n.id] === 'critical')
+  const warningNodes = serviceNodes.filter((n) => healthMock[n.id] === 'warning')
+  const maxDownstream = serviceNodes.reduce((max, n) => {
+    return Math.max(max, getDownstreamCount(n.id))
+  }, 0)
+  const noisyServiceCount = serviceNodes.filter(
+    (n) => (n.alertHistory.noisyRuleIds?.length ?? 0) > 0
+  ).length
+
   return (
     <Card className="p-6">
-      <div className="mb-6">
+      <div className="mb-5">
         <h3 className="text-lg font-semibold flex items-center gap-2">
           <Network className="w-5 h-5" />
-          Impact Map Preview
+          Dependency Graph
         </h3>
-        <p className="text-sm text-muted-foreground mt-1">Service dependencies and blast radius visualization</p>
+        <p className="text-sm text-muted-foreground mt-1">
+          Service topology — derived from live dependency data
+        </p>
       </div>
 
-      {/* Simple topology grid representation */}
-      <div className="space-y-4 mb-6">
-        {/* Top tier */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="text-xs text-muted-foreground font-semibold">Ingress</div>
-          <div className={cn(
-            'flex-1 px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer hover:border-primary',
-            healthConfig['warning'].bg,
-            healthConfig['warning'].border
-          )}>
-            <div className="flex items-center justify-between">
-              <span className="font-semibold text-sm">API Gateway</span>
-              <span className="text-xs text-muted-foreground">8 downstream</span>
+      {/* Tier layout — generated from graph data, not hardcoded */}
+      <div className="space-y-4 mb-5">
+        {tiers.map((tier, tierIndex) => {
+          const nodes = serviceNodes.filter((n) => n.tier === tier)
+          return (
+            <div key={tier}>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                  {tierLabels[tier]}
+                </span>
+                <div className="h-px flex-1 bg-border" />
+              </div>
+              <div className={cn(
+                'grid gap-2',
+                nodes.length === 1 ? 'grid-cols-1' :
+                nodes.length === 2 ? 'grid-cols-2' :
+                'grid-cols-3'
+              )}>
+                {nodes.map((node) => (
+                  <ServiceNodeCard key={node.id} node={node} />
+                ))}
+              </div>
+              {tierIndex < tiers.length - 1 && (
+                <div className="text-center text-muted-foreground/40 text-xs mt-2">↓</div>
+              )}
             </div>
+          )
+        })}
+      </div>
+
+      {/* Stats — derived from graph */}
+      <div className="grid grid-cols-3 gap-3 mb-4 pt-4 border-t border-border">
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Critical</p>
+          <p className={cn('text-xl font-bold', criticalNodes.length > 0 ? 'text-destructive' : 'text-success')}>
+            {criticalNodes.length}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Warning</p>
+          <p className={cn('text-xl font-bold', warningNodes.length > 0 ? 'text-warning' : 'text-success')}>
+            {warningNodes.length}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground mb-1">Noisy Services</p>
+          <p className="text-xl font-bold">{noisyServiceCount}</p>
+        </div>
+      </div>
+
+      {/* Alerts / risk indicators */}
+      <div className="space-y-1.5 mb-5">
+        {criticalNodes.map((n) => (
+          <div key={n.id} className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
+            <span>{n.name} is critical — {getDownstreamCount(n.id)} upstream services affected</span>
           </div>
-        </div>
-
-        {/* Connection lines (visual representation) */}
-        <div className="text-xs text-muted-foreground text-center">↓ ↓ ↓ ↓ ↓</div>
-
-        {/* Service tier */}
-        <div className="grid grid-cols-3 gap-3">
-          {[
-            { label: 'Auth Service', health: 'critical' as const, downstream: 6 },
-            { label: 'User Service', health: 'healthy' as const, downstream: 4 },
-            { label: 'Payment Service', health: 'healthy' as const, downstream: 2 },
-          ].map((service) => (
-            <div
-              key={service.label}
-              className={cn(
-                'px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer hover:border-primary',
-                healthConfig[service.health].bg,
-                healthConfig[service.health].border
-              )}
-            >
-              <div className="font-semibold text-sm">{service.label}</div>
-              <div className="text-xs text-muted-foreground mt-1">{service.downstream} services</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Connection lines */}
-        <div className="text-xs text-muted-foreground text-center">↓ ↓ ↓</div>
-
-        {/* Data tier */}
-        <div className="grid grid-cols-2 gap-3">
-          {[
-            { label: 'Database Cluster', health: 'warning' as const, downstream: 12 },
-            { label: 'Cache Service', health: 'healthy' as const, downstream: 5 },
-          ].map((service) => (
-            <div
-              key={service.label}
-              className={cn(
-                'px-4 py-3 rounded-lg border-2 transition-colors cursor-pointer hover:border-primary',
-                healthConfig[service.health].bg,
-                healthConfig[service.health].border
-              )}
-            >
-              <div className="font-semibold text-sm">{service.label}</div>
-              <div className="text-xs text-muted-foreground mt-1">{service.downstream} upstream</div>
-            </div>
-          ))}
-        </div>
+        ))}
+        {warningNodes.map((n) => (
+          <div key={n.id} className="flex items-center gap-2 text-sm">
+            <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
+            <span>{n.name} degraded</span>
+            {(n.alertHistory.noisyRuleIds?.length ?? 0) > 0 && (
+              <Badge variant="outline" className="text-xs text-muted-foreground gap-1">
+                <BellOff className="w-3 h-3" />
+                {n.alertHistory.noisyRuleIds!.length} noisy rules
+              </Badge>
+            )}
+          </div>
+        ))}
       </div>
 
-      {/* Key metrics */}
-      <div className="grid grid-cols-3 gap-4 mb-6 pt-4 border-t border-border">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Critical Dependencies</p>
-          <p className="text-2xl font-bold text-destructive">2</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Blast Radius</p>
-          <p className="text-2xl font-bold text-warning">8 services</p>
-        </div>
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">SPOF Risk</p>
-          <p className="text-2xl font-bold text-primary">High</p>
-        </div>
-      </div>
-
-      {/* Risk indicators */}
-      <div className="space-y-2 mb-6">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-destructive"></div>
-          <span className="text-sm">Auth Service degradation affects 6 services</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-warning"></div>
-          <span className="text-sm">Database cluster under 85% capacity</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-success"></div>
-          <span className="text-sm">Cache service is redundant</span>
-        </div>
-      </div>
-
-      <Link href="/risk-analysis" className="block text-center w-full p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium">
-        Open Full Impact Analysis →
+      <Link
+        href="/dependencies"
+        className="block text-center w-full p-3 rounded-lg border border-border hover:bg-accent/5 transition-colors text-sm font-medium"
+      >
+        Open Full Dependency Graph →
       </Link>
     </Card>
   )

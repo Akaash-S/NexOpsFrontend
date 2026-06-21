@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Command as CommandPrimitive } from 'cmdk'
-import { Search, X, FileText, Zap, Settings, BarChart3, AlertTriangle, Users, Plug } from 'lucide-react'
+import { Search, X, FileText, Zap, Settings, BarChart3, AlertTriangle, Plug, Network, GitCommitHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -63,10 +63,10 @@ export function CommandPalette() {
       { 
         id: 'nav-dashboard', 
         title: 'Dashboard', 
-        description: 'View your engineering command center',
+        description: 'View the correlation engine dashboard',
         category: 'Navigation',
         icon: <BarChart3 className="w-4 h-4" />,
-        keywords: ['dashboard', 'home', 'overview'],
+        keywords: ['dashboard', 'home', 'overview', 'correlation'],
         action: () => { router.push('/dashboard'); onClose() }
       },
       {
@@ -79,48 +79,39 @@ export function CommandPalette() {
         action: () => { router.push('/services'); onClose() }
       },
       {
+        id: 'nav-dependencies',
+        title: 'Dependencies',
+        description: 'View service dependency graph',
+        category: 'Navigation',
+        icon: <Network className="w-4 h-4" />,
+        keywords: ['dependencies', 'graph', 'topology', 'impact'],
+        action: () => { router.push('/dependencies'); onClose() }
+      },
+      {
         id: 'nav-incidents',
         title: 'Incidents',
-        description: 'View and manage incidents',
+        description: 'View and investigate incidents',
         category: 'Navigation',
         icon: <AlertTriangle className="w-4 h-4" />,
-        keywords: ['incidents', 'issues', 'problems'],
+        keywords: ['incidents', 'issues', 'problems', 'causal'],
         action: () => { router.push('/incidents'); onClose() }
       },
       {
-        id: 'nav-alerts',
-        title: 'Alerts',
-        description: 'View active alerts and notifications',
+        id: 'nav-recent-changes',
+        title: 'Recent Changes',
+        description: 'View deployments and configuration changes',
         category: 'Navigation',
-        icon: <Zap className="w-4 h-4" />,
-        keywords: ['alerts', 'warnings', 'notifications'],
-        action: () => { router.push('/alerts'); onClose() }
-      },
-      {
-        id: 'nav-deployments',
-        title: 'Deployments',
-        description: 'View deployment history and status',
-        category: 'Navigation',
-        icon: <Zap className="w-4 h-4" />,
-        keywords: ['deployments', 'releases'],
-        action: () => { router.push('/deployments'); onClose() }
-      },
-      {
-        id: 'nav-teams',
-        title: 'Teams',
-        description: 'Manage engineering teams',
-        category: 'Navigation',
-        icon: <Users className="w-4 h-4" />,
-        keywords: ['teams', 'users', 'members'],
-        action: () => { router.push('/teams'); onClose() }
+        icon: <GitCommitHorizontal className="w-4 h-4" />,
+        keywords: ['changes', 'deployments', 'deploys', 'blast radius'],
+        action: () => { router.push('/recent-changes'); onClose() }
       },
       {
         id: 'nav-integrations',
         title: 'Integrations',
-        description: 'Connect external tools',
+        description: 'View connection status of external tools',
         category: 'Navigation',
         icon: <Plug className="w-4 h-4" />,
-        keywords: ['integrations', 'plugins', 'apps'],
+        keywords: ['integrations', 'plugins', 'apps', 'github', 'pagerduty'],
         action: () => { router.push('/integrations'); onClose() }
       },
       {

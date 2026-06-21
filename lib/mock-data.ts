@@ -14,18 +14,27 @@ export interface Service {
   owner: string;
 }
 
+export interface CandidateCause {
+  deployId: string;
+  service: string;       // ServiceNode.id from graph.ts
+  matchScore: number;   // 0-100
+  matchReasons: string[]; // human-readable reasoning — always shown alongside score
+  confirmed: boolean | null; // null = unconfirmed, true = confirmed, false = rejected
+}
+
 export interface Incident {
   id: string;
   title: string;
   severity: 'critical' | 'high' | 'medium' | 'low';
   status: 'investigating' | 'monitoring' | 'resolved';
-  service: string;
+  service: string;      // ServiceNode.id from graph.ts
   startedAt: string;
   resolvedAt?: string;
   affectedUsers: number;
   description: string;
   assignee: string;
   timeline: TimelineEvent[];
+  candidateCauses: CandidateCause[];
 }
 
 export interface TimelineEvent {
@@ -236,7 +245,7 @@ export const mockIncidents: Incident[] = [
     title: 'Payment Processing Slowdown',
     severity: 'high',
     status: 'investigating',
-    service: 'Payment Processor',
+    service: 'payment-service',
     startedAt: '2024-05-28T14:32:00Z',
     affectedUsers: 2340,
     description: 'Customers reporting slow payment processing and timeouts. Latency increased from 120ms to 850ms.',
@@ -246,13 +255,36 @@ export const mockIncidents: Incident[] = [
       { timestamp: '2024-05-28T14:35:00Z', action: 'Team notified', actor: 'Alert Manager' },
       { timestamp: '2024-05-28T14:40:00Z', action: 'Investigation started', actor: 'David Lee' },
     ],
+    candidateCauses: [
+      {
+        deployId: 'dep-2024-002',
+        service: 'payment-service',
+        matchScore: 87,
+        matchReasons: [
+          'Deployed 12 min before alert fired',
+          'Touches 2 of 3 alerting dependencies (database, redis-cache)',
+          'payment-service deploys caused incidents 3 of the last 11 times',
+        ],
+        confirmed: null,
+      },
+      {
+        deployId: 'dep-2024-005',
+        service: 'database',
+        matchScore: 62,
+        matchReasons: [
+          'Database connection pool config changed 52 min prior',
+          'Similar pattern to INC-041 (resolved: connection exhaustion under load)',
+        ],
+        confirmed: null,
+      },
+    ],
   },
   {
     id: 'inc-2',
     title: 'Database Connection Pool Exhaustion',
     severity: 'critical',
     status: 'investigating',
-    service: 'User Service',
+    service: 'user-service',
     startedAt: '2024-05-28T15:10:00Z',
     affectedUsers: 5600,
     description: 'Database connection pool reached maximum capacity causing connection timeout errors for User Service.',
@@ -262,13 +294,36 @@ export const mockIncidents: Incident[] = [
       { timestamp: '2024-05-28T15:12:00Z', action: 'Severity escalated to critical', actor: 'Alert Manager' },
       { timestamp: '2024-05-28T15:15:00Z', action: 'Incident commander assigned', actor: 'Carol White' },
     ],
+    candidateCauses: [
+      {
+        deployId: 'dep-2024-003',
+        service: 'user-service',
+        matchScore: 91,
+        matchReasons: [
+          'Deployed 85 min before alert, new connection pooling config in this version',
+          'user-service is direct consumer of database — it opens 60% of pool connections',
+          'The deploys diff includes max_connections change from 50 → 100 that was misapplied',
+        ],
+        confirmed: null,
+      },
+      {
+        deployId: 'dep-2024-001',
+        service: 'api-gateway',
+        matchScore: 44,
+        matchReasons: [
+          'Deployed 4.5 hours before incident (weaker signal)',
+          'Increased traffic routing added ~18% more requests to database-heavy paths',
+        ],
+        confirmed: null,
+      },
+    ],
   },
   {
     id: 'inc-3',
     title: 'Cache Eviction Issues',
     severity: 'medium',
     status: 'monitoring',
-    service: 'Auth Service',
+    service: 'auth-service',
     startedAt: '2024-05-28T12:45:00Z',
     resolvedAt: '2024-05-28T13:20:00Z',
     affectedUsers: 450,
@@ -279,13 +334,26 @@ export const mockIncidents: Incident[] = [
       { timestamp: '2024-05-28T13:00:00Z', action: 'Cache purged', actor: 'Bob Smith' },
       { timestamp: '2024-05-28T13:20:00Z', action: 'Incident resolved', actor: 'Bob Smith' },
     ],
+    candidateCauses: [
+      {
+        deployId: 'dep-2024-004',
+        service: 'auth-service',
+        matchScore: 79,
+        matchReasons: [
+          'auth-service v1.8.3 deployed 90 min before incident',
+          'New session token format increased average cache entry size by 3×',
+          'Redis eviction policy (allkeys-lru) kicked in under enlarged key sizes',
+        ],
+        confirmed: true,
+      },
+    ],
   },
   {
     id: 'inc-4',
     title: 'API Gateway Circuit Breaker Triggered',
     severity: 'medium',
     status: 'resolved',
-    service: 'API Gateway',
+    service: 'api-gateway',
     startedAt: '2024-05-27T10:15:00Z',
     resolvedAt: '2024-05-27T10:45:00Z',
     affectedUsers: 1200,
@@ -295,6 +363,19 @@ export const mockIncidents: Incident[] = [
       { timestamp: '2024-05-27T10:15:00Z', action: 'Incident detected', actor: 'Monitoring System' },
       { timestamp: '2024-05-27T10:30:00Z', action: 'Circuit breaker triggered', actor: 'API Gateway' },
       { timestamp: '2024-05-27T10:45:00Z', action: 'Service recovered', actor: 'System' },
+    ],
+    candidateCauses: [
+      {
+        deployId: 'dep-2024-004',
+        service: 'auth-service',
+        matchScore: 83,
+        matchReasons: [
+          'auth-service latency spiked from 32ms → 420ms following dep-2024-004',
+          'api-gateway circuit breaker threshold is auth-service p99 > 200ms',
+          'INC-038 had identical signature — also an auth-service deploy (confirmed)',
+        ],
+        confirmed: false,
+      },
     ],
   },
 ];
@@ -1011,7 +1092,7 @@ export const INCIDENTS_DATA = mockIncidents.map((inc, index) => ({
   duration: `${45 + (index * 13) % 120}m`,
   durationMins: 45 + (index * 13) % 120, // For sorting
   lead: inc.assignee,
-  affectedServices: [inc.service],
+  affectedServices: [inc.service], // ServiceNode.id from graph.ts
   affectedClusters: ['prod-us-east-1'],
   rootCause: inc.status === 'resolved' ? inc.description : 'Investigation in progress',
   impactedUsers: inc.affectedUsers,
@@ -1023,6 +1104,7 @@ export const INCIDENTS_DATA = mockIncidents.map((inc, index) => ({
     status: 'info' as const,
   })),
   resolutionNotes: inc.description,
+  candidateCauses: inc.candidateCauses, // from graph-based correlation model
 }));
 
 export const CLUSTER_HEALTH_DATA = [
@@ -1093,51 +1175,80 @@ export const RELIABILITY_COMPARISON_DATA = [
 
 export const CHANGES_DATA = [
   {
-    id: 'commit-1',
-    type: 'commit',
-    hash: 'a3f4e2d',
-    message: 'Fix: API response serialization',
-    author: 'Sarah Chen',
-    time: '2 hours ago',
-    repo: 'nexops-api',
-    files: 3,
-    affectedServices: ['api-gateway', 'rate-limiter'],
-    impact: 'medium',
-    incidents: 0,
-  },
-  {
-    id: 'deploy-1',
+    id: 'dep-2024-001',
     type: 'deployment',
-    version: 'v2.4.1',
-    service: 'API Gateway',
-    time: '1 hour ago',
-    cluster: 'prod-us-east-1',
+    version: '2.15.3',
+    service: 'api-gateway',
+    serviceName: 'API Gateway',
+    time: '3 hours ago',
+    author: 'deployment-bot',
+    message: 'Rate limiting improvements + security patches',
     affectedServices: ['api-gateway'],
     impact: 'high',
-    incidents: 1,
+    incidents: 0,
+    blastRadius: {
+      directServices: ['auth-service', 'user-service', 'payment-service', 'notification-service'],
+      downstreamServices: ['database', 'redis-cache', 'kafka-queue'],
+      riskScore: 34,
+      riskBasis: 'api-gateway deploys caused incidents 1 of the last 23 times — low historical risk',
+    },
   },
   {
-    id: 'commit-2',
-    type: 'commit',
-    hash: 'b2e1c9f',
-    message: 'Feat: Add caching layer',
-    author: 'Marcus Johnson',
-    time: '45 minutes ago',
-    repo: 'nexops-api',
-    files: 8,
-    affectedServices: ['search-service', 'database'],
+    id: 'dep-2024-002',
+    type: 'deployment',
+    version: '1.5.4',
+    service: 'payment-service',
+    serviceName: 'Payment Service',
+    time: '1 hour ago',
+    author: 'ci-pipeline',
+    message: 'Retry logic overhaul + new timeout config',
+    affectedServices: ['payment-service'],
     impact: 'high',
-    incidents: 0,
+    incidents: 1,
+    blastRadius: {
+      directServices: ['database'],
+      downstreamServices: [],
+      riskScore: 78,
+      riskBasis: 'Deploys to payment-service caused incidents 3 of the last 11 times — elevated risk',
+    },
   },
   {
-    id: 'infra-1',
+    id: 'dep-2024-003',
+    type: 'deployment',
+    version: '3.2.1',
+    service: 'user-service',
+    serviceName: 'User Service',
+    time: '2 hours ago',
+    author: 'Carol White',
+    message: 'Connection pool config change: max_connections 50 → 100',
+    affectedServices: ['user-service'],
+    impact: 'high',
+    incidents: 1,
+    blastRadius: {
+      directServices: ['database'],
+      downstreamServices: [],
+      riskScore: 65,
+      riskBasis: 'Config changes to connection pool on user-service correlated with 2 of last 9 database incidents',
+    },
+  },
+  {
+    id: 'dep-2024-005',
     type: 'infrastructure',
-    change: 'Database connection pool increased 50->100',
-    time: '30 minutes ago',
-    cluster: 'prod-us-east-1',
-    affectedServices: ['database', 'api-gateway', 'search-service'],
-    impact: 'low',
+    version: 'config-v9',
+    service: 'database',
+    serviceName: 'Database',
+    time: '90 minutes ago',
+    author: 'auto-scaling',
+    message: 'Connection pool limit increased 50 → 100 (auto-scaling event)',
+    affectedServices: ['database'],
+    impact: 'medium',
     incidents: 0,
+    blastRadius: {
+      directServices: ['auth-service', 'user-service', 'payment-service', 'analytics-engine'],
+      downstreamServices: [],
+      riskScore: 42,
+      riskBasis: 'Database infra changes caused incidents 2 of the last 18 times',
+    },
   },
 ]
 

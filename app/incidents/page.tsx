@@ -1,22 +1,17 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { PageContent, PageHeader } from '@/components/layout'
 import { IncidentTabs } from '@/components/incidents/incident-tabs'
-import { IncidentDrawer } from '@/components/incidents/incident-drawer'
 import { IncidentFilters } from '@/components/incidents/incident-filters'
-import { DeclareIncidentDrawer } from '@/components/incidents/declare-incident-drawer'
 import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { ShieldAlert } from 'lucide-react'
 import { INCIDENTS_DATA } from '@/lib/mock-data'
-import { useAppState } from '@/lib/hooks/use-app-state'
 
 export default function IncidentsPage() {
-  const { setDeclareIncidentOpen } = useAppState()
+  const router = useRouter()
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null)
-  
-  const [incidents, setIncidents] = useState<any[]>(INCIDENTS_DATA)
+  const [incidents] = useState<any[]>(INCIDENTS_DATA)
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -24,7 +19,7 @@ export default function IncidentsPage() {
     severity: 'all',
     sortBy: 'date-desc',
   })
-  
+
   const [statusFilter, setStatusFilter] = useState<'all' | 'open' | 'investigating' | 'resolved'>('open')
 
   // Filter and Sort Logic
@@ -64,72 +59,48 @@ export default function IncidentsPage() {
       })
   }, [incidents, filters, statusFilter])
 
-  const selectedIncidentData = incidents.find((i) => i.id === selectedIncident) as any
   const openCount = incidents.filter((i) => i.status === 'open' || i.status === 'investigating').length
   const criticalCount = incidents.filter((i) => i.severity === 'critical' && i.status !== 'resolved').length
   const totalIncidents = incidents.length
   const avgMTTR = '18m'
 
-  const handleIncidentDeclared = (newIncidentMock: any) => {
-    setIncidents([newIncidentMock, ...incidents])
-  }
-
   return (
-    <>
-      <PageContent>
-        <div className="flex items-center justify-between mb-6">
-          <PageHeader
-            title="Incidents"
-            description="Operational investigation center with timeline, root cause analysis, and incident intelligence"
-          />
-          <Button onClick={() => setDeclareIncidentOpen(true)} variant="destructive" className="gap-2">
-            <ShieldAlert className="w-4 h-4" />
-            Declare Incident
-          </Button>
-        </div>
+    <PageContent>
+      <PageHeader
+        title="Incidents"
+        description="Investigation center — select an incident to see ranked causal candidates and the correlation engine's reasoning"
+      />
 
-        {/* Summary Cards */}
-        <div className="grid grid-cols-4 gap-4 mb-8">
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Active Incidents</div>
-            <div className="text-2xl font-bold text-warning">{openCount}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Active Critical</div>
-            <div className="text-2xl font-bold text-destructive">{criticalCount}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Avg MTTR</div>
-            <div className="text-2xl font-bold">{avgMTTR}</div>
-          </Card>
-          <Card className="p-4">
-            <div className="text-sm text-muted-foreground">Total Reports</div>
-            <div className="text-2xl font-bold">{totalIncidents}</div>
-          </Card>
-        </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-4 gap-4 mb-8">
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Active Incidents</div>
+          <div className="text-2xl font-bold text-warning">{openCount}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Active Critical</div>
+          <div className="text-2xl font-bold text-destructive">{criticalCount}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Avg MTTR</div>
+          <div className="text-2xl font-bold">{avgMTTR}</div>
+        </Card>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Total Reports</div>
+          <div className="text-2xl font-bold">{totalIncidents}</div>
+        </Card>
+      </div>
 
-        {/* Filters */}
-        <IncidentFilters filters={filters} setFilters={setFilters} />
+      {/* Filters */}
+      <IncidentFilters filters={filters} setFilters={setFilters} />
 
-        {/* Incident Tabs */}
-        <IncidentTabs
-          incidents={filteredAndSortedIncidents}
-          selectedIncident={selectedIncident}
-          onSelectIncident={setSelectedIncident}
-          onStatusFilterChange={setStatusFilter}
-        />
-      </PageContent>
-
-      {/* Incident Drawer */}
-      {selectedIncidentData && (
-        <IncidentDrawer
-          incident={selectedIncidentData}
-          onClose={() => setSelectedIncident(null)}
-        />
-      )}
-
-      {/* Declare Incident Wizard */}
-      <DeclareIncidentDrawer onSuccess={handleIncidentDeclared} />
-    </>
+      {/* Incident Tabs */}
+      <IncidentTabs
+        incidents={filteredAndSortedIncidents}
+        selectedIncident={selectedIncident}
+        onSelectIncident={(id) => router.push(`/incidents/${id}`)}
+        onStatusFilterChange={setStatusFilter}
+      />
+    </PageContent>
   )
 }
