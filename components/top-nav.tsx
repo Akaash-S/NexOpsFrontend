@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Menu, Search, Bell, Settings, User, Command, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,7 +19,15 @@ import { useAppState } from '@/lib/hooks/use-app-state'
 import { cn } from '@/lib/utils'
 
 export function TopNav() {
-  const { setCommandPaletteOpen, getUnreadCount } = useAppState()
+  const router = useRouter()
+  const { 
+    setCommandPaletteOpen, 
+    getUnreadCount, 
+    setAuthenticated,
+    notifications,
+    markNotificationAsRead,
+    markAllAsRead
+  } = useAppState()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
   const unreadCount = getUnreadCount()
@@ -90,13 +99,91 @@ export function TopNav() {
             </Button>
 
             {/* Notifications */}
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="w-5 h-5" />
-              {unreadCount > 0 && (
-                <span className="absolute top-2 right-2 w-2 h-2 bg-destructive rounded-full" />
-              )}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="relative">
+                  <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 flex items-center justify-center bg-destructive text-[10px] font-bold text-destructive-foreground rounded-full">
+                      {unreadCount}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-80 sm:w-96 p-0 z-50 overflow-hidden bg-card border border-border">
+                {/* Header */}
+                <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
+                  <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notifications</span>
+                  {unreadCount > 0 && (
+                    <button 
+                      onClick={(e) => {
+                        e.preventDefault()
+                        markAllAsRead()
+                      }}
+                      className="text-xs font-semibold text-primary hover:underline bg-transparent border-none cursor-pointer p-0"
+                    >
+                      Mark all as read
+                    </button>
+                  )}
+                </div>
 
+                {/* List Container */}
+                <div className="max-h-[300px] overflow-y-auto divide-y divide-border/40">
+                  {notifications.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center p-8 text-center space-y-2 select-none">
+                      <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-muted-foreground">
+                        <Bell className="w-4 h-4" />
+                      </div>
+                      <p className="text-xs font-semibold text-foreground">You're all caught up</p>
+                      <p className="text-[10px] text-muted-foreground max-w-[220px]">
+                        No new notifications. We'll alert you if incidents or risk-deploys are detected.
+                      </p>
+                    </div>
+                  ) : (
+                    notifications.map((n) => (
+                      <DropdownMenuItem
+                        key={n.id}
+                        className={cn(
+                          "flex items-start gap-3 p-4 cursor-pointer focus:bg-muted/80 focus:text-foreground transition-all duration-200 border-none outline-none rounded-none select-none",
+                          !n.read ? "bg-primary/5 hover:bg-primary/10 font-medium" : "hover:bg-muted/50"
+                        )}
+                        onClick={() => {
+                          markNotificationAsRead(n.id)
+                          if (n.link) {
+                            router.push(n.link)
+                          }
+                        }}
+                      >
+                        {/* Status Indicator Dot */}
+                        <span className={cn(
+                          "w-2 h-2 rounded-full mt-1.5 flex-shrink-0 animate-pulse",
+                          n.type === 'error' && 'bg-destructive shadow-[0_0_8px_rgba(239,68,68,0.5)]',
+                          n.type === 'warning' && 'bg-warning shadow-[0_0_8px_rgba(245,158,11,0.5)]',
+                          n.type === 'success' && 'bg-success shadow-[0_0_8px_rgba(34,197,94,0.5)]',
+                          n.type === 'info' && 'bg-primary shadow-[0_0_8px_rgba(59,130,246,0.5)]'
+                        )} />
+
+                        {/* Text Details */}
+                        <div className="flex-1 min-w-0 space-y-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className={cn(
+                              "text-xs leading-none tracking-tight",
+                              !n.read ? "text-foreground font-bold" : "text-muted-foreground"
+                            )}>
+                              {n.title}
+                            </p>
+                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">{n.timestamp}</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground leading-normal line-clamp-2">
+                            {n.description}
+                          </p>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  )}
+                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
             {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -105,10 +192,19 @@ export function TopNav() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem>Profile</DropdownMenuItem>
-                <DropdownMenuItem>Preferences</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/profile')}>
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings?tab=preferences')}>
+                  Preferences
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Logout</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => {
+                  setAuthenticated(false)
+                  router.push('/')
+                }}>
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

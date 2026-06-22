@@ -1553,22 +1553,6 @@ export const INTEGRATIONS_DATA = [
     config: 'nexops-org/repositories',
   },
   {
-    id: 'int-2',
-    name: 'Kubernetes',
-    status: 'connected',
-    lastSync: '1 minute ago',
-    health: 'healthy',
-    config: '4 clusters',
-  },
-  {
-    id: 'int-3',
-    name: 'Slack',
-    status: 'connected',
-    lastSync: '2 minutes ago',
-    health: 'healthy',
-    config: '#nexops-incidents',
-  },
-  {
     id: 'int-4',
     name: 'PagerDuty',
     status: 'connected',

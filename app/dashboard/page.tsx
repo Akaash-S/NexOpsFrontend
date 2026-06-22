@@ -1,17 +1,47 @@
-import { PageContent, PageHeader, Grid, MetricCard } from '@/components/layout'
+import { PageContent, PageHeader, Grid, MetricCard, EmptyState } from '@/components/layout'
 import { HealthOverview } from '@/components/dashboard/health-overview'
 import { ActiveIncidents } from '@/components/dashboard/active-incidents'
 import { RecentChanges } from '@/components/dashboard/recent-changes'
 import { Recommendations } from '@/components/dashboard/recommendations'
 import { ImpactMap } from '@/components/dashboard/impact-map'
 import { Activity, AlertTriangle, GitCommitHorizontal, Search } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 export const metadata = {
   title: 'Dashboard | NexOps',
   description: 'NexOps correlation engine — what caused this incident, and how do we know?',
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage(props: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
+}) {
+  const resolvedParams = await props.searchParams
+  const isEmpty = resolvedParams.empty === 'true'
+
+  if (isEmpty) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Dashboard"
+          description="Correlation engine — active incidents with ranked causal candidates, change blast radius, and dependency topology"
+        />
+        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
+          <EmptyState
+            icon={<AlertTriangle className="w-12 h-12 text-muted-foreground/60" />}
+            title="Welcome to NexOps"
+            description="Your workspace is not receiving telemetry or alert data yet. Connect your integrations to populate this dashboard."
+            action={
+              <Button asChild>
+                <Link href="/settings?tab=workspace">Set Up Workspace</Link>
+              </Button>
+            }
+          />
+        </div>
+      </PageContent>
+    )
+  }
+
   return (
     <PageContent>
       <PageHeader
@@ -75,3 +105,4 @@ export default function DashboardPage() {
     </PageContent>
   )
 }
+

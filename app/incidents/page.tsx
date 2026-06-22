@@ -1,17 +1,23 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { useRouter } from 'next/navigation'
-import { PageContent, PageHeader } from '@/components/layout'
+import { useState, useMemo, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { IncidentTabs } from '@/components/incidents/incident-tabs'
 import { IncidentFilters } from '@/components/incidents/incident-filters'
 import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { AlertTriangle } from 'lucide-react'
 import { INCIDENTS_DATA } from '@/lib/mock-data'
 
-export default function IncidentsPage() {
+function IncidentsPageContent() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isEmpty = searchParams?.get('empty') === 'true'
+
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null)
-  const [incidents] = useState<any[]>(INCIDENTS_DATA)
+  const [incidents] = useState<any[]>(() => isEmpty ? [] : INCIDENTS_DATA)
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -59,6 +65,29 @@ export default function IncidentsPage() {
       })
   }, [incidents, filters, statusFilter])
 
+  if (incidents.length === 0) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Incidents"
+          description="Investigation center — select an incident to see ranked causal candidates and the correlation engine's reasoning"
+        />
+        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
+          <EmptyState
+            icon={<AlertTriangle className="w-12 h-12 text-muted-foreground/60" />}
+            title="No Active Incidents"
+            description="All services are operating within normal parameters. Make sure PagerDuty or other alert channels are connected."
+            action={
+              <Button asChild>
+                <Link href="/settings?tab=workspace">Configure Alert Sources</Link>
+              </Button>
+            }
+          />
+        </div>
+      </PageContent>
+    )
+  }
+
   const openCount = incidents.filter((i) => i.status === 'open' || i.status === 'investigating').length
   const criticalCount = incidents.filter((i) => i.severity === 'critical' && i.status !== 'resolved').length
   const totalIncidents = incidents.length
@@ -104,3 +133,22 @@ export default function IncidentsPage() {
     </PageContent>
   )
 }
+
+export default function IncidentsPage() {
+  return (
+    <Suspense fallback={
+      <PageContent>
+        <PageHeader
+          title="Incidents"
+          description="Investigation center — select an incident to see ranked causal candidates and the correlation engine's reasoning"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground animate-pulse">Loading incidents...</div>
+        </div>
+      </PageContent>
+    }>
+      <IncidentsPageContent />
+    </Suspense>
+  )
+}
+

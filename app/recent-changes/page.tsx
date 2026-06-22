@@ -1,10 +1,12 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { PageContent, PageHeader } from '@/components/layout'
+import { useState, useMemo, Suspense } from 'react'
+import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { useSearchParams } from 'next/navigation'
 import {
   Select,
   SelectContent,
@@ -12,11 +14,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Package, Settings, AlertTriangle, CheckCircle, AlertCircle, Flame, ChevronDown, ChevronUp, Search } from 'lucide-react'
+import { Package, Settings, AlertTriangle, CheckCircle, AlertCircle, Flame, ChevronDown, ChevronUp, Search, GitCommitHorizontal } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { CHANGES_DATA } from '@/lib/mock-data'
 import { getNodeById } from '@/lib/graph'
+import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
 const typeConfig = {
   deployment: { icon: Package, label: 'Deployment', color: 'text-primary' },
@@ -29,22 +32,7 @@ const impactConfig = {
   low: { label: 'Low Impact', bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
 }
 
-function RiskBar({ score }: { score: number }) {
-  const color =
-    score >= 70 ? 'bg-destructive' : score >= 40 ? 'bg-warning' : 'bg-success'
-  const label =
-    score >= 70 ? 'High' : score >= 40 ? 'Medium' : 'Low'
-  return (
-    <div className="flex items-center gap-3">
-      <div className="flex-1 h-1.5 bg-muted rounded-full overflow-hidden">
-        <div className={cn('h-full rounded-full transition-all', color)} style={{ width: `${score}%` }} />
-      </div>
-      <span className={cn('text-xs font-semibold w-14 text-right', score >= 70 ? 'text-destructive' : score >= 40 ? 'text-warning' : 'text-success')}>
-        {score} — {label}
-      </span>
-    </div>
-  )
-}
+// Removed legacy RiskBar component - unified into ScoreWithReasoning
 
 function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
   const [expanded, setExpanded] = useState(false)
@@ -105,12 +93,13 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
             </button>
           </div>
 
-          {/* Risk Score — always shown with basis text */}
-          <div>
-            <p className="text-xs text-muted-foreground mb-1.5">Risk Score</p>
-            <RiskBar score={blastRadius.riskScore} />
-            <p className="text-xs text-muted-foreground mt-1.5 italic">{blastRadius.riskBasis}</p>
-          </div>
+          {/* Risk Score — unified via ScoreWithReasoning component */}
+          <ScoreWithReasoning
+            label="Risk Score"
+            score={blastRadius.riskScore}
+            reasons={blastRadius.riskBasis}
+            variant="risk"
+          />
 
           {/* Direct services — always visible */}
           <div>
@@ -167,13 +156,17 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
   )
 }
 
-export default function RecentChangesPage() {
+function RecentChangesPageContent() {
+  const searchParams = useSearchParams()
+  const isEmpty = searchParams?.get('empty') === 'true'
   const [search, setSearch] = useState('')
   const [sortBy, setSortBy] = useState('time')
   const [riskFilter, setRiskFilter] = useState('all')
 
+  const [changesState] = useState<any[]>(() => isEmpty ? [] : CHANGES_DATA)
+
   const changes = useMemo(() => {
-    return CHANGES_DATA
+    return changesState
       .filter((c) => {
         const matchesSearch =
           ((c as any).serviceName || c.service).toLowerCase().includes(search.toLowerCase()) ||
@@ -193,11 +186,34 @@ export default function RecentChangesPage() {
         if (sortBy === 'incidents') return b.incidents - a.incidents
         return 0 // time (default order from data)
       })
-  }, [search, sortBy, riskFilter])
+  }, [changesState, search, sortBy, riskFilter])
 
-  const highRiskCount = CHANGES_DATA.filter((c) => (c as any).blastRadius?.riskScore >= 70).length
-  const incidentLinked = CHANGES_DATA.filter((c) => c.incidents > 0).length
-  const totalChanges = CHANGES_DATA.length
+  if (changesState.length === 0) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Recent Changes"
+          description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
+        />
+        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
+          <EmptyState
+            icon={<GitCommitHorizontal className="w-12 h-12 text-muted-foreground/60" />}
+            title="No Recent Changes"
+            description="No deployments or infrastructure changes have been recorded. Integrate your CI/CD pipeline to track revisions."
+            action={
+              <Button asChild>
+                <Link href="/settings?tab=workspace">Setup Deployment Tracking</Link>
+              </Button>
+            }
+          />
+        </div>
+      </PageContent>
+    )
+  }
+
+  const highRiskCount = changesState.filter((c) => (c as any).blastRadius?.riskScore >= 70).length
+  const incidentLinked = changesState.filter((c) => c.incidents > 0).length
+  const totalChanges = changesState.length
 
   return (
     <PageContent>
@@ -279,3 +295,22 @@ export default function RecentChangesPage() {
     </PageContent>
   )
 }
+
+export default function RecentChangesPage() {
+  return (
+    <Suspense fallback={
+      <PageContent>
+        <PageHeader
+          title="Recent Changes"
+          description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground animate-pulse">Loading changes...</div>
+        </div>
+      </PageContent>
+    }>
+      <RecentChangesPageContent />
+    </Suspense>
+  )
+}
+

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, type MouseEvent } from 'react'
 import ReactFlow, {
   Node,
   Edge,
@@ -142,6 +142,10 @@ export function DependencyGraph({
   onNodeSelect,
   selectedNode,
 }: DependencyGraphProps) {
+  const handleNodeClick = useCallback((_event: MouseEvent, node: Node) => {
+    onNodeSelect(node.id)
+  }, [onNodeSelect])
+
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
 
@@ -209,18 +213,23 @@ export function DependencyGraph({
     [edges, highlightedNodes]
   )
 
+  const memoizedNodeTypes = useMemo(() => nodeTypes, [])
+
   return (
-    <ReactFlow
-      nodes={filteredNodes}
-      edges={filteredEdges}
-      onNodesChange={onNodesChange}
-      onEdgesChange={onEdgesChange}
-      nodeTypes={nodeTypes}
-      fitView
-    >
-      <Background />
-      <Controls />
-      <MiniMap />
-    </ReactFlow>
+    <div style={{ width: '100%', height: '100%' }}>
+      <ReactFlow
+        nodes={filteredNodes}
+        edges={filteredEdges}
+        onNodesChange={onNodesChange}
+        onEdgesChange={onEdgesChange}
+        onNodeClick={handleNodeClick}
+        nodeTypes={memoizedNodeTypes}
+        fitView
+      >
+        <Background />
+        <Controls />
+        <MiniMap />
+      </ReactFlow>
+    </div>
   )
 }

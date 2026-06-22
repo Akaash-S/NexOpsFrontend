@@ -35,19 +35,19 @@ export function DependencyControls({
         </div>
 
         {/* View Mode Toggle */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">View Mode:</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-sm text-muted-foreground hidden md:inline">View Mode:</span>
           <ToggleGroup
             type="single"
             value={impactMode ? 'impact' : 'dependency'}
             onValueChange={(value) => onImpactModeChange(value === 'impact')}
             className="border border-border rounded-lg"
           >
-            <ToggleGroupItem value="dependency" className="gap-2">
+            <ToggleGroupItem value="dependency" className="gap-2 px-3.5">
               <ArrowUp className="w-4 h-4" />
               Dependencies
             </ToggleGroupItem>
-            <ToggleGroupItem value="impact" className="gap-2">
+            <ToggleGroupItem value="impact" className="gap-2 px-3.5">
               <ArrowDown className="w-4 h-4" />
               Impact
             </ToggleGroupItem>

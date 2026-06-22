@@ -25,6 +25,8 @@ import {
 import { cn } from '@/lib/utils'
 import { INCIDENTS_DATA, CandidateCause } from '@/lib/mock-data'
 import { serviceNodes, dependencyEdges, getNodeById, getUpstream, getDownstream } from '@/lib/graph'
+import { useAppState } from '@/lib/hooks/use-app-state'
+import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
 const severityConfig = {
   critical: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', label: 'Critical' },
@@ -75,7 +77,7 @@ function CandidateRow({ cause, rank, localConfirmed, onConfirm }: CandidateRowPr
 
   return (
     <div className={cn(
-      'rounded-xl border-2 overflow-hidden',
+      'rounded-xl border-2 overflow-hidden bg-card/40',
       confirmed === true ? 'border-success/40' :
       confirmed === false ? 'border-border opacity-60' :
       rank === 0 ? 'border-destructive/30' : 'border-border'
@@ -108,22 +110,8 @@ function CandidateRow({ cause, rank, localConfirmed, onConfirm }: CandidateRowPr
       </div>
 
       <div className="px-5 py-4 bg-background space-y-4">
-        {/* Reasoning — full list, always visible */}
-        <div>
-          <p className="text-xs font-semibold text-muted-foreground mb-2 uppercase tracking-wide">
-            Why this is a candidate
-          </p>
-          <ul className="space-y-2">
-            {cause.matchReasons.map((reason, i) => (
-              <li key={i} className="flex items-start gap-3 text-sm">
-                <div className="flex-shrink-0 mt-1 w-5 h-5 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-semibold">
-                  {i + 1}
-                </div>
-                <span>{reason}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        {/* Consolidated Reasoning explainer component */}
+        <ScoreWithReasoning score={cause.matchScore} reasons={cause.matchReasons} />
 
         {/* Service context from graph */}
         {node && (
@@ -147,21 +135,21 @@ function CandidateRow({ cause, rank, localConfirmed, onConfirm }: CandidateRowPr
 
         {/* Confirm / Reject controls */}
         {confirmed === null ? (
-          <div className="flex items-center gap-3 pt-1 border-t border-border">
-            <p className="text-sm text-muted-foreground flex-1">Was this the cause of the incident?</p>
+          <div className="flex items-center gap-3 pt-2.5 border-t border-border/40">
+            <p className="text-xs text-muted-foreground flex-1">Was this the cause of the incident?</p>
             <Button
               size="sm"
               variant="outline"
-              className="gap-1.5 text-success border-success/20 bg-success/5 hover:bg-success/20"
+              className="gap-1.5 text-success border-success/20 bg-success/5 hover:bg-success/20 h-8 text-xs font-semibold"
               onClick={() => onConfirm(true)}
             >
-              <ThumbsUp className="w-3.5 h-3.5" />
+              <ThumbsUp className="w-3 h-3" />
               Yes, this caused it
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="gap-1.5 text-muted-foreground hover:bg-muted"
+              className="gap-1.5 text-muted-foreground hover:bg-muted h-8 text-xs font-semibold"
               onClick={() => onConfirm(false)}
             >
               <ThumbsDown className="w-3.5 h-3.5" />
@@ -169,8 +157,8 @@ function CandidateRow({ cause, rank, localConfirmed, onConfirm }: CandidateRowPr
             </Button>
           </div>
         ) : (
-          <div className="flex items-center justify-between pt-1 border-t border-border">
-            <span className={cn('text-sm font-semibold', confirmed ? 'text-success' : 'text-muted-foreground')}>
+          <div className="flex items-center justify-between pt-2.5 border-t border-border/40">
+            <span className={cn('text-xs font-semibold', confirmed ? 'text-success' : 'text-muted-foreground')}>
               {confirmed
                 ? '✓ Confirmed as root cause — thank you, this improves future correlations'
                 : '✗ Ruled out — this deploy was not the cause'}
@@ -198,17 +186,11 @@ export default function IncidentInvestigationPage() {
     notFound()
   }
 
-  // Track confirmed state per candidate
-  const [causeState, setCauseState] = useState<Record<string, boolean | null>>(() => {
-    const initial: Record<string, boolean | null> = {}
-    incident.candidateCauses.forEach((c: CandidateCause) => {
-      initial[c.deployId] = c.confirmed
-    })
-    return initial
-  })
+  // Load from context to sync cause confirmation state globally
+  const { feedbackState, setFeedback } = useAppState()
 
   const handleConfirm = (deployId: string, value: boolean | null) => {
-    setCauseState((prev) => ({ ...prev, [deployId]: value }))
+    setFeedback(incidentId, deployId, value)
   }
 
   // Build dependency graph slice for this incident's primary service
@@ -222,9 +204,12 @@ export default function IncidentInvestigationPage() {
   const sev = severityConfig[incident.severity as keyof typeof severityConfig] ?? severityConfig.medium
   const stat = statusConfig[incident.status as keyof typeof statusConfig] ?? statusConfig.open
 
-  const confirmedCount = Object.values(causeState).filter(v => v === true).length
+  const confirmedCount = incident.candidateCauses.filter(
+    (c: CandidateCause) => feedbackState[`${incidentId}::${c.deployId}`] === true
+  ).length
+
   const pendingCount = incident.candidateCauses.filter(
-    (c: CandidateCause) => causeState[c.deployId] === null
+    (c: CandidateCause) => feedbackState[`${incidentId}::${c.deployId}`] === null || feedbackState[`${incidentId}::${c.deployId}`] === undefined
   ).length
 
   return (
@@ -316,7 +301,7 @@ export default function IncidentInvestigationPage() {
                       key={cause.deployId}
                       cause={cause}
                       rank={i}
-                      localConfirmed={causeState[cause.deployId] ?? cause.confirmed}
+                      localConfirmed={feedbackState[`${incidentId}::${cause.deployId}`] ?? null}
                       onConfirm={(v) => handleConfirm(cause.deployId, v)}
                     />
                   ))}

@@ -1,340 +1,131 @@
-# NexOps - Engineering Intelligence Platform
+# NexOps - Incident Correlation Engine
 
-A modern, enterprise-grade frontend for understanding what changed, what is impacted, what is unhealthy, why failures occurred, and what actions should be taken next.
+A modern, enterprise-grade frontend focused on answering exactly one critical question better than anything else: **"What caused this incident, and how do we know?"**
 
-## Overview
+NexOps reads deployments, alerts, and dependency graphs from connected systems, correlating operational events to find root causes and map dependency blast radius.
 
-NexOps is an **Engineering Intelligence Platform** designed for engineering organizations to gain deep insights into their systems, services, and deployments. The UI combines the best patterns from Linear, Vercel Dashboard, Datadog, and modern cloud control panels while maintaining its own distinct identity.
+---
 
-**Phase 1** provides a complete, production-ready application shell with:
-- Full navigation system with 7 organized sections
-- 18 routes covering all major features
-- Professional design system with enterprise aesthetics
-- Responsive layout for desktop and mobile
-- Dark mode by default with light mode support
-- Reusable layout and data display components
-- Loading states and skeleton loaders
-
-## Tech Stack
+## Technical Stack
 
 - **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Styling**: Tailwind CSS + Design Tokens (OKLch)
-- **Components**: shadcn/ui
+- **Styling**: Tailwind CSS + OKLch Design Tokens
+- **Components**: shadcn/ui + Radix UI primitives
 - **Data Table**: @tanstack/react-table
+- **Charts**: Recharts
+- **Topology Graphing**: React Flow (v11)
 - **Icons**: Lucide React
-- **Themes**: next-themes
-- **Node**: v18+
+- **Themes**: next-themes (default dark mode)
+
+---
 
 ## Getting Started
 
 ### Installation
 
 ```bash
-# Clone or set up the project
-cd nexops
+# Clone the project and navigate to the directory
+cd updated-frontend
 
 # Install dependencies
-pnpm install
+npm install
 
-# Start development server
-pnpm dev
-```
+# Start the development server
+npm run dev
+```Visit `http://localhost:3000` to launch the unauthenticated landing page. Click **Launch Engine** or **Sign In** to log in using mock credentials.
 
-Visit `http://localhost:3000` - you'll be redirected to `/dashboard`.
+> [!NOTE]
+> **Authentication is fully simulated.** No backend, OAuth providers, or databases are connected. Clicking any login button establishes a mock in-memory session.
+
+---
 
 ## Project Structure
 
+The project has been streamlined from the old 18-route platform down to **7 active correlation routes**, removing out-of-scope modules like raw log ingestion, custom paging, and automations. It adds a pre-app shell, onboarding sequence, and personal profile space:
+
 ```
-nexops/
+updated-frontend/
 ├── app/
-│   ├── layout.tsx              # Root layout with ThemeProvider
-│   ├── globals.css             # Design tokens and theme variables
-│   ├── page.tsx                # Home redirect
-│   ├── dashboard/              # Dashboard page
-│   ├── clusters/               # Clusters overview
-│   ├── services/               # Services management
-│   ├── repositories/           # Repository visibility
-│   ├── dependencies/           # Dependency graph
-│   ├── pipelines/              # Pipeline management
-│   ├── deployments/            # Deployment tracking
-│   ├── releases/               # Release management
-│   ├── alerts/                 # Alert management
-│   ├── incidents/              # Incident tracking
-│   ├── health/                 # Health center
-│   ├── change-impact/          # Change impact analysis
-│   ├── risk-analysis/          # Risk analysis
-│   ├── recommendations/        # Recommendations
-│   ├── rules/                  # Automation rules
-│   ├── workflows/              # Automation workflows
-│   ├── teams/                  # Team management
-│   ├── integrations/           # Integration management
-│   └── settings/               # Application settings
+│   ├── layout.tsx              # Root layout with providers
+│   ├── globals.css             # OKLch design tokens & theme variables
+│   ├── page.tsx                # Cinematic scrollytelling landing page
+│   ├── login/                  # Mock SSO login interface (GitHub / Google)
+│   ├── onboarding/             # Connect GitHub/PagerDuty step & auto-derived graph preview
+│   ├── profile/                # Personal staff workspace, owned services, triage logs
+│   ├── dashboard/              # Correlation Command Center
+│   ├── services/               # Microservice Catalog (read-only derived views)
+│   ├── dependencies/           # Interactive React Flow topology graphs
+│   ├── incidents/              # Operational incident tracking log
+│   │   ├── page.tsx            # Incident table & tabs
+│   │   └── [id]/               # Dedicated incident investigation workspace
+│   ├── recent-changes/         # Deployment change feed & blast radius metrics
+│   ├── settings/               # System configuration tabbed parameters (Preferences, Notifications, Workspace, Account)
+│   ├── not-found.tsx           # Custom 404 page in NexOps design language
+│   └── error.tsx               # Graceful system crash boundary
 │
 ├── components/
-│   ├── ui/                     # shadcn/ui components
-│   ├── top-nav.tsx             # Fixed header navigation
-│   ├── sidebar.tsx             # Side navigation with sections
-│   ├── layout.tsx              # Page layout components
-│   ├── data-table.tsx          # Data table with sorting/filtering
-│   ├── intelligence-drawer.tsx # Right-side drawer panel
-│   ├── investigation-workspace.tsx # Two-panel analysis layout
-│   ├── command-palette.tsx     # Cmd+K command palette
-│   ├── notification-center.tsx # Notification panel
-│   ├── loading-state.tsx       # Skeleton loaders
-│   └── app-shell.tsx           # App shell wrapper
+│   ├── ui/                     # shadcn/ui primitives
+│   ├── dashboard/              # Active incidents, recent changes, topology components
+│   ├── top-nav.tsx             # Fixed header navigation with wired profile dropdown actions
+│   ├── sidebar.tsx             # Restructured 7-route navigation sidebar
+│   ├── layout.tsx              # Reusable layout components (PageLayout, Grid, MetricCard, EmptyState)
+│   ├── command-palette.tsx     # Global CMD+K shortcut re-indexed to active routes
+│   └── app-shell.tsx           # App shell wrapper that excludes pre-app paths from navigation sidebar/header
 │
 ├── docs/
-│   ├── DESIGN_SYSTEM.md        # Design tokens and patterns
-│   └── PHASE_1_COMPLETE.md     # Phase 1 completion details
+│   ├── DASHBOARD.md            # Detailed dashboard & correlation widgets guide
+│   ├── DESIGN_SYSTEM.md        # OKLch tokens and patterns
+│   └── README.md               # Master developer documentation
 │
 ├── lib/
-│   └── utils.ts                # Utility functions (cn for classnames)
-│
-├── hooks/
-│   ├── use-mobile.ts           # Mobile detection hook
-│   └── use-toast.ts            # Toast notifications
-│
-├── public/                      # Static assets
-├── package.json
-├── tsconfig.json
-├── next.config.mjs
-├── tailwind.config.ts
-└── README.md (this file)
+│   ├── graph.ts                # Single source of truth for the service dependency graph
+│   ├── mock-data.ts            # Incidents, changes, and blastRadius datasets referencing graph.ts
+│   └── utils.ts                # Tailwind merge helper
 ```
 
-## Navigation Structure
+---
 
-### Overview
-- **Dashboard** - Engineering command center showing what needs attention
+## Navigation & Page Access
 
-### Engineering
-- **Clusters** - Domain-level operational view
-- **Services** - Primary operational entities
-- **Repositories** - Source control visibility
-- **Dependencies** - Relationship and dependency graph
+### Pre-App / Identity Shell
+- **Landing Page** (`/`): Displays a scrollytelling simulation of the correlation engine's pipeline (backward correlation matches and forward blast radius risks) followed by CTA targets.
+- **SSO Login** (`/login`): Clean developer access interface supporting mock SSO connections.
+- **Onboarding** (`/onboarding`): Simulated 3-step setup connecting integrations to build the derived microservice dependency tree.
+- **User Profile** (`/profile`): Displays engineering credentials, owned services (auto-derived), and a real-time record of all causal triage actions taken by the user.
 
-### Delivery
-- **Pipelines** - Delivery pipeline status and insights
-- **Deployments** - Release intelligence and risk analysis
-- **Releases** - Release management and versioning
+### 7 Core Platform Routes
+- **Dashboard** (`/dashboard`): Active incidents, ranked causal candidates, deployment risk, and dependency topology at a glance.
+- **Services** (`/services`): Microservices metadata, team ownership, and uptime statuses.
+- **Dependencies** (`/dependencies`): Interactive node-edge graph mapping service interactions.
+- **Incidents** (`/incidents`): Logs of active and resolved incidents. Clicking any incident card in the list routes the engineer directly to its individual investigation workspace (`/incidents/[id]`).
+- **Recent Changes** (`/recent-changes`): Deploys and configuration changes showing risk scores and downstream blast radius.
+- **Settings** (`/settings`): Consolidated preferences, notification controls, workspace integration settings, and mock logout button.
 
-### Operations
-- **Alerts** - Operational signals and alerting
-- **Incidents** - Incident investigation and management
-- **Health Center** - System health and SLO/SLA tracking
+---
+## Core Correlation Features
 
-### Intelligence
-- **Change Impact** - What changed and what was affected
-- **Risk Analysis** - Predictive risk intelligence
-- **Recommendations** - Decision support system
+1.  **Causal Candidate Identification**: Displays ranked suspect deployments under active incidents with explicit natural language reasoning (never bare score percentages).
+2.  **Blast Radius Mapping**: Surfaces direct and downstream services affected by a deployment directly on change cards.
+3.  **Human Feedback Loop**: Session-persisted confirm/reject buttons on candidates let engineers train correlation algorithms by marking causes as validated or ruled out.
+4.  **Alert Noise Indicators**: Highlights alert rules that rarely correlate with real incidents with a badge (e.g. `"3 noisy rules"`), helping engineers separate signal from noise.
 
-### Automation
-- **Rules** - Automation rules and policies
-- **Workflows** - Complex workflow orchestration
-
-### Administration
-- **Teams** - Team management and permissions
-- **Integrations** - External service integrations
-- **Settings** - Application preferences and configuration
-
-## Design System
-
-### Colors
-NexOps uses a professional slate-based color palette optimized for data-dense interfaces:
-
-**Light Mode**
-- Primary: Blue (`oklch(0.44 0.12 262)`)
-- Background: Off-white (`oklch(0.98 0 0)`)
-- Foreground: Dark slate (`oklch(0.15 0 0)`)
-
-**Dark Mode (Default)**
-- Primary: Bright blue (`oklch(0.64 0.15 262)`)
-- Background: Deep slate (`oklch(0.12 0 0)`)
-- Foreground: Off-white (`oklch(0.92 0 0)`)
-
-**Status Colors**
-- Success: Green - Healthy systems
-- Warning: Amber - Warning conditions
-- Destructive: Red - Errors and critical issues
-- Accent: Blue - Information
-
-See `docs/DESIGN_SYSTEM.md` for complete design specification.
-
-### Typography
-- **Sans (Body)**: Geist
-- **Mono (Code)**: Geist Mono
-- **Scale**: Semantic hierarchy (page title, section header, body, small)
-
-### Spacing
-- **Base Unit**: 4px (Tailwind standard)
-- **Section Padding**: 24px (p-6) / 32px (p-8)
-- **Gap System**: 16px (gap-4) / 24px (gap-6)
-
-### Layout
-- **Desktop**: 256px sidebar + full-width content
-- **Mobile**: Full-width with collapsible sidebar overlay
-- **Drawers**: 420px desktop, full-width mobile
-- **Two-panel**: 70% main content, 30% intelligence panel
-
-## Key Components
-
-### Layout Components
-- `PageContainer` - Full-width wrapper
-- `PageLayout` - Sidebar-aware layout
-- `PageHeader` - Page title and actions
-- `Section` - Content section with padding
-- `Grid` - Responsive grid (1-4 columns)
-
-### Data Components
-- `MetricCard` - KPI display with trend
-- `StatusBadge` - Health indicator
-- `DataTable` - Sortable, filterable table
-- `EmptyState` - Empty state UI
-
-### State Components
-- `CardSkeleton` - Card loading skeleton
-- `TableSkeleton` - Table loading skeleton
-- `GridSkeleton` - Grid loading skeleton
-
-### Interaction Components
-- `IntelligenceDrawer` - Right-side information panel
-- `InvestigationWorkspace` - Deep analysis layout
-- `CommandPalette` - Cmd+K command search
-- `NotificationCenter` - Notification panel
-
-## Features
-
-### ✅ Complete
-- Responsive design (mobile-first)
-- Dark mode by default
-- Navigation with all 18 routes
-- Design system with tokens
-- Layout components
-- Data table component
-- Loading states
-- Accessibility foundations
-
-### 🚀 Ready for Phase 2
-- Dashboard page (fill with real components)
-- Data pages (tables and lists)
-- Intelligence features (graphs, analysis)
-- Interactive workflows (modals, drawers)
-- Real data integration
-
-## Responsive Breakpoints
-
-- **Mobile**: Default styles (< 768px)
-- **Tablet** (md): 768px and up
-- **Desktop** (lg): 1024px and up
-
-## Accessibility
-
-✅ Semantic HTML
-✅ ARIA labels
-✅ Keyboard navigation
-✅ Focus indicators
-✅ Color contrast (WCAG AA)
-✅ Screen reader support
+---
 
 ## Development
 
 ### Run Development Server
 ```bash
-pnpm dev
+npm run dev
 ```
 
 ### Build for Production
 ```bash
-pnpm build
-pnpm start
+npm run build
+npm start
 ```
 
 ### Type Checking
 ```bash
-pnpm type-check
+npx tsc --noEmit
 ```
-
-### Linting
-```bash
-pnpm lint
-```
-
-## Next Steps (Phase 2)
-
-Phase 2 will focus on building out the core features:
-
-1. **Dashboard Page** - Real components:
-   - Engineering Health Panel
-   - Active Incidents
-   - Critical Changes
-   - Recommended Actions
-
-2. **Data Pages** - Complete implementations:
-   - Cluster management
-   - Service overview
-   - Pipeline status
-   - Deployment tracking
-
-3. **Intelligence Features**:
-   - Dependency graphs
-   - Change impact timeline
-   - Risk scoring
-   - Recommendations engine
-
-4. **Interactive Workflows**:
-   - Investigation workspaces
-   - Incident investigation
-   - Change approval flows
-   - Risk remediation
-
-## Specification
-
-This project implements the NexOps Engineering Intelligence Platform specification with:
-
-✅ Enterprise SaaS aesthetic
-✅ Professional design language
-✅ Fast navigation and discoverability
-✅ Flexible workflows for different teams
-✅ Clear visual hierarchy
-✅ Accessibility-first interactions
-✅ Intelligent guidance and recommendations
-✅ Consistent interaction patterns
-
-See the specification PDF for complete requirements.
-
-## Performance
-
-- **Next.js 16**: Latest features and optimizations
-- **Server Components**: Reduced JavaScript bundle
-- **Streaming**: Progressive content loading
-- **Suspense**: Built-in loading states
-- **Responsive Images**: Optimized with Next.js Image
-- **Code Splitting**: Automatic route splitting
-
-## Browser Support
-
-- Chrome/Edge (latest)
-- Firefox (latest)
-- Safari (latest)
-- Mobile browsers (iOS Safari, Chrome Android)
-
-## Contributing
-
-When adding new features:
-
-1. Follow the component structure in `components/`
-2. Use design tokens from `app/globals.css`
-3. Maintain responsive design practices
-4. Add proper ARIA labels for accessibility
-5. Create placeholder pages before building features
-
-## License
-
-MIT
-
----
-
-**Built with ❤️ using Next.js, React, and Tailwind CSS**
-
-For questions or feedback, refer to the specification document or PHASE_1_COMPLETE.md for implementation details.

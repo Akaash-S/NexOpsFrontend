@@ -33,9 +33,9 @@ export default function DependenciesPage() {
           />
 
           {/* Main Content Area */}
-          <div className="flex gap-4 flex-1 min-h-0">
+          <div className="flex gap-4 flex-1 min-h-[400px]">
             {/* Graph Area */}
-            <div className="flex-1 border border-border rounded-lg overflow-hidden">
+            <div className="flex-1 border border-border rounded-lg overflow-hidden min-h-[400px]">
               <DependencyGraph
                 impactMode={impactMode}
                 searchQuery={searchQuery}

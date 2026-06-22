@@ -44,31 +44,31 @@ function ServiceNodeCard({ node }: { node: ServiceNode }) {
   return (
     <div
       className={cn(
-        'px-3 py-2.5 rounded-lg border-2 transition-colors cursor-default relative',
+        'px-3 py-2.5 rounded-lg border-2 transition-colors cursor-default',
         cfg.bg,
         cfg.border
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <div className="min-w-0">
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0', cfg.dot)} />
-            <span className="font-semibold text-xs leading-tight">{node.name}</span>
-          </div>
-          {downstreamCount > 0 && (
-            <p className="text-[10px] text-muted-foreground">{downstreamCount} upstream dependent{downstreamCount !== 1 ? 's' : ''}</p>
-          )}
+      <div className="min-w-0 space-y-1">
+        <div className="flex items-start gap-1.5">
+          <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5', cfg.dot)} />
+          <span className="font-semibold text-xs leading-tight break-words">{node.name}</span>
         </div>
+        {downstreamCount > 0 && (
+          <p className="text-[10px] text-muted-foreground leading-normal">{downstreamCount} upstream dependent{downstreamCount !== 1 ? 's' : ''}</p>
+        )}
         {/* Alert noise badge */}
         {noisyCount > 0 && (
-          <Badge
-            variant="outline"
-            className="text-[10px] px-1.5 py-0.5 bg-muted/50 text-muted-foreground border-border flex-shrink-0 gap-0.5"
-            title={`${noisyCount} alert rule${noisyCount > 1 ? 's' : ''} on this service rarely correlate with real incidents`}
-          >
-            <BellOff className="w-2.5 h-2.5" />
-            {noisyCount} noisy
-          </Badge>
+          <div className="pt-0.5">
+            <Badge
+              variant="outline"
+              className="text-[9px] px-1.5 py-0.5 bg-muted/50 text-muted-foreground border-border flex items-center gap-0.5 w-fit"
+              title={`${noisyCount} alert rule${noisyCount > 1 ? 's' : ''} on this service rarely correlate with real incidents`}
+            >
+              <BellOff className="w-2.5 h-2.5" />
+              {noisyCount} noisy
+            </Badge>
+          </div>
         )}
       </div>
     </div>

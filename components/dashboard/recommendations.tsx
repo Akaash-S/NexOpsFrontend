@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { SearchCode, ThumbsUp, ThumbsDown, AlertTriangle, CheckCircle2 } from 'lucide-react'
@@ -8,6 +8,8 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { mockIncidents, CandidateCause } from '@/lib/mock-data'
 import { getNodeById } from '@/lib/graph'
+import { useAppState } from '@/lib/hooks/use-app-state'
+import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
 interface PendingCandidate {
   incidentId: string
@@ -24,41 +26,33 @@ const severityConfig = {
   low: { text: 'text-info', bg: 'bg-info/10', border: 'border-info/20', label: 'Low' },
 }
 
-/** Build the initial candidate list from incident data — only unconfirmed causes */
-function buildCandidates(): PendingCandidate[] {
-  const candidates: PendingCandidate[] = []
-  for (const inc of mockIncidents) {
-    for (const cause of inc.candidateCauses) {
-      if (cause.confirmed === null) {
-        candidates.push({
+export function Recommendations() {
+  const { feedbackState, setFeedback } = useAppState()
+
+  // Dynamically build candidates list from mockIncidents syncing with global feedbackState context
+  const candidates = useMemo(() => {
+    const list: PendingCandidate[] = []
+    for (const inc of mockIncidents) {
+      for (const cause of inc.candidateCauses) {
+        const val = feedbackState[`${inc.id}::${cause.deployId}`] ?? null
+        list.push({
           incidentId: inc.id,
           incidentTitle: inc.title,
           incidentSeverity: inc.severity,
           cause,
-          _localConfirmed: null,
+          _localConfirmed: val,
         })
       }
     }
-  }
-  // Sort by matchScore descending
-  return candidates.sort((a, b) => b.cause.matchScore - a.cause.matchScore)
-}
-
-export function Recommendations() {
-  const [candidates, setCandidates] = useState<PendingCandidate[]>(buildCandidates)
+    return list.sort((a, b) => b.cause.matchScore - a.cause.matchScore)
+  }, [feedbackState])
 
   const pending = candidates.filter((c) => c._localConfirmed === null)
-  const confirmed = candidates.filter((c) => c._localConfirmed === true).length
-  const rejected = candidates.filter((c) => c._localConfirmed === false).length
+  const confirmedCount = candidates.filter((c) => c._localConfirmed === true).length
+  const rejectedCount = candidates.filter((c) => c._localConfirmed === false).length
 
   const handleFeedback = (incidentId: string, deployId: string, value: boolean) => {
-    setCandidates((prev) =>
-      prev.map((c) =>
-        c.incidentId === incidentId && c.cause.deployId === deployId
-          ? { ...c, _localConfirmed: value }
-          : c
-      )
-    )
+    setFeedback(incidentId, deployId, value)
   }
 
   return (
@@ -79,18 +73,18 @@ export function Recommendations() {
       </div>
 
       {/* Feedback summary */}
-      {(confirmed > 0 || rejected > 0) && (
+      {(confirmedCount > 0 || rejectedCount > 0) && (
         <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-muted/20 border border-border">
-          {confirmed > 0 && (
+          {confirmedCount > 0 && (
             <div className="flex items-center gap-1.5 text-xs text-success font-semibold">
               <CheckCircle2 className="w-3.5 h-3.5" />
-              {confirmed} confirmed
+              {confirmedCount} confirmed
             </div>
           )}
-          {rejected > 0 && (
+          {rejectedCount > 0 && (
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-semibold">
               <ThumbsDown className="w-3 h-3" />
-              {rejected} ruled out
+              {rejectedCount} ruled out
             </div>
           )}
         </div>
@@ -103,22 +97,17 @@ export function Recommendations() {
           <p className="text-sm">Check back after the next incident.</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-4">
           {pending.slice(0, 4).map((item) => {
             const sev = severityConfig[item.incidentSeverity]
             const node = getNodeById(item.cause.service)
             const serviceName = node?.name ?? item.cause.service
-            const scoreColor =
-              item.cause.matchScore >= 80 ? 'text-destructive' :
-              item.cause.matchScore >= 60 ? 'text-warning' : 'text-muted-foreground'
 
             return (
               <div
                 key={`${item.incidentId}::${item.cause.deployId}`}
                 className={cn(
-                  'p-4 rounded-lg border-2 transition-all',
-                  sev.bg,
-                  sev.border
+                  'p-4 rounded-lg border-2 transition-all border-border bg-card/60'
                 )}
               >
                 {/* Incident context */}
@@ -133,29 +122,19 @@ export function Recommendations() {
                   </div>
                 </div>
 
-                {/* Candidate */}
-                <div className="ml-6 space-y-2">
+                {/* Candidate details */}
+                <div className="ml-6 space-y-3">
                   <div className="flex items-center gap-2">
                     <span className="text-xs font-semibold text-muted-foreground">Candidate cause:</span>
                     <span className="text-sm font-semibold">{serviceName}</span>
                     <span className="text-xs font-mono text-muted-foreground">{item.cause.deployId}</span>
-                    <Badge variant="outline" className={cn('text-xs ml-auto font-mono', scoreColor)}>
-                      {item.cause.matchScore}/100
-                    </Badge>
                   </div>
 
-                  {/* Reasoning — always visible, never bare score alone */}
-                  <ul className="space-y-1">
-                    {item.cause.matchReasons.map((reason, i) => (
-                      <li key={i} className="flex items-start gap-2 text-xs">
-                        <span className="text-primary mt-0.5 flex-shrink-0">›</span>
-                        <span>{reason}</span>
-                      </li>
-                    ))}
-                  </ul>
+                  {/* Consolidated Score + Reasoning block */}
+                  <ScoreWithReasoning score={item.cause.matchScore} reasons={item.cause.matchReasons} />
 
                   {/* Binary confirm controls */}
-                  <div className="flex items-center gap-2 pt-2 border-t border-current border-opacity-20">
+                  <div className="flex items-center gap-2 pt-3 border-t border-border/40">
                     <span className="text-xs text-muted-foreground flex-1">Was this the cause?</span>
                     <button
                       onClick={() => handleFeedback(item.incidentId, item.cause.deployId, true)}

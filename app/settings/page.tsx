@@ -1,48 +1,62 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useTheme } from 'next-themes'
 import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Lock, Bell, Globe, Shield, Search, Loader2 } from 'lucide-react'
-import { AUDIT_LOGS_DATA } from '@/lib/mock-data'
+import { User, Bell, Network, Settings, LogOut, CheckCircle2, AlertTriangle, ShieldCheck, Play } from 'lucide-react'
 import { useAppState } from '@/lib/hooks/use-app-state'
+import { serviceNodes } from '@/lib/graph'
+import { INTEGRATIONS_DATA } from '@/lib/mock-data'
+import { cn } from '@/lib/utils'
 
-export default function SettingsPage() {
-  const { addNotification } = useAppState()
+function SettingsPageContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const { theme, setTheme } = useTheme()
+  
+  const { 
+    addNotification, 
+    watchedServices, 
+    setWatchedServices, 
+    density, 
+    setDensity, 
+    setAuthenticated,
+    currentUser
+  } = useAppState()
+
+  // Tab routing support
+  const queryTab = searchParams ? searchParams.get('tab') : null
+  const [activeTab, setActiveTab] = useState('preferences')
+
+  useEffect(() => {
+    if (queryTab && ['preferences', 'notifications', 'workspace', 'account'].includes(queryTab)) {
+      setActiveTab(queryTab)
+    }
+  }, [queryTab])
+
+  // Mock settings values
+  const [landingRoute, setLandingRoute] = useState('/dashboard')
+  const [codeownersPath, setCodeownersPath] = useState('.github/CODEOWNERS')
   const [isSaving, setIsSaving] = useState(false)
-  const [activeTab, setActiveTab] = useState('general')
 
-  // Search State for Audit Logs
-  const [searchAudit, setSearchAudit] = useState('')
-
-  // Settings State
-  const [settings, setSettings] = useState({
-    workspaceName: 'NexOps Engineering',
-    timezone: 'UTC',
-    currency: 'USD',
-    twoFactor: true,
-    ipWhitelist: false,
-    sessionTimeout: true,
-    enforceHttps: true,
-    alertCritical: true,
-    alertHigh: true,
-    alertMedium: false,
-    dailyDigest: true,
+  // Personal Mock Notifications Config
+  const [notifySlack, setNotifySlack] = useState({
+    newIncident: true,
+    candidateAwaiting: true,
+    highRiskDeploy: false,
   })
-
-  const filteredLogs = useMemo(() => {
-    if (!searchAudit) return AUDIT_LOGS_DATA
-    const searchLower = searchAudit.toLowerCase()
-    return AUDIT_LOGS_DATA.filter(log => 
-      log.user.toLowerCase().includes(searchLower) ||
-      log.action.toLowerCase().includes(searchLower) ||
-      log.type.toLowerCase().includes(searchLower)
-    )
-  }, [searchAudit])
+  const [notifyEmail, setNotifyEmail] = useState({
+    newIncident: true,
+    candidateAwaiting: false,
+    highRiskDeploy: true,
+  })
 
   const handleSave = (sectionName: string) => {
     setIsSaving(true)
@@ -50,214 +64,359 @@ export default function SettingsPage() {
       setIsSaving(false)
       addNotification({
         title: 'Settings Saved',
-        description: `Your ${sectionName} settings have been updated successfully.`,
+        description: `Your ${sectionName} changes have been successfully updated.`,
         type: 'success',
       })
-    }, 800)
+    }, 600)
   }
 
-  const updateSetting = (key: keyof typeof settings, value: any) => {
-    setSettings(prev => ({ ...prev, [key]: value }))
+  const handleSignOut = () => {
+    setAuthenticated(false)
+    addNotification({
+      title: 'Logged Out',
+      description: 'You have been signed out of your session.',
+      type: 'info',
+    })
+    router.push('/')
+  }
+
+  const toggleWatchedService = (serviceId: string) => {
+    if (watchedServices.includes(serviceId)) {
+      setWatchedServices(watchedServices.filter((id) => id !== serviceId))
+    } else {
+      setWatchedServices([...watchedServices, serviceId])
+    }
+    addNotification({
+      title: 'Watched Services Updated',
+      description: `Toggle status updated for service: ${serviceId}`,
+      type: 'info',
+    })
   }
 
   return (
-    <>
-      <PageContent>
-        <PageHeader
-          title="Settings"
-          description="Workspace configuration, security policies, and administrative controls"
-        />
+    <PageContent>
+      <PageHeader
+        title="Settings & Preferences"
+        description="Configure your personal interface options, notification scopes, and workspace connections"
+      />
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList>
-            <TabsTrigger value="general" className="gap-2">
-              <Globe className="w-4 h-4" />
-              General
-            </TabsTrigger>
-            <TabsTrigger value="security" className="gap-2">
-              <Shield className="w-4 h-4" />
-              Security
-            </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
-              <Bell className="w-4 h-4" />
-              Notifications
-            </TabsTrigger>
-            <TabsTrigger value="audit" className="gap-2">
-              <Lock className="w-4 h-4" />
-              Audit Logs
-            </TabsTrigger>
-          </TabsList>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="preferences" className="gap-2">
+            <Settings className="w-4 h-4" />
+            Preferences
+          </TabsTrigger>
+          <TabsTrigger value="notifications" className="gap-2">
+            <Bell className="w-4 h-4" />
+            Notifications
+          </TabsTrigger>
+          <TabsTrigger value="workspace" className="gap-2">
+            <Network className="w-4 h-4" />
+            Workspace
+          </TabsTrigger>
+          <TabsTrigger value="account" className="gap-2">
+            <User className="w-4 h-4" />
+            Account
+          </TabsTrigger>
+        </TabsList>
 
-          {/* General */}
-          <TabsContent value="general" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
-            <Card className="p-6 max-w-2xl">
-              <h3 className="font-semibold mb-4 text-lg">Workspace Settings</h3>
-              <div className="space-y-6">
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Workspace Name</label>
-                  <Input 
-                    value={settings.workspaceName} 
-                    onChange={(e) => updateSetting('workspaceName', e.target.value)}
-                  />
+        {/* 1. PREFERENCES TAB (PERSONAL) */}
+        <TabsContent value="preferences" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Display & Styling settings */}
+            <Card className="p-6 space-y-6">
+              <div>
+                <h3 className="font-semibold text-base mb-1">Display & Theme</h3>
+                <p className="text-xs text-muted-foreground">Adjust styling variables for your user interface.</p>
+              </div>
+
+              {/* Theme selection */}
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Appearance Theme</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['dark', 'light', 'system'].map((t) => (
+                    <Button
+                      key={t}
+                      variant="outline"
+                      size="sm"
+                      className={cn(
+                        'capitalize border-border/80',
+                        theme === t && 'border-primary bg-primary/5 text-primary'
+                      )}
+                      onClick={() => {
+                        setTheme(t)
+                        addNotification({
+                          title: 'Appearance Changed',
+                          description: `Theme is now set to ${t}.`,
+                          type: 'success',
+                        })
+                      }}
+                    >
+                      {t}
+                    </Button>
+                  ))}
                 </div>
+              </div>
+
+              {/* Density toggle */}
+              <div className="flex items-center justify-between pt-4 border-t border-border/40">
                 <div>
-                  <label className="text-sm font-medium mb-2 block">Timezone</label>
-                  <Input 
-                    value={settings.timezone} 
-                    onChange={(e) => updateSetting('timezone', e.target.value)}
-                  />
+                  <label className="text-sm font-semibold block">Comfortable Grid View</label>
+                  <span className="text-xs text-muted-foreground">Sets default card padding and grid column sizes.</span>
                 </div>
-                <div>
-                  <label className="text-sm font-medium mb-2 block">Currency</label>
-                  <Input 
-                    value={settings.currency} 
-                    onChange={(e) => updateSetting('currency', e.target.value)}
-                  />
-                </div>
-                <div className="pt-4 border-t border-border">
-                  <Button onClick={() => handleSave('General')} disabled={isSaving}>
-                    {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                    Save Changes
+                <Switch 
+                  checked={density === 'comfortable'} 
+                  onCheckedChange={(val) => {
+                    setDensity(val ? 'comfortable' : 'compact')
+                    addNotification({
+                      title: 'Density Configured',
+                      description: `Dashboard padding set to ${val ? 'comfortable' : 'compact'}.`,
+                      type: 'info',
+                    })
+                  }} 
+                />
+              </div>
+
+              {/* Default landing route selection */}
+              <div className="space-y-2 pt-4 border-t border-border/40">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider block">Default post-login page</label>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(landingRoute === '/dashboard' && 'border-primary bg-primary/5 text-primary')}
+                    onClick={() => {
+                      setLandingRoute('/dashboard')
+                      addNotification({ title: 'Preferences Updated', description: 'Landing page set to Dashboard', type: 'success' })
+                    }}
+                  >
+                    Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className={cn(landingRoute === '/incidents' && 'border-primary bg-primary/5 text-primary')}
+                    onClick={() => {
+                      setLandingRoute('/incidents')
+                      addNotification({ title: 'Preferences Updated', description: 'Landing page set to Incidents log', type: 'success' })
+                    }}
+                  >
+                    Incidents Log
                   </Button>
                 </div>
               </div>
             </Card>
-          </TabsContent>
 
-          {/* Security */}
-          <TabsContent value="security" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Card className="p-6">
-                <h3 className="font-semibold mb-4 text-lg">Security Policies</h3>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm">Two-Factor Authentication Required</label>
-                    <Switch checked={settings.twoFactor} onCheckedChange={(v) => { updateSetting('twoFactor', v); handleSave('Security') }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm">IP Whitelist Enabled</label>
-                    <Switch checked={settings.ipWhitelist} onCheckedChange={(v) => { updateSetting('ipWhitelist', v); handleSave('Security') }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm">Session Timeout (30 min)</label>
-                    <Switch checked={settings.sessionTimeout} onCheckedChange={(v) => { updateSetting('sessionTimeout', v); handleSave('Security') }} />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm">Enforce HTTPS</label>
-                    <Switch checked={settings.enforceHttps} onCheckedChange={(v) => { updateSetting('enforceHttps', v); handleSave('Security') }} />
-                  </div>
-                </div>
-              </Card>
+            {/* Watched microservices */}
+            <Card className="p-6 space-y-4">
+              <div>
+                <h3 className="font-semibold text-base mb-1">Watched Services</h3>
+                <p className="text-xs text-muted-foreground">Select services to prioritize and watch in personalized dashboards.</p>
+              </div>
 
-              <Card className="p-6">
-                <h3 className="font-semibold mb-4 text-lg">API Security</h3>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm text-muted-foreground">Rate Limiting</span>
-                    <span className="text-sm font-semibold">1000 req/min</span>
-                  </div>
-                  <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <span className="text-sm text-muted-foreground">Token Expiration</span>
-                    <span className="text-sm font-semibold">90 days</span>
-                  </div>
-                  <div className="pt-4 mt-2 border-t border-border">
-                    <Button variant="outline" className="w-full">Manage API Keys</Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Notifications */}
-          <TabsContent value="notifications" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
-            <Card className="p-6 max-w-2xl">
-              <h3 className="font-semibold mb-4 text-lg">Notification Preferences</h3>
-              <div className="space-y-6">
-                <div className="flex items-center justify-between p-2 rounded hover:bg-muted/30 transition-colors">
-                  <div>
-                    <label className="text-sm font-medium block">Critical Alerts</label>
-                    <span className="text-xs text-muted-foreground">Instant delivery via SMS and PagerDuty</span>
-                  </div>
-                  <Switch checked={settings.alertCritical} onCheckedChange={(v) => { updateSetting('alertCritical', v); handleSave('Notifications') }} />
-                </div>
-                <div className="flex items-center justify-between p-2 rounded hover:bg-muted/30 transition-colors">
-                  <div>
-                    <label className="text-sm font-medium block">High Priority</label>
-                    <span className="text-xs text-muted-foreground">Immediate delivery via Email and Slack</span>
-                  </div>
-                  <Switch checked={settings.alertHigh} onCheckedChange={(v) => { updateSetting('alertHigh', v); handleSave('Notifications') }} />
-                </div>
-                <div className="flex items-center justify-between p-2 rounded hover:bg-muted/30 transition-colors">
-                  <div>
-                    <label className="text-sm font-medium block">Medium Priority</label>
-                    <span className="text-xs text-muted-foreground">Batched delivery via Email every 1 hour</span>
-                  </div>
-                  <Switch checked={settings.alertMedium} onCheckedChange={(v) => { updateSetting('alertMedium', v); handleSave('Notifications') }} />
-                </div>
-                <div className="flex items-center justify-between p-2 rounded hover:bg-muted/30 transition-colors">
-                  <div>
-                    <label className="text-sm font-medium block">Daily Digest</label>
-                    <span className="text-xs text-muted-foreground">Summary of all operations sent at 8:00 AM</span>
-                  </div>
-                  <Switch checked={settings.dailyDigest} onCheckedChange={(v) => { updateSetting('dailyDigest', v); handleSave('Notifications') }} />
-                </div>
+              <div className="space-y-1.5 max-h-[220px] overflow-y-auto border border-border/50 rounded-lg p-2 bg-muted/15">
+                {serviceNodes.map((svc) => {
+                  const isWatched = watchedServices.includes(svc.id)
+                  return (
+                    <div 
+                      key={svc.id} 
+                      onClick={() => toggleWatchedService(svc.id)}
+                      className={cn(
+                        "flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors text-xs border border-transparent",
+                        isWatched ? 'bg-primary/5 border-primary/20 text-foreground' : 'hover:bg-muted/50 text-muted-foreground'
+                      )}
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "w-1.5 h-1.5 rounded-full",
+                          svc.tier === 'ingress' ? 'bg-primary' : svc.tier === 'service' ? 'bg-accent' : 'bg-warning'
+                        )} />
+                        <span className="font-semibold">{svc.name}</span>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] scale-90">
+                        {isWatched ? 'Watching' : 'Ignore'}
+                      </Badge>
+                    </div>
+                  )
+                })}
               </div>
             </Card>
-          </TabsContent>
+          </div>
+        </TabsContent>
 
-          {/* Audit Logs */}
-          <TabsContent value="audit" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
-            <Card className="p-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-                <div>
-                  <h3 className="font-semibold text-lg">Audit Log</h3>
-                  <p className="text-sm text-muted-foreground mt-1">A verifiable record of all administrative actions taken in the workspace.</p>
+        {/* 2. NOTIFICATIONS TAB (PERSONAL CHANNEL CONFIGS) */}
+        <TabsContent value="notifications" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
+          <Card className="p-6 max-w-2xl space-y-6">
+            <div>
+              <h3 className="font-semibold text-base mb-1">Per-Channel Alert Subscriptions</h3>
+              <p className="text-xs text-muted-foreground">Scope notification notifications relative to your watched and owned service graph nodes.</p>
+            </div>
+
+            {/* Channels Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+              {/* Slack Channel */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Slack notifications</span>
                 </div>
-                <div className="relative w-full sm:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    placeholder="Search logs..." 
-                    className="pl-9 w-full"
-                    value={searchAudit}
-                    onChange={(e) => setSearchAudit(e.target.value)}
-                  />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="text-muted-foreground">New incident on watched service</label>
+                    <Switch checked={notifySlack.newIncident} onCheckedChange={(v) => { setNotifySlack(p=>({...p, newIncident: v})); handleSave('Slack settings') }} />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="text-muted-foreground">Candidate cause awaiting feedback</label>
+                    <Switch checked={notifySlack.candidateAwaiting} onCheckedChange={(v) => { setNotifySlack(p=>({...p, candidateAwaiting: v})); handleSave('Slack settings') }} />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="text-muted-foreground">High-risk deploy on watched service</label>
+                    <Switch checked={notifySlack.highRiskDeploy} onCheckedChange={(v) => { setNotifySlack(p=>({...p, highRiskDeploy: v})); handleSave('Slack settings') }} />
+                  </div>
                 </div>
               </div>
+
+              {/* Email Channel */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                  <span className="text-xs font-bold text-foreground uppercase tracking-wider">Email digests</span>
+                </div>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="text-muted-foreground">New incident on watched service</label>
+                    <Switch checked={notifyEmail.newIncident} onCheckedChange={(v) => { setNotifyEmail(p=>({...p, newIncident: v})); handleSave('Email settings') }} />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="text-muted-foreground">Candidate cause awaiting feedback</label>
+                    <Switch checked={notifyEmail.candidateAwaiting} onCheckedChange={(v) => { setNotifyEmail(p=>({...p, candidateAwaiting: v})); handleSave('Email settings') }} />
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <label className="text-muted-foreground">High-risk deploy on watched service</label>
+                    <Switch checked={notifyEmail.highRiskDeploy} onCheckedChange={(v) => { setNotifyEmail(p=>({...p, highRiskDeploy: v})); handleSave('Email settings') }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+        </TabsContent>
+
+        {/* 3. WORKSPACE TAB (ORG/ADMIN INTEGRATIONS & DATA SOURCE CONFIG) */}
+        <TabsContent value="workspace" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            
+            {/* Integrations Connection Status */}
+            <div className="md:col-span-2 space-y-4">
+              <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground px-1">Active Integrations</h3>
               
-              <div className="space-y-2">
-                {filteredLogs.length > 0 ? (
-                  filteredLogs.map(log => (
-                    <div key={log.id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-muted/30 hover:bg-muted/50 rounded-lg border border-border transition-colors">
-                      <div className="flex items-center gap-3 mb-2 sm:mb-0">
-                        <div className={`w-2 h-2 rounded-full ${
-                          log.type === 'security' ? 'bg-destructive' : 
-                          log.type === 'infrastructure' ? 'bg-primary' : 
-                          log.type === 'integration' ? 'bg-info' : 'bg-muted-foreground'
-                        }`} />
-                        <div>
-                          <span className="font-semibold text-sm mr-2">{log.user}</span>
-                          <span className="text-sm text-muted-foreground">{log.action}</span>
-                        </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {INTEGRATIONS_DATA.filter(i => ['GitHub', 'PagerDuty'].includes(i.name)).map((integration) => (
+                  <Card key={integration.name} className="p-5 border border-border/80 space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="font-bold text-sm">{integration.name}</div>
+                      <Badge className="bg-success/10 text-success border-success/20 border" variant="outline">
+                        {integration.status}
+                      </Badge>
+                    </div>
+                    <div className="space-y-1 text-xs text-muted-foreground">
+                      <div className="flex justify-between">
+                        <span>Derived Info:</span>
+                        <span className="text-foreground">{integration.config}</span>
                       </div>
-                      <div className="text-xs text-muted-foreground flex shrink-0 sm:ml-4 bg-background px-2 py-1 rounded-md border border-border">
-                        {log.time}
+                      <div className="flex justify-between">
+                        <span>Last Sync:</span>
+                        <span>{integration.lastSync}</span>
                       </div>
                     </div>
-                  ))
-                ) : (
-                  <div className="text-center p-8 text-muted-foreground border border-dashed rounded-lg bg-muted/20">
-                    <p>No audit logs found matching your search.</p>
-                  </div>
-                )}
+                  </Card>
+                ))}
               </div>
-              
-              <div className="mt-6 flex justify-center">
-                <Button variant="outline" disabled>Load More Events</Button>
+            </div>
+
+            {/* Derived Ownership configuration */}
+            <Card className="p-6 border border-border bg-card space-y-4 h-fit">
+              <div>
+                <h3 className="font-semibold text-base mb-1">Ownership Model</h3>
+                <p className="text-xs text-muted-foreground">Configure the derived CODEOWNERS mappings.</p>
               </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide block">
+                  Repository Config Path
+                </label>
+                <Input 
+                  value={codeownersPath} 
+                  onChange={(e) => setCodeownersPath(e.target.value)} 
+                  className="text-xs font-mono h-9 bg-background/50"
+                />
+              </div>
+
+              <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-[10px] text-muted-foreground flex gap-1.5">
+                <ShieldCheck className="w-3.5 h-3.5 text-success flex-shrink-0 mt-0.5" />
+                <span>NexOps derives incident leads by reading mappings at this path inside synced repositories.</span>
+              </div>
+
+              <Button size="sm" className="w-full text-xs font-medium" onClick={() => handleSave('Ownership Model')}>
+                Update Source Path
+              </Button>
             </Card>
-          </TabsContent>
-        </Tabs>
+          </div>
+        </TabsContent>
+
+        {/* 4. ACCOUNT TAB (SESSION INFO & SIGN OUT ACTION) */}
+        <TabsContent value="account" className="space-y-6 animate-in fade-in slide-in-from-left-2 duration-300">
+          <Card className="p-6 max-w-md border border-border/80 bg-card/60 space-y-6">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                <User className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="font-bold text-base">{currentUser?.name ?? 'John Doe'}</h3>
+                <p className="text-xs text-muted-foreground">Role: Senior Staff Engineer</p>
+              </div>
+            </div>
+
+            <div className="space-y-2.5 pt-4 border-t border-border/40 text-xs text-muted-foreground">
+              <div className="flex justify-between">
+                <span>Account ID:</span>
+                <span className="font-mono text-foreground">usr-94819-nex</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Mock Session:</span>
+                <Badge variant="outline" className="bg-success/5 text-success border-success/20 text-[10px] scale-90 px-1.5 py-0">
+                  Active
+                </Badge>
+              </div>
+            </div>
+
+            <Button 
+              variant="destructive" 
+              className="w-full gap-2 h-10 text-sm font-medium border border-destructive/20 bg-destructive/10 hover:bg-destructive/20 text-destructive shadow-sm"
+              onClick={handleSignOut}
+            >
+              <LogOut className="w-4 h-4" />
+              Sign Out from NexOps
+            </Button>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </PageContent>
+  )
+}
+
+export default function SettingsPage() {
+  return (
+    <Suspense fallback={
+      <PageContent>
+        <PageHeader
+          title="Settings"
+          description="System configuration — manage your preferences, notification thresholds, and workspace integrations"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground animate-pulse">Loading settings...</div>
+        </div>
       </PageContent>
-    </>
+    }>
+      <SettingsPageContent />
+    </Suspense>
   )
 }

@@ -1,14 +1,20 @@
 'use client'
 
-import { useState } from 'react'
-import { PageContent, PageHeader } from '@/components/layout'
+import { useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
+import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { ServiceCatalog } from '@/components/services/service-catalog'
 import { ServiceDetailsDrawer } from '@/components/services/service-details-drawer'
 import { ServiceFilters } from '@/components/services/service-filters'
 import { SERVICES_DATA } from '@/lib/mock-data'
+import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import { Network } from 'lucide-react'
 
-export default function ServicesPage() {
-  const [services] = useState(SERVICES_DATA)
+function ServicesPageContent() {
+  const searchParams = useSearchParams()
+  const isEmpty = searchParams?.get('empty') === 'true'
+  const [services] = useState(() => isEmpty ? [] : SERVICES_DATA)
   const [selectedService, setSelectedService] = useState<string | null>(null)
 
   const [filters, setFilters] = useState({
@@ -46,8 +52,30 @@ export default function ServicesPage() {
       }
     })
 
-
   const selectedServiceData = services.find((s) => s.id === selectedService) as any
+
+  if (services.length === 0) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Services"
+          description="Service catalog — read-only, derived from connected source-of-truth systems"
+        />
+        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
+          <EmptyState
+            icon={<Network className="w-12 h-12 text-muted-foreground/60" />}
+            title="No Services Monitored"
+            description="Connect a repository or workspace to start tracking services, health, and deployments automatically."
+            action={
+              <Button asChild>
+                <Link href="/settings?tab=workspace">Connect GitHub</Link>
+              </Button>
+            }
+          />
+        </div>
+      </PageContent>
+    )
+  }
 
   return (
     <>
@@ -79,3 +107,22 @@ export default function ServicesPage() {
     </>
   )
 }
+
+export default function ServicesPage() {
+  return (
+    <Suspense fallback={
+      <PageContent>
+        <PageHeader
+          title="Services"
+          description="Service catalog — read-only, derived from connected source-of-truth systems"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground animate-pulse">Loading services...</div>
+        </div>
+      </PageContent>
+    }>
+      <ServicesPageContent />
+    </Suspense>
+  )
+}
+

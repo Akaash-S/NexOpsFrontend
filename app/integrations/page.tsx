@@ -12,8 +12,7 @@ import { IntegrationFilters } from '@/components/integrations/integration-filter
 export default function IntegrationsPage() {
   const [integrations] = useState<any[]>(
     // Show only GitHub and PagerDuty per restructure spec (read-only connection status)
-    INTEGRATIONS_DATA.filter((i) => ['GitHub', 'PagerDuty'].includes(i.name) ||
-      ['GitHub', 'PagerDuty', 'Kubernetes', 'Slack'].includes(i.name))
+    INTEGRATIONS_DATA.filter((i) => ['GitHub', 'PagerDuty'].includes(i.name))
   )
 
   // Filters State

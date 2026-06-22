@@ -1,0 +1,198 @@
+'use client'
+
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAppState } from '@/lib/hooks/use-app-state'
+import { Card } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
+import { Github, Chrome, ArrowRight, ShieldAlert, Loader2 } from 'lucide-react'
+import { cn } from '@/lib/utils'
+
+type AuthProvider = 'GitHub' | 'Google' | 'email' | null
+
+export default function LoginPage() {
+  const router = useRouter()
+  const { setAuthenticated, onboardingComplete } = useAppState()
+  const [email, setEmail] = useState('')
+  const [activeProvider, setActiveProvider] = useState<AuthProvider>(null)
+  const [transitioning, setTransitioning] = useState(false)
+  const [emailError, setEmailError] = useState('')
+
+  const loading = activeProvider !== null
+
+  const handleMockLogin = (provider: AuthProvider) => {
+    if (loading) return
+    setActiveProvider(provider)
+    setEmailError('')
+
+    // Step 1: Hold loading state for a deliberate delay (1100ms)
+    setTimeout(() => {
+      // Step 2: Brief full-screen transition frame (350ms)
+      setTransitioning(true)
+
+      setTimeout(() => {
+        setAuthenticated(true)
+        if (!onboardingComplete) {
+          router.push('/onboarding')
+        } else {
+          router.push('/dashboard')
+        }
+      }, 350)
+    }, 1100)
+  }
+
+  const handleSubmitEmail = (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError('')
+
+    if (!email.trim()) {
+      setEmailError('Please enter your work email to continue.')
+      return
+    }
+
+    handleMockLogin('email')
+  }
+
+  // Full-screen transition overlay
+  if (transitioning) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-300">
+        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+          <span className="text-xl font-black text-primary-foreground">N</span>
+        </div>
+        <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+        <p className="text-xs text-muted-foreground">Setting up your workspace…</p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col justify-center items-center px-4 relative overflow-hidden">
+      {/* Background gradients */}
+      <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/5 blur-[120px] pointer-events-none" />
+
+      <div className={cn(
+        "w-full max-w-[420px] space-y-6 z-10 transition-all duration-300",
+        loading && "opacity-95"
+      )}>
+        {/* Brand Logo & Header */}
+        <div className="flex flex-col items-center text-center space-y-2">
+          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+            <span className="text-xl font-black text-primary-foreground">N</span>
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight mt-4">Welcome to NexOps</h1>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            Sign in to start correlating alerts, changes, and service graphs in real time.
+          </p>
+        </div>
+
+        {/* Auth card */}
+        <Card className="p-6 border border-border/80 backdrop-blur-md bg-card/50 shadow-2xl space-y-6">
+          <div className="space-y-3">
+            {/* Github SSO */}
+            <Button
+              variant="outline"
+              className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
+              onClick={() => handleMockLogin('GitHub')}
+              disabled={loading}
+            >
+              {activeProvider === 'GitHub' ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">Connecting to GitHub…</span>
+                </>
+              ) : (
+                <>
+                  <Github className="w-5 h-5 text-foreground" />
+                  Continue with GitHub
+                </>
+              )}
+            </Button>
+
+            {/* Google SSO */}
+            <Button
+              variant="outline"
+              className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
+              onClick={() => handleMockLogin('Google')}
+              disabled={loading}
+            >
+              {activeProvider === 'Google' ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">Connecting to Google…</span>
+                </>
+              ) : (
+                <>
+                  <Chrome className="w-5 h-5 text-foreground" />
+                  Continue with Google
+                </>
+              )}
+            </Button>
+          </div>
+
+          <div className="relative flex py-2 items-center">
+            <div className="flex-grow border-t border-border/60"></div>
+            <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase font-semibold tracking-wider">
+              or continue with
+            </span>
+            <div className="flex-grow border-t border-border/60"></div>
+          </div>
+
+          {/* Email Form Option */}
+          <form onSubmit={handleSubmitEmail} className="space-y-4">
+            <div className="space-y-1">
+              <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Work Email
+              </label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => {
+                  setEmail(e.target.value)
+                  if (emailError) setEmailError('')
+                }}
+                className={cn(
+                  "h-11 bg-background/50 border-border",
+                  emailError && "border-destructive focus-visible:ring-destructive/30"
+                )}
+                disabled={loading}
+              />
+              {emailError && (
+                <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
+                  {emailError}
+                </p>
+              )}
+            </div>
+            <Button
+              type="submit"
+              className="w-full h-11 font-medium gap-2 text-sm shadow-lg shadow-primary/10"
+              disabled={loading}
+            >
+              {activeProvider === 'email' ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  Authenticating…
+                </>
+              ) : (
+                <>
+                  Sign In with Email
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </Button>
+          </form>
+        </Card>
+
+        {/* Bottom helper info */}
+        <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 p-2 bg-muted/20 border border-border/30 rounded-lg">
+          <ShieldAlert className="w-3.5 h-3.5 text-primary" />
+          <span>SSO Mock authentication is active for previewing.</span>
+        </div>
+      </div>
+    </div>
+  )
+}
