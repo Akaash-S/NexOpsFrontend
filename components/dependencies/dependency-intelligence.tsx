@@ -4,10 +4,11 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { AlertTriangle, Zap, TrendingUp, CheckCircle, GitBranch } from 'lucide-react'
+import { AlertTriangle, Zap, TrendingUp, CheckCircle, GitBranch, X } from 'lucide-react'
 
 interface DependencyIntelligenceProps {
   nodeId: string
+  onClose?: () => void
 }
 
 const serviceData: Record<string, any> = {
@@ -128,7 +129,7 @@ const serviceData: Record<string, any> = {
   },
 }
 
-export function DependencyIntelligence({ nodeId }: DependencyIntelligenceProps) {
+export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligenceProps) {
   const service = serviceData[nodeId] || {
     name: nodeId,
     health: 90,
@@ -154,13 +155,25 @@ export function DependencyIntelligence({ nodeId }: DependencyIntelligenceProps) 
     <ScrollArea className="h-full border border-border rounded-lg">
       <div className="p-4 space-y-4">
         {/* Header */}
-        <div className="space-y-2 pb-4 border-b border-border">
-          <h3 className="font-semibold text-foreground">{service.name}</h3>
-          <div className="flex gap-2">
-            <Badge variant="outline">{service.health}% Health</Badge>
-            <Badge variant="outline">{service.criticality}</Badge>
+        <div className="flex items-start justify-between pb-4 border-b border-border">
+          <div className="space-y-2">
+            <h3 className="font-semibold text-foreground">{service.name}</h3>
+            <div className="flex gap-2">
+              <Badge variant="outline">{service.health}% Health</Badge>
+              <Badge variant="outline">{service.criticality}</Badge>
+            </div>
+            <p className="text-xs text-muted-foreground">Owned by {service.owner}</p>
           </div>
-          <p className="text-xs text-muted-foreground">Owned by {service.owner}</p>
+          {onClose && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted"
+              onClick={onClose}
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          )}
         </div>
 
         {/* Health Trend */}

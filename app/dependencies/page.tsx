@@ -33,9 +33,9 @@ export default function DependenciesPage() {
           />
 
           {/* Main Content Area */}
-          <div className="flex gap-4 flex-1 min-h-[400px]">
+          <div className="flex gap-4 flex-1 h-[calc(100vh-240px)] min-h-[500px]">
             {/* Graph Area */}
-            <div className="flex-1 border border-border rounded-lg overflow-hidden min-h-[400px]">
+            <div className="flex-1 border border-border rounded-lg overflow-hidden h-full">
               <DependencyGraph
                 impactMode={impactMode}
                 searchQuery={searchQuery}
@@ -46,8 +46,8 @@ export default function DependenciesPage() {
 
             {/* Intelligence Panel */}
             {selectedNode && (
-              <div className="w-96">
-                <DependencyIntelligence nodeId={selectedNode} />
+              <div className="w-96 flex-shrink-0 h-full">
+                <DependencyIntelligence nodeId={selectedNode} onClose={() => setSelectedNode(null)} />
               </div>
             )}
           </div>
