@@ -119,9 +119,10 @@ function SettingsPageContent() {
     } else {
       setWatchedServices([...watchedServices, serviceId])
     }
+    const serviceName = repos.find((r) => r.id === serviceId)?.name || serviceId
     addNotification({
       title: 'Watched Services Updated',
-      description: `Toggle status updated for service: ${serviceId}`,
+      description: `Toggle status updated for service: ${serviceName}`,
       type: 'info',
     })
   }

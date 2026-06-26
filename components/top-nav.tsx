@@ -172,7 +172,9 @@ export function TopNav() {
                             )}>
                               {n.title}
                             </p>
-                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">{n.timestamp}</span>
+                            <span className="text-[9px] text-muted-foreground whitespace-nowrap">
+                              {new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', month: 'short', day: 'numeric' }).format(new Date(n.timestamp))}
+                            </span>
                           </div>
                           <p className="text-[10px] text-muted-foreground leading-normal line-clamp-2">
                             {n.description}

@@ -50,15 +50,15 @@ function ServiceNodeCard({ node, edges }: { node: ServiceNode; edges: Dependency
   return (
     <div
       className={cn(
-        'px-3 py-2.5 rounded-lg border-2 transition-colors cursor-default',
+        'px-3 py-2.5 rounded-lg border-2 transition-colors cursor-default max-w-full',
         cfg.bg,
         cfg.border
       )}
     >
       <div className="min-w-0 space-y-1">
-        <div className="flex items-start gap-1.5">
+        <div className="flex items-start gap-1.5 min-w-0">
           <div className={cn('w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5', cfg.dot)} />
-          <span className="font-semibold text-xs leading-tight break-words">{node.name}</span>
+          <span className="font-semibold text-xs leading-tight truncate">{node.name}</span>
         </div>
         {downstreamCount > 0 && (
           <p className="text-[10px] text-muted-foreground leading-normal">{downstreamCount} upstream dependent{downstreamCount !== 1 ? 's' : ''}</p>
@@ -164,12 +164,7 @@ export function ImpactMap() {
                 </span>
                 <div className="h-px flex-1 bg-border" />
               </div>
-              <div className={cn(
-                'grid gap-2',
-                nodes.length === 1 ? 'grid-cols-1' :
-                nodes.length === 2 ? 'grid-cols-2' :
-                'grid-cols-3'
-              )}>
+              <div className="flex flex-wrap gap-2">
                 {nodes.map((node) => (
                   <ServiceNodeCard key={node.id} node={node} edges={topology.edges} />
                 ))}
