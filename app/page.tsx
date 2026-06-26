@@ -519,7 +519,7 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Architecture diagram mockup */}
+            {/* Architecture diagram */}
             <Card className="p-6 bg-muted/10 border border-border/60 relative overflow-hidden flex flex-col justify-center h-[300px]">
               <div className="absolute top-0 right-0 w-24 h-24 bg-primary/10 rounded-full blur-2xl" />
               <div className="space-y-4">
@@ -613,7 +613,7 @@ export default function LandingPage() {
 
       {/* Footer */}
       <footer className="border-t border-border/40 py-8 text-center text-xs text-muted-foreground bg-muted/5">
-        <p>© 2026 NexOps Correlation Platform. All mock telemetry active.</p>
+        <p>© 2026 NexOps Correlation Platform. All telemetry active.</p>
       </footer>
 
     </div>

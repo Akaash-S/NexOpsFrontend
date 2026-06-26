@@ -40,16 +40,11 @@ const statusConfig = {
   resolved: { label: 'Resolved', class: 'bg-success/10 text-success border-success/20' },
 }
 
-const healthMock: Record<string, 'healthy' | 'warning' | 'critical'> = {
-  'api-gateway': 'warning',
-  'auth-service': 'critical',
-  'user-service': 'healthy',
-  'payment-service': 'warning',
-  'notification-service': 'healthy',
-  'analytics-engine': 'healthy',
-  'database': 'warning',
-  'redis-cache': 'healthy',
-  'kafka-queue': 'healthy',
+function deriveHealth(node: any): 'healthy' | 'warning' | 'critical' {
+  if (node.ciStatus === 'failing') return 'critical'
+  if (node.healthScore !== undefined && node.healthScore < 80) return 'warning'
+  if (node.vulnerabilities && node.vulnerabilities > 0) return 'warning'
+  return 'healthy'
 }
 
 const healthConfig = {
@@ -481,7 +476,7 @@ export default function IncidentInvestigationPage() {
               <div className="space-y-2">
                 {graphSlice.map((node) => {
                   if (!node) return null
-                  const health = healthMock[node.id] ?? 'healthy'
+                  const health = deriveHealth(node)
                   const hcfg = healthConfig[health]
                   const isIncidentService = node.id === primaryServiceId
                   const noisyCount = node.alertHistory.noisyRuleIds?.length ?? 0
