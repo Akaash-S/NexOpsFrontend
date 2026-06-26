@@ -14,19 +14,25 @@ import { Loader2 } from 'lucide-react'
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const { isAuthenticated, onboardingComplete } = useAppState()
+  const { isAuthenticated, onboardingComplete, authLoading } = useAppState()
 
   const isPreApp = ['/', '/login', '/onboarding'].includes(pathname)
   
   // Synchronous check to see if a redirect is pending
-  const isRedirecting = 
+  const isRedirecting = !authLoading && (
     (!isAuthenticated && (!isPreApp || pathname === '/onboarding')) ||
     (isAuthenticated && !onboardingComplete && pathname !== '/onboarding') ||
     (isAuthenticated && onboardingComplete && ['/', '/login', '/onboarding'].includes(pathname))
+  )
 
-  const [checkingAuth, setCheckingAuth] = useState(() => isRedirecting)
+  const [checkingAuth, setCheckingAuth] = useState(() => authLoading || isRedirecting)
 
   useEffect(() => {
+    if (authLoading) {
+      setCheckingAuth(true)
+      return
+    }
+
     const checkAuthAndRedirect = () => {
       if (!isAuthenticated) {
         if (!isPreApp || pathname === '/onboarding') {
@@ -51,7 +57,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
 
     checkAuthAndRedirect()
-  }, [pathname, isAuthenticated, onboardingComplete, router, isPreApp])
+  }, [pathname, isAuthenticated, onboardingComplete, router, isPreApp, authLoading])
 
   // Avoid flash of wrong content: render loading state during redirects or auth checks
   if (isRedirecting || checkingAuth) {

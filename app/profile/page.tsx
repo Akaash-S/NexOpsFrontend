@@ -5,51 +5,108 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { PageContent, PageHeader } from '@/components/layout'
-import { serviceNodes, getNodeById } from '@/lib/graph'
-import { mockIncidents, CandidateCause } from '@/lib/mock-data'
-import { User, Bell, Network, CheckCircle2, AlertTriangle, ThumbsUp, ThumbsDown, ArrowRight } from 'lucide-react'
+import { useState, useEffect, useMemo } from 'react'
+import { User, Bell, Network, CheckCircle2, AlertTriangle, ThumbsUp, ThumbsDown, ArrowRight, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export default function ProfilePage() {
-  const { currentUser, feedbackState, setFeedback } = useAppState()
+  const { currentUser, feedbackState } = useAppState()
+  const [repos, setRepos] = useState<any[]>([])
+  const [incidents, setIncidents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Derived user team: John Doe is on @team-payments (primary) and @team-platform (secondary)
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [reposData, incidentsData] = await Promise.all([
+          apiFetch('/repos'),
+          apiFetch('/incidents')
+        ])
+
+        const enrichedRepos = reposData.map((repo: any) => {
+          const nameLower = repo.name.toLowerCase()
+          let tier = 'service'
+          if (nameLower.includes('gateway') || nameLower.includes('frontend')) {
+            tier = 'ingress'
+          } else if (nameLower.includes('database') || nameLower.includes('db') || nameLower.includes('redis') || nameLower.includes('cache') || nameLower.includes('queue') || nameLower.includes('kafka') || nameLower.includes('terraform')) {
+            tier = 'data'
+          }
+          return {
+            ...repo,
+            tier,
+            alertHistory: {
+              count30d: repo.vulnerabilities ? repo.vulnerabilities + 2 : 2
+            }
+          }
+        })
+
+        setRepos(enrichedRepos)
+        setIncidents(incidentsData)
+      } catch (err) {
+        console.error("Failed to load profile data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  // Derived user team: Akaash S/John Doe is on @team-payments (primary) and @team-platform (secondary)
   const userTeams = ['@team-payments', '@team-platform']
 
-  // Dynamically resolve owned services based on graph owners
-  const ownedServices = serviceNodes.filter((node) => 
-    userTeams.some((team) => node.owner.toLowerCase().includes(team.toLowerCase()))
-  )
+  // Dynamically resolve owned services based on repository owners
+  const ownedServices = useMemo(() => {
+    return repos.filter((repo) => 
+      userTeams.some((team) => (repo.owner || '').toLowerCase().includes(team.toLowerCase()))
+    )
+  }, [repos])
 
   // Map global feedbackState to a readable history list
-  const triageHistory = Object.entries(feedbackState)
-    .filter(([_, value]) => value !== null)
-    .map(([key, value]) => {
-      const [incidentId, deployId] = key.split('::')
-      const incident = mockIncidents.find((inc) => inc.id === incidentId)
-      
-      // Find the cause details
-      const cause = incident?.candidateCauses.find((c) => c.deployId === deployId)
-      const serviceNode = cause ? getNodeById(cause.service) : null
+  const triageHistory = useMemo(() => {
+    return Object.entries(feedbackState)
+      .filter(([_, value]) => value !== null)
+      .map(([key, value]) => {
+        const [incidentId, causeId] = key.split('::')
+        const incident = incidents.find((inc) => inc.id === incidentId)
+        
+        // Find the cause details
+        const cause = (incident?.candidateCauses || incident?.candidate_causes || []).find((c: any) => c.id === causeId)
+        const repo = cause ? repos.find((r) => r.id === cause.repoId) : null
 
-      return {
-        incidentId,
-        incidentTitle: incident?.title ?? 'Unknown Incident',
-        incidentSeverity: incident?.severity ?? 'medium',
-        deployId,
-        serviceId: cause?.service ?? 'unknown',
-        serviceName: serviceNode?.name ?? cause?.service ?? 'Unknown Service',
-        confirmed: value === true,
-        causeScore: cause?.matchScore ?? 0,
-      }
-    })
+        return {
+          incidentId,
+          incidentTitle: incident?.title ?? 'Unknown Incident',
+          incidentSeverity: incident?.severity ?? 'medium',
+          deployId: cause?.eventId || causeId,
+          serviceId: cause?.repoId ?? 'unknown',
+          serviceName: repo?.name ?? 'Unknown Service',
+          confirmed: value === true,
+          causeScore: cause?.score ?? 0,
+        }
+      })
+  }, [feedbackState, incidents, repos])
 
   const severityConfig = {
     critical: { class: 'bg-destructive/10 text-destructive border-destructive/20' },
     high: { class: 'bg-warning/10 text-warning border-warning/20' },
     medium: { class: 'bg-accent/10 text-accent border-accent/20' },
     low: { class: 'bg-info/10 text-info border-info/20' },
+  } as const
+
+  if (loading) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="User Profile"
+          description="Personal workspace — manage your service ownership, alert triage history, and notification settings"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContent>
+    )
   }
 
   return (

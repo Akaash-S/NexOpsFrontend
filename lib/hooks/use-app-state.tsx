@@ -1,7 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback } from 'react';
-import { mockIncidents } from '@/lib/mock-data';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 export interface Notification {
   id: string;
@@ -11,15 +10,6 @@ export interface Notification {
   timestamp: string;
   read: boolean;
   link?: string;
-}
-
-export interface CommandPaletteItem {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  keywords: string[];
-  action: () => void;
 }
 
 interface AppContextType {
@@ -36,22 +26,23 @@ interface AppContextType {
   getUnreadCount: () => number;
   
   // User state
-  currentUser: { name: string; email: string; avatar?: string } | null;
-  setCurrentUser: (user: { name: string; email: string; avatar?: string } | null) => void;
+  currentUser: { name: string; email: string; avatar?: string; id?: string } | null;
+  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string } | null) => void;
   
   // Sidebar state
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
 
-  // Mock Authentication and Onboarding
+  // Authentication and Onboarding
   isAuthenticated: boolean;
   setAuthenticated: (auth: boolean) => void;
   onboardingComplete: boolean;
   setOnboardingComplete: (complete: boolean) => void;
+  authLoading: boolean;
 
-  // Candidate causes feedback loop (shared state)
+  // Candidate causes feedback loop
   feedbackState: Record<string, boolean | null>;
-  setFeedback: (incidentId: string, deployId: string, value: boolean | null) => void;
+  setFeedback: (incidentId: string, deployId: string, value: boolean | null) => Promise<void>;
 
   // Watched services settings
   watchedServices: string[];
@@ -74,83 +65,164 @@ export function useAppState() {
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>(() => [
-    {
-      id: 'notif-1',
-      title: 'New Incident: Payment Processing Slowdown',
-      description: 'Active investigating incident detected on watched service: Payment Service.',
-      type: 'error',
-      timestamp: '12m ago',
-      read: false,
-      link: '/incidents/inc-1',
-    },
-    {
-      id: 'notif-2',
-      title: 'Cause Candidate Awaiting Review',
-      description: 'GitHub deployment dep-2024-003 is flagged as a 91% match for incident inc-2.',
-      type: 'warning',
-      timestamp: '45m ago',
-      read: false,
-      link: '/incidents/inc-2',
-    },
-    {
-      id: 'notif-3',
-      title: 'High-Risk Deploy: User Service v3.2.1',
-      description: 'Deployment dep-2024-003 has a calculated risk score of 91.',
-      type: 'warning',
-      timestamp: '2h ago',
-      read: true,
-      link: '/recent-changes',
-    },
-    {
-      id: 'notif-4',
-      title: 'Database connection stabilized',
-      description: 'Telemetry indicates database connection pool exhaustion has resolved.',
-      type: 'success',
-      timestamp: '4h ago',
-      read: true,
-      link: '/dashboard',
-    },
-    {
-      id: 'notif-5',
-      title: 'New incident: Auth Token Failures',
-      description: 'Active critical failures detected on watched service: Auth Service.',
-      type: 'error',
-      timestamp: '1d ago',
-      read: true,
-      link: '/incidents/inc-2',
-    }
-  ]);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string } | null>(
-    { name: 'John Doe', email: 'john.doe@nexops.internal', avatar: '' }
-  );
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string; id?: string } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
-  // Mock Authentication & Onboarding state
+  // Authentication & Onboarding state
   const [isAuthenticated, setAuthenticated] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  // Shared Cause Feedback State initialized from mockIncidents dataset
-  const [feedbackState, setFeedbackState] = useState<Record<string, boolean | null>>(() => {
-    const initial: Record<string, boolean | null> = {};
-    mockIncidents.forEach((inc) => {
-      inc.candidateCauses.forEach((c) => {
-        initial[`${inc.id}::${c.deployId}`] = c.confirmed;
-      });
-    });
-    return initial;
-  });
+  // Shared Cause Feedback State
+  const [feedbackState, setFeedbackState] = useState<Record<string, boolean | null>>({});
 
-  const setFeedback = useCallback((incidentId: string, deployId: string, value: boolean | null) => {
+  // Preferences & Settings State
+  const [watchedServices, setWatchedServices] = useState<string[]>([]);
+  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+
+  // Listen to Firebase Auth state
+  useEffect(() => {
+    let unsubscribe = () => {};
+    
+    async function initAuth() {
+      try {
+        const { onAuthStateChanged } = await import('firebase/auth');
+        const { auth } = await import('@/lib/firebase');
+        
+        unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+          if (fbUser) {
+            try {
+              const token = await fbUser.getIdToken();
+              localStorage.setItem("authToken", token);
+              
+              // Fetch user profile from backend to verify onboarding status
+              const res = await fetch("http://localhost:8000/api/v1/users/me", {
+                headers: {
+                  "Authorization": `Bearer ${token}`
+                }
+              });
+              
+              if (res.ok) {
+                const dbUser = await res.json();
+                setCurrentUser({
+                  id: dbUser.id,
+                  name: dbUser.fullName || fbUser.displayName || 'Developer',
+                  email: dbUser.email || fbUser.email || '',
+                  avatar: dbUser.avatarUrl || fbUser.photoURL || ''
+                });
+                setAuthenticated(true);
+                setOnboardingComplete(dbUser.onboardingCompleted || false);
+              } else {
+                console.error("User profile verification failed on backend");
+                localStorage.removeItem("authToken");
+                setCurrentUser(null);
+                setAuthenticated(false);
+                setOnboardingComplete(false);
+              }
+            } catch (err) {
+              console.error("Error fetching user profile:", err);
+              localStorage.removeItem("authToken");
+              setCurrentUser(null);
+              setAuthenticated(false);
+              setOnboardingComplete(false);
+            } finally {
+              setAuthLoading(false);
+            }
+          } else {
+            localStorage.removeItem("authToken");
+            setCurrentUser(null);
+            setAuthenticated(false);
+            setOnboardingComplete(false);
+            setAuthLoading(false);
+          }
+        });
+      } catch (err) {
+        console.error("Firebase auth initialization failed", err);
+        setAuthLoading(false);
+      }
+    }
+    
+    initAuth();
+    return () => unsubscribe();
+  }, []);
+
+  // Sync feedback confirmation states on startup or when user is authenticated
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    
+    async function fetchIncidentFeedback() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client');
+        const incidents = await apiFetch('/incidents');
+        const initialFeedback: Record<string, boolean | null> = {};
+        for (const inc of incidents) {
+          if (inc.candidateCauses) {
+            for (const cause of inc.candidateCauses) {
+              initialFeedback[`${inc.id}::${cause.id}`] = cause.confirmed;
+            }
+          }
+        }
+        setFeedbackState(initialFeedback);
+      } catch (err) {
+        console.error("Failed to load initial feedback states", err);
+      }
+    }
+    
+    fetchIncidentFeedback();
+  }, [isAuthenticated]);
+
+  const handleSetAuthenticated = useCallback(async (authVal: boolean) => {
+    if (!authVal) {
+      try {
+        const { signOut } = await import('firebase/auth');
+        const { auth } = await import('@/lib/firebase');
+        await signOut(auth);
+      } catch (err) {
+        console.error("Signout failed:", err);
+      }
+      localStorage.removeItem("authToken");
+      setCurrentUser(null);
+      setAuthenticated(false);
+      setOnboardingComplete(false);
+    } else {
+      setAuthenticated(true);
+    }
+  }, []);
+
+  const setFeedback = useCallback(async (incidentId: string, deployId: string, value: boolean | null) => {
+    // 1. Update local state immediately
     setFeedbackState((prev) => ({
       ...prev,
       [`${incidentId}::${deployId}`]: value,
     }));
-  }, []);
 
-  // Preferences & Settings State
-  const [watchedServices, setWatchedServices] = useState<string[]>(['payment-service', 'auth-service']);
-  const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+    // 2. Persist to real backend
+    try {
+      const { apiFetch } = await import('@/lib/api-client');
+      await apiFetch(`/incidents/${incidentId}/feedback`, {
+        method: 'POST',
+        body: JSON.stringify({
+          candidateCauseId: deployId,
+          confirmed: value
+        })
+      });
+      
+      // Add notification for confirmation changes
+      addNotification({
+        title: value === true ? 'Causal Candidate Confirmed' : value === false ? 'Candidate Cause Ruled Out' : 'Cause Reset',
+        description: `Incident correlation feedback submitted successfully.`,
+        type: 'success'
+      });
+    } catch (err) {
+      console.error("Failed to submit cause feedback:", err);
+      addNotification({
+        title: 'Feedback Failed',
+        description: 'Could not connect to NexOps backend to persist feedback.',
+        type: 'error'
+      });
+    }
+  }, []);
 
   const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
     const newNotification: Notification = {
@@ -160,12 +232,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       read: false,
     };
     setNotifications((prev) => [newNotification, ...prev]);
-
-    if (notification.type === 'info') {
-      setTimeout(() => {
-        setNotifications((prev) => prev.filter((n) => n.id !== newNotification.id));
-      }, 5000);
-    }
   }, []);
 
   const markNotificationAsRead = useCallback((id: string) => {
@@ -198,7 +264,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     sidebarOpen,
     setSidebarOpen,
     isAuthenticated,
-    setAuthenticated,
+    setAuthenticated: handleSetAuthenticated,
     onboardingComplete,
     setOnboardingComplete,
     feedbackState,
@@ -207,6 +273,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setWatchedServices,
     density,
     setDensity,
+    authLoading,
   };
 
   return (

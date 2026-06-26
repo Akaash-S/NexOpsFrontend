@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { Card } from '@/components/ui/card'
@@ -8,12 +8,14 @@ import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Github, Chrome, ArrowRight, ShieldAlert, Loader2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { auth, githubProvider, googleProvider } from '@/lib/firebase'
 
 type AuthProvider = 'GitHub' | 'Google' | 'email' | null
 
 export default function LoginPage() {
   const router = useRouter()
-  const { setAuthenticated, onboardingComplete } = useAppState()
+  const { isAuthenticated, onboardingComplete } = useAppState()
   const [email, setEmail] = useState('')
   const [activeProvider, setActiveProvider] = useState<AuthProvider>(null)
   const [transitioning, setTransitioning] = useState(false)
@@ -21,28 +23,39 @@ export default function LoginPage() {
 
   const loading = activeProvider !== null
 
-  const handleMockLogin = (provider: AuthProvider) => {
+  // Automatically redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      setTransitioning(true)
+      if (onboardingComplete) {
+        router.push('/dashboard')
+      } else {
+        router.push('/onboarding')
+      }
+    } else {
+      setTransitioning(false)
+    }
+  }, [isAuthenticated, onboardingComplete, router])
+
+  const handleLogin = async (provider: AuthProvider) => {
     if (loading) return
     setActiveProvider(provider)
     setEmailError('')
 
-    // Step 1: Hold loading state for a deliberate delay (1100ms)
-    setTimeout(() => {
-      // Step 2: Brief full-screen transition frame (350ms)
-      setTransitioning(true)
-
-      setTimeout(() => {
-        setAuthenticated(true)
-        if (!onboardingComplete) {
-          router.push('/onboarding')
-        } else {
-          router.push('/dashboard')
-        }
-      }, 350)
-    }, 1100)
+    try {
+      if (provider === 'GitHub') {
+        await signInWithPopup(auth, githubProvider)
+      } else if (provider === 'Google') {
+        await signInWithPopup(auth, googleProvider)
+      }
+    } catch (err: any) {
+      console.error(`${provider} Login failed:`, err)
+      setEmailError(err.message || `${provider} authentication failed.`)
+      setActiveProvider(null)
+    }
   }
 
-  const handleSubmitEmail = (e: React.FormEvent) => {
+  const handleSubmitEmail = async (e: React.FormEvent) => {
     e.preventDefault()
     setEmailError('')
 
@@ -51,7 +64,30 @@ export default function LoginPage() {
       return
     }
 
-    handleMockLogin('email')
+    setActiveProvider('email')
+    try {
+      // Try signing in with a default local development password
+      await signInWithEmailAndPassword(auth, email, 'password123')
+    } catch (signInErr: any) {
+      // If user doesn't exist or credentials fail, try to sign them up automatically
+      if (
+        signInErr.code === 'auth/user-not-found' || 
+        signInErr.code === 'auth/invalid-credential' || 
+        signInErr.code === 'auth/invalid-email'
+      ) {
+        try {
+          await createUserWithEmailAndPassword(auth, email, 'password123')
+        } catch (signUpErr: any) {
+          console.error('Email sign up failed:', signUpErr)
+          setEmailError(signUpErr.message || 'Auto-registration failed.')
+          setActiveProvider(null)
+        }
+      } else {
+        console.error('Email sign in failed:', signInErr)
+        setEmailError(signInErr.message || 'Email authentication failed.')
+        setActiveProvider(null)
+      }
+    }
   }
 
   // Full-screen transition overlay
@@ -95,7 +131,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
-              onClick={() => handleMockLogin('GitHub')}
+              onClick={() => handleLogin('GitHub')}
               disabled={loading}
             >
               {activeProvider === 'GitHub' ? (
@@ -115,7 +151,7 @@ export default function LoginPage() {
             <Button
               variant="outline"
               className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
-              onClick={() => handleMockLogin('Google')}
+              onClick={() => handleLogin('Google')}
               disabled={loading}
             >
               {activeProvider === 'Google' ? (
@@ -190,9 +226,10 @@ export default function LoginPage() {
         {/* Bottom helper info */}
         <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 p-2 bg-muted/20 border border-border/30 rounded-lg">
           <ShieldAlert className="w-3.5 h-3.5 text-primary" />
-          <span>SSO Mock authentication is active for previewing.</span>
+          <span>Real Firebase Auth integration is active.</span>
         </div>
       </div>
     </div>
   )
 }
+

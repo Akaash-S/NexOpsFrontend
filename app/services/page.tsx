@@ -1,21 +1,60 @@
 'use client'
 
-import { useState, Suspense } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { ServiceCatalog } from '@/components/services/service-catalog'
 import { ServiceDetailsDrawer } from '@/components/services/service-details-drawer'
 import { ServiceFilters } from '@/components/services/service-filters'
-import { SERVICES_DATA } from '@/lib/mock-data'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { Network } from 'lucide-react'
+import { Network, Loader2 } from 'lucide-react'
 
 function ServicesPageContent() {
   const searchParams = useSearchParams()
   const isEmpty = searchParams?.get('empty') === 'true'
-  const [services] = useState(() => isEmpty ? [] : SERVICES_DATA)
+  const [services, setServices] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [selectedService, setSelectedService] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (isEmpty) {
+      setLoading(false)
+      return
+    }
+
+    async function loadServices() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const repos = await apiFetch('/repos')
+        
+        const mapped = repos.map((repo: any) => ({
+          id: repo.id,
+          name: repo.name,
+          team: repo.owner || '@team-platform',
+          health: Math.round(repo.healthScore || 100),
+          status: (repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning'),
+          deployments: 14,
+          dependencies: [],
+          dependents: [],
+          lastDeployed: repo.lastCommitAt ? new Date(repo.lastCommitAt).toLocaleDateString() : 'N/A',
+          owner: repo.owner || '@team-platform',
+          criticality: repo.name.includes('gateway') || repo.name.includes('auth') || repo.name.includes('payment') ? 'critical' : 'medium',
+          changeFailureRate: 0,
+          deploymentFrequency: 'daily',
+          mttr: '15m',
+          incidents30d: repo.issueCount || 0
+        }))
+        setServices(mapped)
+      } catch (err) {
+        console.error("Failed to load services:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadServices()
+  }, [isEmpty])
 
   const [filters, setFilters] = useState({
     search: '',
@@ -53,6 +92,20 @@ function ServicesPageContent() {
     })
 
   const selectedServiceData = services.find((s) => s.id === selectedService) as any
+
+  if (loading) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Services"
+          description="Service catalog — read-only, derived from connected source-of-truth systems"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContent>
+    )
+  }
 
   if (services.length === 0) {
     return (

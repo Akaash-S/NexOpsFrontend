@@ -1,19 +1,33 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, AlertCircle, ShieldAlert } from 'lucide-react'
-import { INTEGRATIONS_DATA } from '@/lib/mock-data'
+import { CheckCircle2, AlertCircle, ShieldAlert, Loader2 } from 'lucide-react'
+import { useAppState } from '@/lib/hooks/use-app-state'
 import { IntegrationFilters } from '@/components/integrations/integration-filters'
 
 export default function IntegrationsPage() {
-  const [integrations] = useState<any[]>(
-    // Show only GitHub and PagerDuty per restructure spec (read-only connection status)
-    INTEGRATIONS_DATA.filter((i) => ['GitHub', 'PagerDuty'].includes(i.name))
-  )
+  const { onboardingComplete } = useAppState()
+  const [hasRepos, setHasRepos] = useState(false)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function checkRepos() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const repos = await apiFetch('/repos')
+        setHasRepos(repos && repos.length > 0)
+      } catch (err) {
+        console.error("Failed to check repos:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    checkRepos()
+  }, [])
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -23,13 +37,36 @@ export default function IntegrationsPage() {
     sortBy: 'name-asc',
   })
 
+  const integrations = useMemo(() => {
+    return [
+      {
+        id: 'github',
+        name: 'GitHub',
+        description: 'Synchronizes repositories, structures, codeowners and nexops.yaml configs.',
+        status: hasRepos ? 'connected' : 'disconnected',
+        health: hasRepos ? 'healthy' : 'warning',
+        config: hasRepos ? 'OAuth Connected (read-only)' : 'Not configured',
+        updatedAt: 'Just now'
+      },
+      {
+        id: 'pagerduty',
+        name: 'PagerDuty',
+        description: 'Ingests real-time alert logs and triggers incidents correlating them to changes.',
+        status: onboardingComplete ? 'connected' : 'disconnected',
+        health: onboardingComplete ? 'healthy' : 'warning',
+        config: onboardingComplete ? 'Webhook active' : 'Not configured',
+        updatedAt: 'Just now'
+      }
+    ]
+  }, [hasRepos, onboardingComplete])
+
   const filteredAndSortedIntegrations = useMemo(() => {
     return integrations
       .filter((int) => {
         const searchLower = filters.search.toLowerCase()
         const matchesSearch = 
           int.name.toLowerCase().includes(searchLower) ||
-          int.config.toLowerCase().includes(searchLower)
+          int.description.toLowerCase().includes(searchLower)
         
         let matchesStatus = true
         if (filters.status !== 'all') matchesStatus = int.status === filters.status
@@ -57,6 +94,20 @@ export default function IntegrationsPage() {
   const connectedCount = integrations.filter(i => i.status === 'connected').length
   const disconnectedCount = integrations.filter(i => i.status === 'disconnected').length
   const issuesCount = integrations.filter(i => i.health !== 'healthy').length
+
+  if (loading) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Integrations"
+          description="Read-only connection status — GitHub and PagerDuty data sources that feed the correlation engine"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContent>
+    )
+  }
 
   return (
     <>
@@ -137,7 +188,7 @@ export default function IntegrationsPage() {
                       </div>
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Last Sync</span>
-                        <span className="text-xs text-muted-foreground">{integration.lastSync}</span>
+                        <span className="text-xs text-muted-foreground">{integration.updatedAt}</span>
                       </div>
                     </div>
 

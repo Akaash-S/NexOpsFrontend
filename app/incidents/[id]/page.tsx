@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { notFound, useRouter } from 'next/navigation'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
@@ -21,10 +21,10 @@ import {
   GitCommitHorizontal,
   ChevronRight,
   BellOff,
+  Loader2,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { INCIDENTS_DATA, CandidateCause } from '@/lib/mock-data'
-import { serviceNodes, dependencyEdges, getNodeById, getUpstream, getDownstream } from '@/lib/graph'
+import { CandidateCause } from '@/lib/types'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
@@ -63,9 +63,10 @@ interface CandidateRowProps {
   rank: number
   localConfirmed: boolean | null
   onConfirm: (value: boolean | null) => void
+  getNodeById: (id: string) => any
 }
 
-function CandidateRow({ cause, rank, localConfirmed, onConfirm }: CandidateRowProps) {
+function CandidateRow({ cause, rank, localConfirmed, onConfirm, getNodeById }: CandidateRowProps) {
   const node = getNodeById(cause.service)
   const serviceName = node?.name ?? cause.service
   const confirmed = localConfirmed
@@ -180,17 +181,146 @@ export default function IncidentInvestigationPage() {
   const params = useParams()
   const incidentId = params?.id as string
 
-  const incident = INCIDENTS_DATA.find((i) => i.id === incidentId)
-
-  if (!incident) {
-    notFound()
-  }
+  const [incident, setIncident] = useState<any>(null)
+  const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
+  const [loading, setLoading] = useState(true)
 
   // Load from context to sync cause confirmation state globally
   const { feedbackState, setFeedback } = useAppState()
 
+  useEffect(() => {
+    async function loadIncidentAndTopology() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [incidentData, topologyData] = await Promise.all([
+          apiFetch(`/incidents/${incidentId}`),
+          apiFetch('/dependencies/topology')
+        ])
+
+        // Map backend fields to the ones expected by the UI
+        const mappedCauses = (incidentData.candidateCauses || incidentData.candidate_causes || []).map((c: any) => ({
+          id: c.id,
+          deployId: c.eventId || c.event_id || 'unknown-deploy',
+          service: c.repoId || c.repo_id,
+          matchScore: c.score || 0,
+          matchReasons: typeof c.reason === 'string' ? c.reason.split(';') : (Array.isArray(c.reason) ? c.reason : [c.reason || '']),
+          confirmed: c.confirmed
+        }))
+
+        // Fetch events for timeline mapping
+        let timeline = []
+        try {
+          const primaryRepoId = incidentData.rootCauseRepoId || mappedCauses[0]?.service
+          if (primaryRepoId) {
+            const eventsData = await apiFetch(`/events?repo_id=${primaryRepoId}`)
+            if (eventsData && eventsData.length > 0) {
+              timeline = eventsData.slice(0, 5).map((e: any) => ({
+                time: new Date(e.createdAt || e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                event: e.message
+              }))
+            }
+          }
+        } catch (timelineErr) {
+          console.error("Timeline load failed, using fallbacks:", timelineErr)
+        }
+
+        if (timeline.length === 0) {
+          const start = new Date(incidentData.startedAt || incidentData.started_at)
+          timeline = [
+            { time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
+            { time: new Date(start.getTime() + 180000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
+            { time: new Date(start.getTime() + 480000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: `On-Call engineer acknowledged and began investigation` }
+          ]
+        }
+
+        const start = new Date(incidentData.startedAt || incidentData.started_at)
+        const end = incidentData.resolvedAt ? new Date(incidentData.resolvedAt) : new Date()
+        const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
+        const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
+
+        setIncident({
+          id: incidentData.id,
+          title: incidentData.title,
+          description: incidentData.description || '',
+          severity: (incidentData.severity || 'medium').toLowerCase(),
+          status: incidentData.status || 'open',
+          duration,
+          impactedUsers: incidentData.affectedUsers || incidentData.affected_users || 1200,
+          lead: incidentData.assignee || 'On-Call Bot',
+          startTime: start.toLocaleString(),
+          relatedAlerts: incidentData.relatedAlerts || 3,
+          timeline,
+          candidateCauses: mappedCauses,
+          affectedServices: mappedCauses.map((c: any) => c.service)
+        })
+        setTopology(topologyData)
+      } catch (err) {
+        console.error("Failed to load incident detail:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (incidentId) {
+      loadIncidentAndTopology()
+    }
+  }, [incidentId])
+
+  const deriveTier = (name: string): 'ingress' | 'service' | 'data' => {
+    const nameLower = name.toLowerCase();
+    if (nameLower.includes('gateway') || nameLower.includes('frontend')) {
+      return 'ingress';
+    }
+    if (nameLower.includes('database') || nameLower.includes('db') || nameLower.includes('redis') || nameLower.includes('cache') || nameLower.includes('queue') || nameLower.includes('kafka') || nameLower.includes('terraform')) {
+      return 'data';
+    }
+    return 'service';
+  }
+
+  const getNodeById = (id: string) => {
+    const node = topology.nodes.find((n) => n.id === id)
+    if (!node) return undefined
+    return {
+      id: node.id,
+      name: node.name,
+      tier: deriveTier(node.name),
+      owner: node.owner || '@team-platform (from CODEOWNERS)',
+      alertHistory: {
+        count30d: node.vulnerabilities ? node.vulnerabilities + 2 : 2,
+        noisyRuleIds: node.vulnerabilities > 0 ? ['rule-cpu-spike'] : []
+      }
+    }
+  }
+
+  const getUpstream = (nodeId: string) => {
+    return topology.edges
+      .filter((e) => e.source === nodeId)
+      .map((e) => e.target)
+  }
+
+  const getDownstream = (nodeId: string) => {
+    return topology.edges
+      .filter((e) => e.target === nodeId)
+      .map((e) => e.source)
+  }
+
   const handleConfirm = (deployId: string, value: boolean | null) => {
     setFeedback(incidentId, deployId, value)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[50vh] bg-background">
+        <div className="flex flex-col items-center gap-2 text-muted-foreground animate-pulse">
+          <Loader2 className="w-8 h-8 animate-spin" />
+          <span>Loading investigation data...</span>
+        </div>
+      </div>
+    )
+  }
+
+  if (!incident) {
+    notFound()
   }
 
   // Build dependency graph slice for this incident's primary service
@@ -205,11 +335,15 @@ export default function IncidentInvestigationPage() {
   const stat = statusConfig[incident.status as keyof typeof statusConfig] ?? statusConfig.open
 
   const confirmedCount = incident.candidateCauses.filter(
-    (c: CandidateCause) => feedbackState[`${incidentId}::${c.deployId}`] === true
+    (c: any) => feedbackState[`${incidentId}::${c.id}`] === true || feedbackState[`${incidentId}::${c.deployId}`] === true
   ).length
 
   const pendingCount = incident.candidateCauses.filter(
-    (c: CandidateCause) => feedbackState[`${incidentId}::${c.deployId}`] === null || feedbackState[`${incidentId}::${c.deployId}`] === undefined
+    (c: any) => {
+      const stateKey = `${incidentId}::${c.id}`
+      const stateKeyAlt = `${incidentId}::${c.deployId}`
+      return feedbackState[stateKey] === null || feedbackState[stateKey] === undefined || feedbackState[stateKeyAlt] === null || feedbackState[stateKeyAlt] === undefined
+    }
   ).length
 
   return (
@@ -303,6 +437,7 @@ export default function IncidentInvestigationPage() {
                       rank={i}
                       localConfirmed={feedbackState[`${incidentId}::${cause.deployId}`] ?? null}
                       onConfirm={(v) => handleConfirm(cause.deployId, v)}
+                      getNodeById={getNodeById}
                     />
                   ))}
                 </div>

@@ -1,13 +1,11 @@
 'use client'
 
-import { useMemo } from 'react'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { SearchCode, ThumbsUp, ThumbsDown, AlertTriangle, CheckCircle2 } from 'lucide-react'
+import { SearchCode, ThumbsUp, ThumbsDown, AlertTriangle, CheckCircle2, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { mockIncidents, CandidateCause } from '@/lib/mock-data'
-import { getNodeById } from '@/lib/graph'
+import { useState, useEffect, useMemo } from 'react'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
@@ -15,7 +13,7 @@ interface PendingCandidate {
   incidentId: string
   incidentTitle: string
   incidentSeverity: 'critical' | 'high' | 'medium' | 'low'
-  cause: CandidateCause
+  cause: any
   _localConfirmed: boolean | null
 }
 
@@ -24,35 +22,68 @@ const severityConfig = {
   high: { text: 'text-warning', bg: 'bg-warning/10', border: 'border-warning/20', label: 'High' },
   medium: { text: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20', label: 'Medium' },
   low: { text: 'text-info', bg: 'bg-info/10', border: 'border-info/20', label: 'Low' },
-}
+} as const
 
 export function Recommendations() {
   const { feedbackState, setFeedback } = useAppState()
+  const [incidents, setIncidents] = useState<any[]>([])
+  const [repos, setRepos] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Dynamically build candidates list from mockIncidents syncing with global feedbackState context
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [incidentsData, reposData] = await Promise.all([
+          apiFetch('/incidents'),
+          apiFetch('/repos')
+        ])
+        setIncidents(incidentsData)
+        setRepos(reposData)
+      } catch (err) {
+        console.error("Failed to load recommendations data:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  // Dynamically build candidates list from backend incidents syncing with global feedbackState context
   const candidates = useMemo(() => {
     const list: PendingCandidate[] = []
-    for (const inc of mockIncidents) {
-      for (const cause of inc.candidateCauses) {
-        const val = feedbackState[`${inc.id}::${cause.deployId}`] ?? null
+    for (const inc of incidents) {
+      const topCauses = inc.candidateCauses || inc.candidate_causes || []
+      for (const cause of topCauses) {
+        const val = feedbackState[`${inc.id}::${cause.id}`] ?? cause.confirmed
         list.push({
           incidentId: inc.id,
           incidentTitle: inc.title,
-          incidentSeverity: inc.severity,
+          incidentSeverity: (inc.severity || 'medium').toLowerCase() as any,
           cause,
           _localConfirmed: val,
         })
       }
     }
-    return list.sort((a, b) => b.cause.matchScore - a.cause.matchScore)
-  }, [feedbackState])
+    return list.sort((a, b) => b.cause.score - a.cause.score)
+  }, [incidents, feedbackState])
 
   const pending = candidates.filter((c) => c._localConfirmed === null)
   const confirmedCount = candidates.filter((c) => c._localConfirmed === true).length
   const rejectedCount = candidates.filter((c) => c._localConfirmed === false).length
 
-  const handleFeedback = (incidentId: string, deployId: string, value: boolean) => {
-    setFeedback(incidentId, deployId, value)
+  const handleFeedback = (incidentId: string, causeId: string, value: boolean) => {
+    setFeedback(incidentId, causeId, value)
+  }
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Card>
+    )
   }
 
   return (
@@ -99,13 +130,15 @@ export function Recommendations() {
       ) : (
         <div className="space-y-4">
           {pending.slice(0, 4).map((item) => {
-            const sev = severityConfig[item.incidentSeverity]
-            const node = getNodeById(item.cause.service)
-            const serviceName = node?.name ?? item.cause.service
+            const severityKey = (item.incidentSeverity || 'medium').toLowerCase() as keyof typeof severityConfig
+            const sev = severityConfig[severityKey] || severityConfig.medium
+            const repo = repos.find((r) => r.id === item.cause.repoId)
+            const serviceName = repo?.name ?? 'Unknown Service'
+            const reasons = typeof item.cause.reason === 'string' ? item.cause.reason.split(';').map((r: string) => r.trim()).filter(Boolean) : [item.cause.reason || '']
 
             return (
               <div
-                key={`${item.incidentId}::${item.cause.deployId}`}
+                key={`${item.incidentId}::${item.cause.id}`}
                 className={cn(
                   'p-4 rounded-lg border-2 transition-all border-border bg-card/60'
                 )}
@@ -115,7 +148,7 @@ export function Recommendations() {
                   <AlertTriangle className={cn('w-4 h-4 flex-shrink-0 mt-0.5', sev.text)} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                      <span className="text-xs font-mono text-muted-foreground">{item.incidentId}</span>
+                      <span className="text-xs font-mono text-muted-foreground">{item.incidentId.substring(0, 8)}</span>
                       <Badge variant="outline" className={cn('text-xs', sev.text)}>{sev.label}</Badge>
                     </div>
                     <p className="font-semibold text-sm">{item.incidentTitle}</p>
@@ -124,27 +157,27 @@ export function Recommendations() {
 
                 {/* Candidate details */}
                 <div className="ml-6 space-y-3">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs font-semibold text-muted-foreground">Candidate cause:</span>
                     <span className="text-sm font-semibold">{serviceName}</span>
-                    <span className="text-xs font-mono text-muted-foreground">{item.cause.deployId}</span>
+                    <span className="text-xs font-mono text-muted-foreground">{item.cause.eventId || item.cause.id.substring(0, 8)}</span>
                   </div>
 
                   {/* Consolidated Score + Reasoning block */}
-                  <ScoreWithReasoning score={item.cause.matchScore} reasons={item.cause.matchReasons} />
+                  <ScoreWithReasoning score={item.cause.score} reasons={reasons} />
 
                   {/* Binary confirm controls */}
                   <div className="flex items-center gap-2 pt-3 border-t border-border/40">
                     <span className="text-xs text-muted-foreground flex-1">Was this the cause?</span>
                     <button
-                      onClick={() => handleFeedback(item.incidentId, item.cause.deployId, true)}
+                      onClick={() => handleFeedback(item.incidentId, item.cause.id, true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-success/10 text-success border border-success/20 hover:bg-success/20 transition-colors"
                     >
                       <ThumbsUp className="w-3 h-3" />
                       Yes
                     </button>
                     <button
-                      onClick={() => handleFeedback(item.incidentId, item.cause.deployId, false)}
+                      onClick={() => handleFeedback(item.incidentId, item.cause.id, false)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded text-xs font-semibold bg-muted text-muted-foreground border border-border hover:bg-muted/80 transition-colors"
                     >
                       <ThumbsDown className="w-3 h-3" />

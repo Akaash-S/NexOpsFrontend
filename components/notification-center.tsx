@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
-import { useState, useMemo } from 'react'
-import { getActiveAlerts, getInvestigatingIncidents } from '@/lib/mock-data'
+import { useState, useMemo, useEffect } from 'react'
+import { Alert, Incident } from '@/lib/types'
 
 interface NotificationCenterProps {
   isOpen: boolean
@@ -24,30 +24,52 @@ interface Notification {
 
 export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps) {
   const [readIds, setReadIds] = useState<Set<string>>(new Set())
+  const [alerts, setAlerts] = useState<Alert[]>([])
+  const [incidents, setIncidents] = useState<Incident[]>([])
+
+  useEffect(() => {
+    if (!isOpen) return
+
+    async function loadNotifications() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [alertsData, incidentsData] = await Promise.all([
+          apiFetch('/alerts'),
+          apiFetch('/incidents')
+        ])
+        setAlerts(alertsData)
+        setIncidents(incidentsData.filter((i: any) => i.status === 'investigating' || i.status === 'monitoring'))
+      } catch (err) {
+        console.error("Failed to load notifications:", err)
+      }
+    }
+
+    loadNotifications()
+  }, [isOpen])
 
   const notifications: Notification[] = useMemo(() => {
-    const alerts = getActiveAlerts().map((alert, idx) => ({
-      id: `alert-${idx}`,
+    const mappedAlerts = alerts.map((alert) => ({
+      id: alert.id,
       type: 'alert' as const,
       title: alert.title,
-      description: `Current: ${alert.current} (Threshold: ${alert.threshold})`,
+      description: alert.message || '',
       timestamp: new Date(alert.createdAt).toLocaleString(),
-      read: readIds.has(`alert-${idx}`),
+      read: readIds.has(alert.id),
     }));
 
-    const incidents = getInvestigatingIncidents().map((inc, idx) => ({
-      id: `incident-${idx}`,
+    const mappedIncidents = incidents.map((inc) => ({
+      id: inc.id,
       type: 'incident' as const,
       title: inc.title,
       description: `${inc.affectedUsers} users affected - ${inc.service}`,
       timestamp: new Date(inc.startedAt).toLocaleString(),
-      read: readIds.has(`incident-${idx}`),
+      read: readIds.has(inc.id),
     }));
 
-    return [...alerts, ...incidents].sort((a, b) => 
+    return [...mappedAlerts, ...mappedIncidents].sort((a, b) => 
       new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
     );
-  }, [readIds]);
+  }, [alerts, incidents, readIds]);
 
   const unreadCount = notifications.filter(n => !n.read).length;
 

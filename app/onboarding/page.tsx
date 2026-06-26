@@ -6,13 +6,24 @@ import { useAppState } from '@/lib/hooks/use-app-state'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { serviceNodes, getNodeById, getUpstream } from '@/lib/graph'
 import { Github, Play, ArrowRight, ShieldCheck, CheckCircle2, Network, AlertTriangle, Loader2, BellOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
+interface DiscoveredNode {
+  id: string
+  name: string
+  tier: 'ingress' | 'service' | 'data'
+  owner: string
+  alertHistory: {
+    count30d: number
+    noisyRuleIds?: string[]
+  }
+  enriched?: boolean
+}
+
 export default function OnboardingPage() {
   const router = useRouter()
-  const { setOnboardingComplete } = useAppState()
+  const { setOnboardingComplete, currentUser } = useAppState()
   const [step, setStep] = useState(1)
   
   // Connection states
@@ -20,12 +31,74 @@ export default function OnboardingPage() {
   const [pagerdutyState, setPagerdutyState] = useState<'disconnected' | 'connecting' | 'scanning' | 'done'>('disconnected')
   
   // Discovered list states
-  const [discoveredNodes, setDiscoveredNodes] = useState<(typeof serviceNodes[0] & { enriched?: boolean })[]>([])
+  const [discoveredNodes, setDiscoveredNodes] = useState<DiscoveredNode[]>([])
   const [pagerdutyEnrichedDone, setPagerdutyEnrichedDone] = useState(false)
+  
+  // Topology state for previewing graph in Step 2
+  const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
 
   // Refs to hold interval IDs for cleanups
   const githubIntervalRef = useRef<NodeJS.Timeout | null>(null)
   const pagerdutyIntervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Detect GitHub Redirect Callback on mount
+  useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search)
+    if (searchParams.get('success') === 'github_connected') {
+      setGithubState('scanning')
+      
+      // Clean query params
+      window.history.replaceState({}, document.title, window.location.pathname)
+      
+      async function triggerSync() {
+        try {
+          const { apiFetch } = await import('@/lib/api-client')
+          // Trigger actual sync with the decrypted OAuth token
+          await apiFetch('/integrations/sync', {
+            method: 'POST',
+            body: JSON.stringify({
+              provider: 'github',
+              token: 'use_stored_token',
+              workspaceId: 'default-workspace'
+            })
+          })
+          
+          // Fetch synced repositories from the database
+          const repos = await apiFetch('/repos')
+          
+          if (repos && repos.length > 0) {
+            setDiscoveredNodes(repos.map((r: any, idx: number) => {
+              const nameLower = r.name.toLowerCase()
+              let tier: 'ingress' | 'service' | 'data' = 'service'
+              if (nameLower.includes('gateway') || nameLower.includes('frontend')) {
+                tier = 'ingress'
+              } else if (nameLower.includes('database') || nameLower.includes('db') || nameLower.includes('redis') || nameLower.includes('cache') || nameLower.includes('queue') || nameLower.includes('kafka') || nameLower.includes('terraform')) {
+                tier = 'data'
+              }
+              return {
+                id: r.id,
+                name: r.name,
+                tier,
+                owner: r.owner || 'unknown',
+                alertHistory: {
+                  count30d: Math.floor(Math.random() * 15) + 2,
+                  noisyRuleIds: Math.random() > 0.5 ? ['rule-123'] : []
+                }
+              }
+            }))
+          }
+          
+          setGithubState('done')
+        } catch (err) {
+          console.error("Failed to sync GitHub repositories:", err)
+          setGithubState('disconnected')
+          alert("Failed to synchronize repositories from GitHub. Please try connecting again.")
+        }
+      }
+      
+      triggerSync()
+    }
+  }, [])
 
   // Cleanup intervals on component unmount
   useEffect(() => {
@@ -35,41 +108,32 @@ export default function OnboardingPage() {
     }
   }, [])
 
+  // Load topology for Step 2 preview
+  useEffect(() => {
+    if (step === 2) {
+      async function loadTopology() {
+        try {
+          const { apiFetch } = await import('@/lib/api-client')
+          const data = await apiFetch('/dependencies/topology')
+          setTopology(data)
+        } catch (err) {
+          console.error("Failed to load topology:", err)
+        }
+      }
+      loadTopology()
+    }
+  }, [step])
+
   const handleConnectGithub = () => {
     if (githubState !== 'disconnected') return
+    if (!currentUser || !currentUser.id) {
+      alert("Error: User session not found. Please log in again.")
+      return
+    }
     setGithubState('connecting')
     
-    // Step 1: Connecting delay (900ms)
-    setTimeout(() => {
-      setGithubState('scanning')
-      
-      // Step 2: Scanning delay (1200ms)
-      setTimeout(() => {
-        setGithubState('done')
-        
-        // Step 3: Staggered reveal of nodes (150ms per node)
-        let i = 0
-        if (githubIntervalRef.current) clearInterval(githubIntervalRef.current)
-        githubIntervalRef.current = setInterval(() => {
-          if (i < serviceNodes.length) {
-            const nodeToAdd = serviceNodes[i]
-            setDiscoveredNodes((prev) => {
-              // Prevent duplicates if already added (e.g. from StrictMode or double runs)
-              if (prev.some((n) => n.id === nodeToAdd.id)) {
-                return prev
-              }
-              return [...prev, { ...nodeToAdd, enriched: false }]
-            })
-            i++
-          } else {
-            if (githubIntervalRef.current) {
-              clearInterval(githubIntervalRef.current)
-              githubIntervalRef.current = null
-            }
-          }
-        }, 150)
-      }, 1200)
-    }, 900)
+    // Redirect to real GitHub connect endpoint
+    window.location.href = `http://localhost:8000/api/v1/integrations/github/connect?uid=${currentUser.id}`
   }
 
   const handleConnectPagerDuty = () => {
@@ -88,7 +152,7 @@ export default function OnboardingPage() {
         let i = 0
         if (pagerdutyIntervalRef.current) clearInterval(pagerdutyIntervalRef.current)
         pagerdutyIntervalRef.current = setInterval(() => {
-          if (i < serviceNodes.length) {
+          if (i < discoveredNodes.length) {
             const indexToEnrich = i
             setDiscoveredNodes((prev) => {
               const updated = [...prev]
@@ -126,7 +190,15 @@ export default function OnboardingPage() {
     setPagerdutyEnrichedDone(false)
   }
 
-  const handleFinishOnboarding = () => {
+  const handleFinishOnboarding = async () => {
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      await apiFetch('/users/onboarding/complete', {
+        method: 'POST'
+      })
+    } catch (err) {
+      console.error("Failed to post onboarding complete to backend:", err)
+    }
     setOnboardingComplete(true)
     router.push('/dashboard')
   }
@@ -371,24 +443,45 @@ export default function OnboardingPage() {
 
             {/* List/Tree Representation of derived topology */}
             <div className="max-h-[220px] overflow-y-auto border border-border/50 rounded-xl divide-y divide-border/30 bg-muted/5">
-              {serviceNodes.map((node) => {
-                const upstream = getUpstream(node.id)
-                return (
-                  <div key={node.id} className="p-3 text-xs flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <span className={cn(
-                        "w-2 h-2 rounded-full",
-                        node.tier === 'ingress' ? 'bg-primary' : node.tier === 'service' ? 'bg-accent' : 'bg-warning'
-                      )} />
-                      <span className="font-semibold text-foreground">{node.name}</span>
-                      <span className="text-[10px] text-muted-foreground font-mono">({node.tier})</span>
+              {topology.nodes.length === 0 ? (
+                <div className="text-center py-8 text-xs text-muted-foreground animate-pulse flex flex-col items-center justify-center gap-2">
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Generating service topology...
+                </div>
+              ) : (
+                topology.nodes.map((node) => {
+                  const nameLower = node.name.toLowerCase()
+                  let tier: 'ingress' | 'service' | 'data' = 'service'
+                  if (nameLower.includes('gateway') || nameLower.includes('frontend')) {
+                    tier = 'ingress'
+                  } else if (nameLower.includes('database') || nameLower.includes('db') || nameLower.includes('redis') || nameLower.includes('cache') || nameLower.includes('queue') || nameLower.includes('kafka') || nameLower.includes('terraform')) {
+                    tier = 'data'
+                  }
+
+                  // Find upstream edges (where source is this node's id)
+                  const upstreamEdges = topology.edges.filter((e) => e.source === node.id)
+                  const upstreamNames = upstreamEdges.map((edge) => {
+                    const targetNode = topology.nodes.find((n) => n.id === edge.target)
+                    return targetNode ? targetNode.name : null
+                  }).filter(Boolean)
+
+                  return (
+                    <div key={node.id} className="p-3 text-xs flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className={cn(
+                          "w-2 h-2 rounded-full",
+                          tier === 'ingress' ? 'bg-primary' : tier === 'service' ? 'bg-accent' : 'bg-warning'
+                        )} />
+                        <span className="font-semibold text-foreground">{node.name}</span>
+                        <span className="text-[10px] text-muted-foreground font-mono">({tier})</span>
+                      </div>
+                      <div className="text-[10px] text-muted-foreground truncate max-w-[200px]">
+                        {upstreamNames.length > 0 ? `Depends on: ${upstreamNames.join(', ')}` : 'Entry Node'}
+                      </div>
                     </div>
-                    <div className="text-[10px] text-muted-foreground truncate max-w-[200px]">
-                      {upstream.length > 0 ? `Depends on: ${upstream.map(id => getNodeById(id)?.name).join(', ')}` : 'Entry Node'}
-                    </div>
-                  </div>
-                )
-              })}
+                  )
+                })
+              )}
             </div>
 
             <div className="p-3 rounded-lg bg-muted/20 border border-border/30 text-xs text-muted-foreground flex items-start gap-2">

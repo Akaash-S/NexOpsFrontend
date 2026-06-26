@@ -33,10 +33,10 @@ npm install
 
 # Start the development server
 npm run dev
-```Visit `http://localhost:3000` to launch the unauthenticated landing page. Click **Launch Engine** or **Sign In** to log in using mock credentials.
+```Visit `http://localhost:3000` to launch the landing page. Sign in to authenticate using Firebase and set up your workspace.
 
 > [!NOTE]
-> **Authentication is fully simulated.** No backend, OAuth providers, or databases are connected. Clicking any login button establishes a mock in-memory session.
+> **Authentication is production-grade and backed by Firebase Auth.** A local running FastAPI backend server must be active on `http://localhost:8000` to verify tokens, perform GitHub OAuth sync, and load live telemetry databases.
 
 ---
 

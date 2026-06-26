@@ -12,7 +12,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
-import { SERVICES_DATA, INCIDENTS_DATA, ALERTS_DATA } from '@/lib/mock-data'
 import { useAppState } from '@/lib/hooks/use-app-state'
 
 interface Command {
@@ -43,6 +42,8 @@ export function CommandPalette() {
   const router = useRouter()
   const { commandPaletteOpen, setCommandPaletteOpen } = useAppState()
   const [value, setValue] = useState('')
+  const [services, setServices] = useState<any[]>([])
+  const [incidents, setIncidents] = useState<any[]>([])
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -54,6 +55,26 @@ export function CommandPalette() {
     document.addEventListener('keydown', down)
     return () => document.removeEventListener('keydown', down)
   }, [commandPaletteOpen, setCommandPaletteOpen])
+
+  useEffect(() => {
+    if (!commandPaletteOpen) return
+
+    async function loadData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [repos, incs] = await Promise.all([
+          apiFetch('/repos'),
+          apiFetch('/incidents')
+        ])
+        setServices(repos)
+        setIncidents(incs)
+      } catch (err) {
+        console.error("Failed to load command palette data:", err)
+      }
+    }
+
+    loadData()
+  }, [commandPaletteOpen])
 
   const onClose = () => setCommandPaletteOpen(false)
 
@@ -126,29 +147,29 @@ export function CommandPalette() {
     ];
 
     // Add services to commands
-    const serviceCommands: Command[] = SERVICES_DATA.slice(0, 3).map((svc) => ({
+    const serviceCommands: Command[] = services.slice(0, 3).map((svc) => ({
       id: `service-${svc.id}`,
       title: svc.name,
-      description: `${svc.status === 'healthy' ? 'Healthy' : 'Degraded'} - ${svc.team}`,
+      description: `${svc.ci_status === 'passing' || svc.status === 'passing' ? 'Healthy' : 'Degraded'} - ${svc.owner || 'Unknown'}`,
       category: 'Services',
       icon: <FileText className="w-4 h-4" />,
-      keywords: [svc.name.toLowerCase(), svc.team.toLowerCase()],
+      keywords: [svc.name.toLowerCase(), (svc.owner || '').toLowerCase()],
       action: () => { router.push(`/services?id=${svc.id}`); onClose() }
     }));
 
     // Add incidents to commands
-    const incidentCommands: Command[] = INCIDENTS_DATA.slice(0, 2).map((inc) => ({
+    const incidentCommands: Command[] = incidents.slice(0, 2).map((inc) => ({
       id: `incident-${inc.id}`,
       title: inc.title,
-      description: `${inc.severity} - ${inc.affectedServices.join(', ')}`,
+      description: `${inc.severity} - ${inc.service}`,
       category: 'Incidents',
       icon: <AlertTriangle className="w-4 h-4" />,
-      keywords: [inc.title.toLowerCase(), ...inc.affectedServices.map(s => s.toLowerCase())],
+      keywords: [inc.title.toLowerCase(), inc.service.toLowerCase()],
       action: () => { router.push(`/incidents?id=${inc.id}`); onClose() }
     }));
 
     return [...baseCommands, ...serviceCommands, ...incidentCommands];
-  }, [router, onClose]);
+  }, [router, onClose, services, incidents]);
 
   const filteredCommands = useMemo(() => {
     if (!value) return commands;

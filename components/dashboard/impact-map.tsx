@@ -5,41 +5,47 @@ import { Badge } from '@/components/ui/badge'
 import { Network, BellOff, AlertTriangle } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { serviceNodes, dependencyEdges, ServiceNode } from '@/lib/graph'
+import { useState, useEffect } from 'react'
+import { Loader2 } from 'lucide-react'
 
-const healthMock: Record<string, 'healthy' | 'warning' | 'critical'> = {
-  'api-gateway': 'warning',
-  'auth-service': 'critical',
-  'user-service': 'healthy',
-  'payment-service': 'warning',
-  'notification-service': 'healthy',
-  'analytics-engine': 'healthy',
-  'database': 'warning',
-  'redis-cache': 'healthy',
-  'kafka-queue': 'healthy',
+interface ServiceNode {
+  id: string
+  name: string
+  tier: 'ingress' | 'service' | 'data'
+  owner: string
+  healthScore: number
+  ciStatus: string
+  openIssues: number
+  vulnerabilities: number
+  activity: number
+}
+
+interface DependencyEdge {
+  id: string
+  source: string
+  target: string
+  label: string
+  isBroken: boolean
 }
 
 const healthConfig = {
   healthy: { bg: 'bg-success/10', text: 'text-success', border: 'border-success/30', dot: 'bg-success' },
   warning: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/30', dot: 'bg-warning' },
   critical: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', dot: 'bg-destructive' },
-}
+} as const
 
 const tierLabels = {
   ingress: 'Ingress',
   service: 'Services',
   data: 'Data',
-}
+} as const
 
-function getDownstreamCount(nodeId: string): number {
-  return dependencyEdges.filter((e) => e.to === nodeId).length
-}
-
-function ServiceNodeCard({ node }: { node: ServiceNode }) {
-  const health = healthMock[node.id] ?? 'healthy'
+function ServiceNodeCard({ node, edges }: { node: ServiceNode; edges: DependencyEdge[] }) {
+  const downstreamCount = edges.filter((e) => e.target === node.id).length
+  
+  const health = node.ciStatus === 'failing' ? 'critical' : (node.healthScore < 80 ? 'warning' : 'healthy')
   const cfg = healthConfig[health]
-  const downstreamCount = getDownstreamCount(node.id)
-  const noisyCount = node.alertHistory.noisyRuleIds?.length ?? 0
+  const noisyCount = node.vulnerabilities
 
   return (
     <div
@@ -57,16 +63,15 @@ function ServiceNodeCard({ node }: { node: ServiceNode }) {
         {downstreamCount > 0 && (
           <p className="text-[10px] text-muted-foreground leading-normal">{downstreamCount} upstream dependent{downstreamCount !== 1 ? 's' : ''}</p>
         )}
-        {/* Alert noise badge */}
+        {/* Vulnerability badge */}
         {noisyCount > 0 && (
           <div className="pt-0.5">
             <Badge
               variant="outline"
               className="text-[9px] px-1.5 py-0.5 bg-muted/50 text-muted-foreground border-border flex items-center gap-0.5 w-fit"
-              title={`${noisyCount} alert rule${noisyCount > 1 ? 's' : ''} on this service rarely correlate with real incidents`}
             >
-              <BellOff className="w-2.5 h-2.5" />
-              {noisyCount} noisy
+              <AlertTriangle className="w-2.5 h-2.5 text-warning" />
+              {noisyCount} vuln
             </Badge>
           </div>
         )}
@@ -76,17 +81,62 @@ function ServiceNodeCard({ node }: { node: ServiceNode }) {
 }
 
 export function ImpactMap() {
+  const [topology, setTopology] = useState<{ nodes: ServiceNode[]; edges: DependencyEdge[] }>({ nodes: [], edges: [] })
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const data = await apiFetch('/dependencies/topology')
+        
+        // Enrich backend nodes with derived tier
+        const enrichedNodes = data.nodes.map((node: any) => {
+          const nameLower = node.name.toLowerCase()
+          let tier: 'ingress' | 'service' | 'data' = 'service'
+          if (nameLower.includes('gateway') || nameLower.includes('frontend')) {
+            tier = 'ingress'
+          } else if (nameLower.includes('database') || nameLower.includes('db') || nameLower.includes('redis') || nameLower.includes('cache') || nameLower.includes('queue') || nameLower.includes('kafka') || nameLower.includes('terraform')) {
+            tier = 'data'
+          }
+          return {
+            id: node.id,
+            name: node.name,
+            tier,
+            owner: node.owner || '@team-platform',
+            healthScore: node.healthScore || 100,
+            ciStatus: node.ciStatus || 'passing',
+            openIssues: node.openIssues || 0,
+            vulnerabilities: node.vulnerabilities || 0,
+            activity: node.activity || 0
+          }
+        })
+        
+        setTopology({ nodes: enrichedNodes, edges: data.edges || [] })
+      } catch (err) {
+        console.error("Failed to load dependency graph:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  if (loading) {
+    return (
+      <Card className="p-6">
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        </div>
+      </Card>
+    )
+  }
+
   const tiers = ['ingress', 'service', 'data'] as const
 
-  // Build stats from graph
-  const criticalNodes = serviceNodes.filter((n) => healthMock[n.id] === 'critical')
-  const warningNodes = serviceNodes.filter((n) => healthMock[n.id] === 'warning')
-  const maxDownstream = serviceNodes.reduce((max, n) => {
-    return Math.max(max, getDownstreamCount(n.id))
-  }, 0)
-  const noisyServiceCount = serviceNodes.filter(
-    (n) => (n.alertHistory.noisyRuleIds?.length ?? 0) > 0
-  ).length
+  const criticalNodes = topology.nodes.filter((n) => n.ciStatus === 'failing')
+  const warningNodes = topology.nodes.filter((n) => n.ciStatus !== 'failing' && n.healthScore < 80)
+  const noisyServiceCount = topology.nodes.filter((n) => n.vulnerabilities > 0).length
 
   return (
     <Card className="p-6">
@@ -103,7 +153,9 @@ export function ImpactMap() {
       {/* Tier layout — generated from graph data, not hardcoded */}
       <div className="space-y-4 mb-5">
         {tiers.map((tier, tierIndex) => {
-          const nodes = serviceNodes.filter((n) => n.tier === tier)
+          const nodes = topology.nodes.filter((n) => n.tier === tier)
+          if (nodes.length === 0) return null
+          
           return (
             <div key={tier}>
               <div className="flex items-center gap-2 mb-2">
@@ -119,7 +171,7 @@ export function ImpactMap() {
                 'grid-cols-3'
               )}>
                 {nodes.map((node) => (
-                  <ServiceNodeCard key={node.id} node={node} />
+                  <ServiceNodeCard key={node.id} node={node} edges={topology.edges} />
                 ))}
               </div>
               {tierIndex < tiers.length - 1 && (
@@ -145,29 +197,26 @@ export function ImpactMap() {
           </p>
         </div>
         <div>
-          <p className="text-xs text-muted-foreground mb-1">Noisy Services</p>
+          <p className="text-xs text-muted-foreground mb-1">Vuln Services</p>
           <p className="text-xl font-bold">{noisyServiceCount}</p>
         </div>
       </div>
 
       {/* Alerts / risk indicators */}
       <div className="space-y-1.5 mb-5">
-        {criticalNodes.map((n) => (
-          <div key={n.id} className="flex items-center gap-2 text-sm">
-            <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
-            <span>{n.name} is critical — {getDownstreamCount(n.id)} upstream services affected</span>
-          </div>
-        ))}
+        {criticalNodes.map((n) => {
+          const downstreamCount = topology.edges.filter((e) => e.target === n.id).length
+          return (
+            <div key={n.id} className="flex items-center gap-2 text-sm">
+              <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
+              <span>{n.name} is failing CI — {downstreamCount} upstream services affected</span>
+            </div>
+          )
+        })}
         {warningNodes.map((n) => (
           <div key={n.id} className="flex items-center gap-2 text-sm">
             <div className="w-2 h-2 rounded-full bg-warning flex-shrink-0" />
-            <span>{n.name} degraded</span>
-            {(n.alertHistory.noisyRuleIds?.length ?? 0) > 0 && (
-              <Badge variant="outline" className="text-xs text-muted-foreground gap-1">
-                <BellOff className="w-3 h-3" />
-                {n.alertHistory.noisyRuleIds!.length} noisy rules
-              </Badge>
-            )}
+            <span>{n.name} degraded (health {Math.round(n.healthScore)}%)</span>
           </div>
         ))}
       </div>

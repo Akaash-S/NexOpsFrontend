@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, Suspense } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { IncidentTabs } from '@/components/incidents/incident-tabs'
@@ -8,8 +8,7 @@ import { IncidentFilters } from '@/components/incidents/incident-filters'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { AlertTriangle } from 'lucide-react'
-import { INCIDENTS_DATA } from '@/lib/mock-data'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 
 function IncidentsPageContent() {
   const router = useRouter()
@@ -17,7 +16,61 @@ function IncidentsPageContent() {
   const isEmpty = searchParams?.get('empty') === 'true'
 
   const [selectedIncident, setSelectedIncident] = useState<string | null>(null)
-  const [incidents] = useState<any[]>(() => isEmpty ? [] : INCIDENTS_DATA)
+  const [incidents, setIncidents] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (isEmpty) {
+      setLoading(false)
+      return
+    }
+
+    async function loadIncidents() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [incidentsData, reposData] = await Promise.all([
+          apiFetch('/incidents'),
+          apiFetch('/repos')
+        ])
+        
+        const mapped = incidentsData.map((inc: any) => {
+          const start = new Date(inc.startedAt || inc.started_at)
+          const end = inc.resolvedAt ? new Date(inc.resolvedAt) : new Date()
+          const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
+          const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
+          
+          const topCauses = inc.candidateCauses || inc.candidate_causes || []
+          const affectedServices = topCauses.map((c: any) => reposData.find((r: any) => r.id === c.repoId)?.name || c.repoId)
+          if (affectedServices.length === 0) {
+            affectedServices.push('Platform')
+          }
+
+          return {
+            id: inc.id,
+            title: inc.title,
+            severity: (inc.severity || 'medium').toLowerCase(),
+            status: inc.status || 'open',
+            startTime: start.toLocaleString(),
+            duration,
+            durationMins,
+            lead: inc.assignee || 'On-Call Bot',
+            affectedServices,
+            affectedClusters: inc.clusterId ? [inc.clusterId] : [],
+            rootCause: inc.rootCauseRepoId ? (reposData.find((r: any) => r.id === inc.rootCauseRepoId)?.name || inc.rootCauseRepoId) : 'None confirmed',
+            impactedUsers: inc.affectedUsers || inc.affected_users || 0
+          }
+        })
+
+        setIncidents(mapped)
+      } catch (err) {
+        console.error("Failed to load incidents:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    loadIncidents()
+  }, [isEmpty])
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -64,6 +117,20 @@ function IncidentsPageContent() {
         }
       })
   }, [incidents, filters, statusFilter])
+
+  if (loading) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Incidents"
+          description="Investigation center — select an incident to see ranked causal candidates and the correlation engine's reasoning"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContent>
+    )
+  }
 
   if (incidents.length === 0) {
     return (

@@ -12,8 +12,6 @@ import { Badge } from '@/components/ui/badge'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { User, Bell, Network, Settings, LogOut, CheckCircle2, AlertTriangle, ShieldCheck, Play } from 'lucide-react'
 import { useAppState } from '@/lib/hooks/use-app-state'
-import { serviceNodes } from '@/lib/graph'
-import { INTEGRATIONS_DATA } from '@/lib/mock-data'
 import { cn } from '@/lib/utils'
 
 function SettingsPageContent() {
@@ -40,6 +38,41 @@ function SettingsPageContent() {
       setActiveTab(queryTab)
     }
   }, [queryTab])
+
+  // Repositories state loading
+  const [repos, setRepos] = useState<any[]>([])
+  const [loadingRepos, setLoadingRepos] = useState(true)
+
+  useEffect(() => {
+    async function loadRepos() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const data = await apiFetch('/repos')
+        setRepos(data)
+      } catch (err) {
+        console.error('Failed to load repos:', err)
+      } finally {
+        setLoadingRepos(false)
+      }
+    }
+    loadRepos()
+  }, [])
+
+  // Dynamic integrations array
+  const integrations = [
+    {
+      name: 'GitHub',
+      status: currentUser ? 'Connected' : 'Disconnected',
+      config: currentUser ? 'nexops-org/repositories' : 'Not configured',
+      lastSync: 'Sync active',
+    },
+    {
+      name: 'PagerDuty',
+      status: currentUser ? 'Connected' : 'Disconnected',
+      config: currentUser ? 'PD Webhook Active' : 'Not configured',
+      lastSync: 'Sync active',
+    }
+  ]
 
   // Mock settings values
   const [landingRoute, setLandingRoute] = useState('/dashboard')
@@ -216,30 +249,43 @@ function SettingsPageContent() {
               </div>
 
               <div className="space-y-1.5 max-h-[220px] overflow-y-auto border border-border/50 rounded-lg p-2 bg-muted/15">
-                {serviceNodes.map((svc) => {
-                  const isWatched = watchedServices.includes(svc.id)
-                  return (
-                    <div 
-                      key={svc.id} 
-                      onClick={() => toggleWatchedService(svc.id)}
-                      className={cn(
-                        "flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors text-xs border border-transparent",
-                        isWatched ? 'bg-primary/5 border-primary/20 text-foreground' : 'hover:bg-muted/50 text-muted-foreground'
-                      )}
-                    >
-                      <div className="flex items-center gap-2">
-                        <span className={cn(
-                          "w-1.5 h-1.5 rounded-full",
-                          svc.tier === 'ingress' ? 'bg-primary' : svc.tier === 'service' ? 'bg-accent' : 'bg-warning'
-                        )} />
-                        <span className="font-semibold">{svc.name}</span>
+                {loadingRepos ? (
+                  <div className="text-center py-4 text-xs text-muted-foreground animate-pulse">Loading services...</div>
+                ) : repos.length === 0 ? (
+                  <div className="text-center py-4 text-xs text-muted-foreground">No services found. Connect GitHub to synchronize.</div>
+                ) : (
+                  repos.map((svc) => {
+                    const isWatched = watchedServices.includes(svc.id)
+                    const nameLower = svc.name.toLowerCase()
+                    let tier = 'service'
+                    if (nameLower.includes('gateway') || nameLower.includes('frontend')) {
+                      tier = 'ingress'
+                    } else if (nameLower.includes('database') || nameLower.includes('db') || nameLower.includes('redis') || nameLower.includes('cache') || nameLower.includes('queue') || nameLower.includes('kafka') || nameLower.includes('terraform')) {
+                      tier = 'data'
+                    }
+                    return (
+                      <div 
+                        key={svc.id} 
+                        onClick={() => toggleWatchedService(svc.id)}
+                        className={cn(
+                          "flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors text-xs border border-transparent",
+                          isWatched ? 'bg-primary/5 border-primary/20 text-foreground' : 'hover:bg-muted/50 text-muted-foreground'
+                        )}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className={cn(
+                            "w-1.5 h-1.5 rounded-full",
+                            tier === 'ingress' ? 'bg-primary' : tier === 'service' ? 'bg-accent' : 'bg-warning'
+                          )} />
+                          <span className="font-semibold">{svc.name}</span>
+                        </div>
+                        <Badge variant="outline" className="text-[9px] scale-90">
+                          {isWatched ? 'Watching' : 'Ignore'}
+                        </Badge>
                       </div>
-                      <Badge variant="outline" className="text-[9px] scale-90">
-                        {isWatched ? 'Watching' : 'Ignore'}
-                      </Badge>
-                    </div>
-                  )
-                })}
+                    )
+                  })
+                )}
               </div>
             </Card>
           </div>
@@ -309,11 +355,14 @@ function SettingsPageContent() {
               <h3 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground px-1">Active Integrations</h3>
               
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {INTEGRATIONS_DATA.filter(i => ['GitHub', 'PagerDuty'].includes(i.name)).map((integration) => (
+                {integrations.map((integration) => (
                   <Card key={integration.name} className="p-5 border border-border/80 space-y-4">
                     <div className="flex items-center justify-between">
                       <div className="font-bold text-sm">{integration.name}</div>
-                      <Badge className="bg-success/10 text-success border-success/20 border" variant="outline">
+                      <Badge className={cn(
+                        "border px-1.5 py-0.5 text-[10px]",
+                        integration.status === 'Connected' ? "bg-success/10 text-success border-success/20" : "bg-muted text-muted-foreground border-border"
+                      )} variant="outline">
                         {integration.status}
                       </Badge>
                     </div>

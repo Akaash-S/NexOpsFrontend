@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, Suspense } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -14,43 +14,77 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Package, Settings, AlertTriangle, CheckCircle, AlertCircle, Flame, ChevronDown, ChevronUp, Search, GitCommitHorizontal } from 'lucide-react'
+import { Package, Settings, AlertTriangle, CheckCircle, AlertCircle, Flame, ChevronDown, ChevronUp, Search, GitCommitHorizontal, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
-import { CHANGES_DATA } from '@/lib/mock-data'
-import { getNodeById } from '@/lib/graph'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
 const typeConfig = {
   deployment: { icon: Package, label: 'Deployment', color: 'text-primary' },
   infrastructure: { icon: Settings, label: 'Infrastructure', color: 'text-accent' },
-}
+} as const
 
 const impactConfig = {
   high: { label: 'High Impact', bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/20' },
   medium: { label: 'Medium Impact', bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' },
   low: { label: 'Low Impact', bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
+} as const
+
+function RiskPill({ score, basis }: { score: number; basis: string }) {
+  const color =
+    score >= 70 ? 'bg-destructive/10 text-destructive border-destructive/20' :
+    score >= 40 ? 'bg-warning/10 text-warning border-warning/20' :
+    'bg-success/10 text-success border-success/20'
+  const label = score >= 70 ? 'High' : score >= 40 ? 'Medium' : 'Low'
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/50">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Flame className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+        <span className="text-xs font-semibold text-muted-foreground">Blast Radius</span>
+        <Badge variant="outline" className={cn('text-xs ml-auto', color)}>
+          {score} — {label} Risk
+        </Badge>
+      </div>
+      <p className="text-xs text-muted-foreground italic">{basis}</p>
+    </div>
+  )
 }
 
-// Removed legacy RiskBar component - unified into ScoreWithReasoning
+function getDownstreamDependents(nodeId: string, edges: any[]): string[] {
+  const visited = new Set<string>()
+  function traverse(id: string) {
+    const downstream = edges
+      .filter((e) => e.target === id || e.to === id)
+      .map((e) => e.source || e.from)
+    for (const dep of downstream) {
+      if (dep && !visited.has(dep)) {
+        visited.add(dep)
+        traverse(dep)
+      }
+    }
+  }
+  traverse(nodeId)
+  return [...visited]
+}
 
-function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
+function ChangeCard({ change, topology }: { change: any; topology: any }) {
   const [expanded, setExpanded] = useState(false)
-  const TypeIcon = (typeConfig[change.type as keyof typeof typeConfig] ?? typeConfig.deployment).icon
-  const typeColor = (typeConfig[change.type as keyof typeof typeConfig] ?? typeConfig.deployment).color
+  const isFailing = change.status === 'failed'
+  const TypeIcon = Package
+  const typeColor = typeConfig.deployment.color
   const impact = impactConfig[change.impact as keyof typeof impactConfig] ?? impactConfig.medium
-  const serviceNode = getNodeById(change.service)
-  const blastRadius = (change as any).blastRadius
+  const blastRadius = change.blastRadius
 
-  const incidentBadge = change.incidents > 0 ? (
+  const incidentBadge = isFailing ? (
     <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/20 gap-1">
       <AlertTriangle className="w-3 h-3" />
-      {change.incidents} incident{change.incidents > 1 ? 's' : ''} linked
+      Deployment failed
     </Badge>
   ) : null
 
   return (
-    <Card className={cn('p-5 transition-all', change.incidents > 0 && 'border-destructive/30')}>
+    <Card className={cn('p-5 transition-all', isFailing && 'border-destructive/30')}>
       {/* Header row */}
       <div className="flex items-start gap-3 mb-4">
         <div className={cn('mt-0.5 flex-shrink-0', typeColor)}>
@@ -60,16 +94,16 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
           <div className="flex items-start justify-between gap-2 mb-1">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1 flex-wrap">
-                <span className="font-mono text-xs text-muted-foreground">{change.id}</span>
-                <Badge variant="secondary" className="text-xs">{(change as any).serviceName || change.service}</Badge>
+                <span className="font-mono text-xs text-muted-foreground">{change.id.substring(0, 8)}</span>
+                <Badge variant="secondary" className="text-xs">{change.serviceName}</Badge>
                 <Badge variant="outline" className={cn('text-xs', impact.text, impact.border)}>
                   {impact.label}
                 </Badge>
                 {incidentBadge}
               </div>
-              <p className="font-semibold text-sm">{(change as any).message}</p>
+              <p className="font-semibold text-sm">{change.message}</p>
               <p className="text-xs text-muted-foreground mt-0.5">
-                {change.time} · by {(change as any).author || 'system'} · v{change.version || (change as any).version}
+                {change.time} · by {change.author} · v{change.version}
               </p>
             </div>
           </div>
@@ -93,7 +127,7 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
             </button>
           </div>
 
-          {/* Risk Score — unified via ScoreWithReasoning component */}
+          {/* Risk Score */}
           <ScoreWithReasoning
             label="Risk Score"
             score={blastRadius.riskScore}
@@ -108,7 +142,7 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
             </p>
             <div className="flex flex-wrap gap-1.5">
               {blastRadius.directServices.map((svc: string) => {
-                const node = getNodeById(svc)
+                const node = topology.nodes.find((n: any) => n.id === svc)
                 return (
                   <Badge key={svc} variant="outline" className="text-xs gap-1">
                     {node?.name ?? svc}
@@ -129,7 +163,7 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {blastRadius.downstreamServices.map((svc: string) => {
-                  const node = getNodeById(svc)
+                  const node = topology.nodes.find((n: any) => n.id === svc)
                   return (
                     <Badge key={svc} variant="secondary" className="text-xs">
                       {node?.name ?? svc}
@@ -140,17 +174,6 @@ function ChangeCard({ change }: { change: typeof CHANGES_DATA[0] }) {
             </div>
           )}
         </div>
-      )}
-
-      {/* Correlated incidents link */}
-      {change.incidents > 0 && (
-        <Link
-          href="/incidents"
-          className="flex items-center gap-2 mt-3 text-xs text-destructive hover:text-destructive/80 transition-colors"
-        >
-          <AlertCircle className="w-3.5 h-3.5" />
-          View linked incidents →
-        </Link>
       )}
     </Card>
   )
@@ -163,32 +186,110 @@ function RecentChangesPageContent() {
   const [sortBy, setSortBy] = useState('time')
   const [riskFilter, setRiskFilter] = useState('all')
 
-  const [changesState] = useState<any[]>(() => isEmpty ? [] : CHANGES_DATA)
+  const [deployments, setDeployments] = useState<any[]>([])
+  const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
+  const [loading, setLoading] = useState(true)
 
-  const changes = useMemo(() => {
-    return changesState
+  useEffect(() => {
+    if (isEmpty) {
+      setLoading(false)
+      return
+    }
+
+    async function loadData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [deploymentsData, topologyData] = await Promise.all([
+          apiFetch('/deployments'),
+          apiFetch('/dependencies/topology')
+        ])
+        setDeployments(deploymentsData)
+        setTopology(topologyData)
+      } catch (err) {
+        console.error("Failed to load recent changes:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [isEmpty])
+
+  const decoratedDeployments = useMemo(() => {
+    return deployments.map((dep) => {
+      const isFailing = dep.status === 'failed'
+      const repo = topology.nodes.find((n) => n.id === dep.repoId)
+      const serviceName = repo?.name || dep.repoId
+      
+      const directDependents = topology.edges
+        .filter((e) => e.target === dep.repoId || e.to === dep.repoId)
+        .map((e) => e.source || e.from)
+      const allDownstream = getDownstreamDependents(dep.repoId, topology.edges)
+      
+      const directCount = directDependents.length
+      
+      const riskScore = Math.min(100, (allDownstream.length * 20) + (isFailing ? 40 : 15))
+      const riskBasis = allDownstream.length > 0
+        ? `Impacts ${allDownstream.length} services downstream (direct & transitively) in the dependency tree.`
+        : `Isolated service. Zero downstream dependencies affected.`
+
+      return {
+        ...dep,
+        serviceName,
+        service: dep.repoId,
+        message: dep.changelog || 'No deployment notes.',
+        time: dep.deployedAt ? new Date(dep.deployedAt).toLocaleString() : 'Just now',
+        author: dep.deployedBy || 'system',
+        incidents: isFailing ? 1 : 0,
+        type: 'deployment',
+        impact: riskScore >= 70 ? 'high' : (riskScore >= 40 ? 'medium' : 'low'),
+        blastRadius: {
+          riskScore,
+          riskBasis: [riskBasis],
+          directServices: directDependents,
+          downstreamServices: allDownstream.filter(id => !directDependents.includes(id))
+        }
+      }
+    })
+  }, [deployments, topology])
+
+  const filteredChanges = useMemo(() => {
+    return decoratedDeployments
       .filter((c) => {
         const matchesSearch =
-          ((c as any).serviceName || c.service).toLowerCase().includes(search.toLowerCase()) ||
-          ((c as any).message || '').toLowerCase().includes(search.toLowerCase()) ||
+          c.serviceName.toLowerCase().includes(search.toLowerCase()) ||
+          c.message.toLowerCase().includes(search.toLowerCase()) ||
           c.id.toLowerCase().includes(search.toLowerCase())
-        const br = (c as any).blastRadius
+        
         let matchesRisk = true
-        if (riskFilter === 'high') matchesRisk = br?.riskScore >= 70
-        else if (riskFilter === 'medium') matchesRisk = br?.riskScore >= 40 && br?.riskScore < 70
-        else if (riskFilter === 'low') matchesRisk = br?.riskScore < 40
+        if (riskFilter === 'high') matchesRisk = c.blastRadius.riskScore >= 70
+        else if (riskFilter === 'medium') matchesRisk = c.blastRadius.riskScore >= 40 && c.blastRadius.riskScore < 70
+        else if (riskFilter === 'low') matchesRisk = c.blastRadius.riskScore < 40
         else if (riskFilter === 'incidents') matchesRisk = c.incidents > 0
         return matchesSearch && matchesRisk
       })
       .sort((a, b) => {
-        if (sortBy === 'risk-desc') return ((b as any).blastRadius?.riskScore ?? 0) - ((a as any).blastRadius?.riskScore ?? 0)
-        if (sortBy === 'risk-asc') return ((a as any).blastRadius?.riskScore ?? 0) - ((b as any).blastRadius?.riskScore ?? 0)
+        if (sortBy === 'risk-desc') return b.blastRadius.riskScore - a.blastRadius.riskScore
+        if (sortBy === 'risk-asc') return a.blastRadius.riskScore - b.blastRadius.riskScore
         if (sortBy === 'incidents') return b.incidents - a.incidents
-        return 0 // time (default order from data)
+        return 0
       })
-  }, [changesState, search, sortBy, riskFilter])
+  }, [decoratedDeployments, search, sortBy, riskFilter])
 
-  if (changesState.length === 0) {
+  if (loading) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Recent Changes"
+          description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContent>
+    )
+  }
+
+  if (deployments.length === 0) {
     return (
       <PageContent>
         <PageHeader
@@ -211,9 +312,9 @@ function RecentChangesPageContent() {
     )
   }
 
-  const highRiskCount = changesState.filter((c) => (c as any).blastRadius?.riskScore >= 70).length
-  const incidentLinked = changesState.filter((c) => c.incidents > 0).length
-  const totalChanges = changesState.length
+  const highRiskCount = decoratedDeployments.filter((c) => c.blastRadius.riskScore >= 70).length
+  const incidentLinked = decoratedDeployments.filter((c) => c.incidents > 0).length
+  const totalChanges = decoratedDeployments.length
 
   return (
     <PageContent>
@@ -283,13 +384,13 @@ function RecentChangesPageContent() {
 
       {/* Change Feed */}
       <div className="space-y-4">
-        {changes.length === 0 ? (
+        {filteredChanges.length === 0 ? (
           <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg">
             <CheckCircle className="w-8 h-8 mx-auto mb-3 opacity-30" />
             <p>No changes match your filters.</p>
           </div>
         ) : (
-          changes.map((change) => <ChangeCard key={change.id} change={change} />)
+          filteredChanges.map((change) => <ChangeCard key={change.id} change={change} topology={topology} />)
         )}
       </div>
     </PageContent>
