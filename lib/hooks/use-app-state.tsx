@@ -97,7 +97,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               localStorage.setItem("authToken", token);
               
               // Fetch user profile from backend to verify onboarding status
-              const res = await fetch("http://localhost:8000/api/v1/users/me", {
+              const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
+              const res = await fetch(`${baseUrl}/users/me`, {
                 headers: {
                   "Authorization": `Bearer ${token}`
                 }
