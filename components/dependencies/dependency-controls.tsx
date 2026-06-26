@@ -1,10 +1,8 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
-import { Search, ZoomIn, ZoomOut, ArrowDown, ArrowUp } from 'lucide-react'
+import { Search, ArrowDown, ArrowUp } from 'lucide-react'
 
 interface DependencyControlsProps {
   impactMode: boolean
@@ -66,10 +64,6 @@ export function DependencyControls({
                 : 'Shows services this one depends on'}
             </span>
           </p>
-        </div>
-        <div className="flex gap-2">
-          <Badge variant="outline">8 Services</Badge>
-          <Badge variant="outline">9 Dependencies</Badge>
         </div>
       </div>
     </div>

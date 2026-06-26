@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useMemo, type MouseEvent } from 'react'
+import { useCallback, useMemo, useState, useEffect, type MouseEvent } from 'react'
 import ReactFlow, {
   Node,
   Edge,
@@ -11,128 +11,112 @@ import ReactFlow, {
   MiniMap,
 } from 'reactflow'
 import 'reactflow/dist/style.css'
+import dagre from 'dagre'
 import { ServiceNode } from './service-node'
+import { CardSkeleton } from '@/components/loading-state'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Loader2, AlertTriangle, Network } from 'lucide-react'
+import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 const nodeTypes = {
   service: ServiceNode,
 }
 
-const initialNodes: Node[] = [
-  {
-    id: 'api-gateway',
-    data: { label: 'API Gateway', health: 98, status: 'healthy', criticality: 'critical' },
-    position: { x: 200, y: 50 },
-    type: 'service',
-  },
-  {
-    id: 'auth-service',
-    data: { label: 'Auth Service', health: 99, status: 'healthy', criticality: 'critical' },
-    position: { x: 0, y: 150 },
-    type: 'service',
-  },
-  {
-    id: 'search-service',
-    data: { label: 'Search Service', health: 85, status: 'warning', criticality: 'high' },
-    position: { x: 400, y: 150 },
-    type: 'service',
-  },
-  {
-    id: 'notification-service',
-    data: { label: 'Notification Service', health: 92, status: 'healthy', criticality: 'medium' },
-    position: { x: 100, y: 250 },
-    type: 'service',
-  },
-  {
-    id: 'analytics-engine',
-    data: { label: 'Analytics Engine', health: 88, status: 'healthy', criticality: 'medium' },
-    position: { x: 350, y: 250 },
-    type: 'service',
-  },
-  {
-    id: 'database',
-    data: { label: 'Database', health: 95, status: 'healthy', criticality: 'critical' },
-    position: { x: 200, y: 350 },
-    type: 'service',
-  },
-  {
-    id: 'redis-cache',
-    data: { label: 'Redis Cache', health: 97, status: 'healthy', criticality: 'high' },
-    position: { x: 0, y: 350 },
-    type: 'service',
-  },
-  {
-    id: 'kafka-queue',
-    data: { label: 'Kafka Queue', health: 91, status: 'healthy', criticality: 'high' },
-    position: { x: 400, y: 350 },
-    type: 'service',
-  },
-]
+const NODE_WIDTH = 180
+const NODE_HEIGHT = 120
 
-const initialEdges: Edge[] = [
-  {
-    id: 'api-gateway-auth',
-    source: 'api-gateway',
-    target: 'auth-service',
-    animated: true,
-    label: 'required',
-  },
-  {
-    id: 'api-gateway-search',
-    source: 'api-gateway',
-    target: 'search-service',
-    animated: true,
-    label: 'optional',
-  },
-  {
-    id: 'api-gateway-notification',
-    source: 'api-gateway',
-    target: 'notification-service',
-    animated: true,
-    label: 'required',
-  },
-  {
-    id: 'auth-service-database',
-    source: 'auth-service',
-    target: 'database',
-    label: 'critical',
-  },
-  {
-    id: 'auth-service-redis',
-    source: 'auth-service',
-    target: 'redis-cache',
-    label: 'optional',
-  },
-  {
-    id: 'search-service-kafka',
-    source: 'search-service',
-    target: 'kafka-queue',
-    label: 'required',
-  },
-  {
-    id: 'analytics-engine-kafka',
-    source: 'analytics-engine',
-    target: 'kafka-queue',
-    label: 'required',
-  },
-  {
-    id: 'analytics-engine-database',
-    source: 'analytics-engine',
-    target: 'database',
-    label: 'required',
-  },
-  {
-    id: 'notification-service-kafka',
-    source: 'notification-service',
-    target: 'kafka-queue',
-    label: 'required',
-  },
-]
+interface TopologyNode {
+  id: string
+  name: string
+  platform: string
+  language?: string | null
+  health_score: number
+  ci_status: string
+  open_issues: number
+  vulnerabilities: number
+  activity: number
+  owner?: string | null
+}
+
+interface TopologyEdge {
+  id: string
+  source: string
+  target: string
+  label: string
+  is_broken: boolean
+}
+
+interface TopologyResponse {
+  nodes: TopologyNode[]
+  edges: TopologyEdge[]
+}
+
+function deriveStatus(ciStatus: string, healthScore: number): 'healthy' | 'warning' | 'critical' {
+  if (ciStatus === 'failing') return 'critical'
+  if (ciStatus === 'unknown') return 'warning'
+  if (healthScore < 80) return 'warning'
+  return 'healthy'
+}
+
+function deriveCriticality(healthScore: number): string {
+  if (healthScore >= 95) return 'critical'
+  if (healthScore >= 85) return 'high'
+  if (healthScore >= 70) return 'medium'
+  return 'low'
+}
+
+function layoutGraph(nodes: TopologyNode[], edges: TopologyEdge[]): { flowNodes: Node[]; flowEdges: Edge[] } {
+  const g = new dagre.graphlib.Graph()
+  g.setDefaultEdgeLabel(() => ({}))
+  g.setGraph({ rankdir: 'LR', nodesep: 60, ranksep: 100, marginx: 40, marginy: 40 })
+
+  for (const node of nodes) {
+    g.setNode(node.id, { width: NODE_WIDTH, height: NODE_HEIGHT })
+  }
+  for (const edge of edges) {
+    g.setEdge(edge.source, edge.target)
+  }
+
+  dagre.layout(g)
+
+  const flowNodes: Node[] = nodes.map((node) => {
+    const pos = g.node(node.id)
+    return {
+      id: node.id,
+      type: 'service',
+      position: {
+        x: pos.x - NODE_WIDTH / 2,
+        y: pos.y - NODE_HEIGHT / 2,
+      },
+      data: {
+        label: node.name,
+        health: Math.round(node.health_score),
+        status: deriveStatus(node.ci_status, node.health_score),
+        criticality: deriveCriticality(node.health_score),
+      },
+    }
+  })
+
+  const flowEdges: Edge[] = edges.map((edge) => ({
+    id: edge.id,
+    source: edge.source,
+    target: edge.target,
+    label: edge.label,
+    animated: edge.is_broken,
+    style: edge.is_broken
+      ? { stroke: 'var(--destructive)', strokeWidth: 2 }
+      : { stroke: 'var(--border)', strokeWidth: 1.5 },
+  }))
+
+  return { flowNodes, flowEdges }
+}
 
 interface DependencyGraphProps {
   impactMode: boolean
   searchQuery: string
-  onNodeSelect: (nodeId: string) => void
+  onNodeSelect: (nodeId: string | null) => void
   selectedNode: string | null
 }
 
@@ -142,18 +126,58 @@ export function DependencyGraph({
   onNodeSelect,
   selectedNode,
 }: DependencyGraphProps) {
+  const [topology, setTopology] = useState<TopologyResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function loadTopology() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const data = await apiFetch('/dependencies/topology') as TopologyResponse
+        setTopology(data)
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load topology')
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadTopology()
+  }, [])
+
+  const { flowNodes: layoutNodes, flowEdges: layoutEdges } = useMemo(
+    () => topology ? layoutGraph(topology.nodes, topology.edges) : { flowNodes: [], flowEdges: [] },
+    [topology]
+  )
+
+  const filteredBySearch = useMemo(
+    () => {
+      if (!searchQuery) return layoutNodes
+      const q = searchQuery.toLowerCase()
+      return layoutNodes.filter((n) => n.data.label.toLowerCase().includes(q))
+    },
+    [layoutNodes, searchQuery]
+  )
+
+  const [nodes, setNodes, onNodesChange] = useNodesState(filteredBySearch)
+  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges)
+
+  useEffect(() => {
+    setNodes(filteredBySearch)
+  }, [filteredBySearch, setNodes])
+
+  useEffect(() => {
+    setEdges(layoutEdges)
+  }, [layoutEdges, setEdges])
+
   const handleNodeClick = useCallback((_event: MouseEvent, node: Node) => {
     onNodeSelect(node.id)
   }, [onNodeSelect])
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges)
-
   const highlightedNodes = useMemo(() => {
-    if (!selectedNode) return new Set()
+    if (!selectedNode) return new Set<string>()
     const highlighted = new Set([selectedNode])
 
-    // Add upstream dependencies
     const addUpstream = (nodeId: string) => {
       edges.forEach((edge) => {
         if (edge.target === nodeId && !highlighted.has(edge.source)) {
@@ -163,7 +187,6 @@ export function DependencyGraph({
       })
     }
 
-    // Add downstream dependents
     const addDownstream = (nodeId: string) => {
       edges.forEach((edge) => {
         if (edge.source === nodeId && !highlighted.has(edge.target)) {
@@ -182,7 +205,7 @@ export function DependencyGraph({
     return highlighted
   }, [selectedNode, edges, impactMode])
 
-  const filteredNodes = useMemo(
+  const decoratedNodes = useMemo(
     () =>
       nodes.map((node) => ({
         ...node,
@@ -195,19 +218,17 @@ export function DependencyGraph({
     [nodes, selectedNode, highlightedNodes]
   )
 
-  const filteredEdges = useMemo(
+  const decoratedEdges = useMemo(
     () =>
       edges.map((edge) => {
         const sourceHighlighted = highlightedNodes.has(edge.source)
         const targetHighlighted = highlightedNodes.has(edge.target)
-
         return {
           ...edge,
-          animated: sourceHighlighted && targetHighlighted,
-          style: {
-            stroke: sourceHighlighted && targetHighlighted ? 'var(--primary)' : 'var(--border)',
-            strokeWidth: sourceHighlighted && targetHighlighted ? 2 : 1,
-          },
+          animated: edge.animated || (sourceHighlighted && targetHighlighted),
+          style: sourceHighlighted && targetHighlighted
+            ? { ...edge.style, stroke: 'var(--primary)', strokeWidth: 2 }
+            : edge.style,
         }
       }),
     [edges, highlightedNodes]
@@ -215,14 +236,63 @@ export function DependencyGraph({
 
   const memoizedNodeTypes = useMemo(() => nodeTypes, [])
 
+  const handlePaneClick = useCallback(() => {
+    onNodeSelect(null)
+  }, [onNodeSelect])
+
+  if (loading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Card className="p-8 flex flex-col items-center gap-3">
+          <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+          <p className="text-sm text-muted-foreground">Loading topology...</p>
+        </Card>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-full flex items-center justify-center">
+        <Card className="p-8 flex flex-col items-center gap-3 max-w-md text-center">
+          <AlertTriangle className="w-8 h-8 text-destructive" />
+          <p className="text-sm font-semibold">Failed to load dependency graph</p>
+          <p className="text-xs text-muted-foreground">{error}</p>
+          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
+            Retry
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+  if (!topology || topology.nodes.length === 0) {
+    return (
+      <div className="w-full h-full flex items-center justify-center border border-dashed border-border rounded-lg">
+        <div className="p-8 flex flex-col items-center gap-3 max-w-md text-center">
+          <Network className="w-10 h-10 text-muted-foreground/60" />
+          <h3 className="font-semibold text-sm">No Services Connected</h3>
+          <p className="text-xs text-muted-foreground">
+            Connect your GitHub account and sync repositories to see your service topology.
+            Dependency edges appear when a <code className="text-xs bg-muted px-1 rounded">nexops.yaml</code> file is present in a repo.
+          </p>
+          <Button size="sm" asChild variant="outline">
+            <Link href="/settings?tab=workspace">Connect Integrations</Link>
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ width: '100%', height: '100%' }}>
       <ReactFlow
-        nodes={filteredNodes}
-        edges={filteredEdges}
+        nodes={decoratedNodes}
+        edges={decoratedEdges}
         onNodesChange={onNodesChange}
         onEdgesChange={onEdgesChange}
         onNodeClick={handleNodeClick}
+        onPaneClick={handlePaneClick}
         nodeTypes={memoizedNodeTypes}
         fitView
       >

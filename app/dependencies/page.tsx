@@ -13,46 +13,43 @@ export default function DependenciesPage() {
 
   return (
     <>
-      
-      <>
-        <div className="flex flex-col h-full gap-4 p-4">
-          {/* Header */}
-          <div>
-            <PageHeader
-              title="Dependency Graph"
-              description="Interactive service topology with impact analysis and critical path visualization"
+      <div className="flex flex-col h-full gap-4 p-4">
+        {/* Header */}
+        <div>
+          <PageHeader
+            title="Dependency Graph"
+            description="Interactive service topology with impact analysis and critical path visualization"
+          />
+        </div>
+
+        {/* Controls */}
+        <DependencyControls
+          impactMode={impactMode}
+          onImpactModeChange={setImpactMode}
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+        />
+
+        {/* Main Content Area */}
+        <div className="flex gap-4 flex-1 h-[calc(100vh-240px)] min-h-[500px]">
+          {/* Graph Area */}
+          <div className="flex-1 border border-border rounded-lg overflow-hidden h-full">
+            <DependencyGraph
+              impactMode={impactMode}
+              searchQuery={searchQuery}
+              onNodeSelect={setSelectedNode}
+              selectedNode={selectedNode}
             />
           </div>
 
-          {/* Controls */}
-          <DependencyControls
-            impactMode={impactMode}
-            onImpactModeChange={setImpactMode}
-            searchQuery={searchQuery}
-            onSearchChange={setSearchQuery}
-          />
-
-          {/* Main Content Area */}
-          <div className="flex gap-4 flex-1 h-[calc(100vh-240px)] min-h-[500px]">
-            {/* Graph Area */}
-            <div className="flex-1 border border-border rounded-lg overflow-hidden h-full">
-              <DependencyGraph
-                impactMode={impactMode}
-                searchQuery={searchQuery}
-                onNodeSelect={setSelectedNode}
-                selectedNode={selectedNode}
-              />
+          {/* Intelligence Panel */}
+          {selectedNode && (
+            <div className="w-96 flex-shrink-0 h-full">
+              <DependencyIntelligence nodeId={selectedNode} onClose={() => setSelectedNode(null)} />
             </div>
-
-            {/* Intelligence Panel */}
-            {selectedNode && (
-              <div className="w-96 flex-shrink-0 h-full">
-                <DependencyIntelligence nodeId={selectedNode} onClose={() => setSelectedNode(null)} />
-              </div>
-            )}
-          </div>
+          )}
         </div>
-      </>
+      </div>
     </>
   )
 }
