@@ -48,6 +48,7 @@ export interface Service {
 }
 
 export interface CandidateCause {
+  id: string;
   deployId: string;
   service: string;
   matchScore: number;
