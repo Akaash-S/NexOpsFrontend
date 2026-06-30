@@ -30,6 +30,7 @@ const SEVERITY_CONFIG = {
   critical: { bg: 'bg-destructive/10', text: 'text-destructive' },
   high: { bg: 'bg-warning/10', text: 'text-warning' },
   medium: { bg: 'bg-info/10', text: 'text-info' },
+  low: { bg: 'bg-muted text-muted-foreground', text: 'text-muted-foreground' },
 }
 
 export function IncidentTabs({
@@ -103,7 +104,7 @@ function IncidentCard({
   selected: boolean
   onSelect: (id: string) => void
 }) {
-  const config = SEVERITY_CONFIG[incident.severity]
+  const config = SEVERITY_CONFIG[incident.severity] || SEVERITY_CONFIG.medium
   const Icon = incident.status === 'resolved' ? CheckCircle2 : AlertCircle
 
   return (

@@ -32,6 +32,7 @@ const severityConfig = {
   critical: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', label: 'Critical' },
   high: { bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20', label: 'High' },
   medium: { bg: 'bg-accent/10', text: 'text-accent', border: 'border-accent/20', label: 'Medium' },
+  low: { bg: 'bg-info/10', text: 'text-info', border: 'border-info/20', label: 'Low' },
 }
 
 const statusConfig = {
