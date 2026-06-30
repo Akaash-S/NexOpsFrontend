@@ -6,7 +6,7 @@ import { useAppState } from '@/lib/hooks/use-app-state'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { Github, Play, ArrowRight, ShieldCheck, CheckCircle2, Network, AlertTriangle, Loader2, BellOff } from 'lucide-react'
+import { Github, Play, ArrowRight, ShieldCheck, CheckCircle2, Network, AlertTriangle, Loader2, BellOff, AlertCircle, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface DiscoveredNode {
@@ -29,6 +29,9 @@ export default function OnboardingPage() {
   // Connection states
   const [githubState, setGithubState] = useState<'disconnected' | 'connecting' | 'scanning' | 'done'>('disconnected')
   const [pagerdutyState, setPagerdutyState] = useState<'disconnected' | 'connecting' | 'scanning' | 'done'>('disconnected')
+  const [pagerdutyToken, setPagerdutyToken] = useState('')
+  const [showPdInput, setShowPdInput] = useState(false)
+  const [pdError, setPdError] = useState<string | null>(null)
   
   // Discovered list states
   const [discoveredNodes, setDiscoveredNodes] = useState<DiscoveredNode[]>([])
@@ -138,40 +141,56 @@ export default function OnboardingPage() {
 
   const handleConnectPagerDuty = () => {
     if (pagerdutyState !== 'disconnected') return
+    setShowPdInput(!showPdInput)
+  }
+
+  const submitPagerDutyToken = async () => {
+    if (!pagerdutyToken.trim()) {
+      setPdError('API Token cannot be empty')
+      return
+    }
+    setPdError(null)
     setPagerdutyState('connecting')
+    setShowPdInput(false)
     
-    // Step 1: Connecting delay (900ms)
-    setTimeout(() => {
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      await apiFetch('/integrations/pagerduty/connect', {
+        method: 'POST',
+        body: JSON.stringify({ token: pagerdutyToken.trim() })
+      })
+      
       setPagerdutyState('scanning')
       
-      // Step 2: Scanning delay (1200ms)
-      setTimeout(() => {
-        setPagerdutyState('done')
-        
-        // Step 3: Staggered enrichment of nodes (150ms per node)
-        let i = 0
-        if (pagerdutyIntervalRef.current) clearInterval(pagerdutyIntervalRef.current)
-        pagerdutyIntervalRef.current = setInterval(() => {
-          if (i < discoveredNodes.length) {
-            const indexToEnrich = i
-            setDiscoveredNodes((prev) => {
-              const updated = [...prev]
-              if (updated[indexToEnrich]) {
-                updated[indexToEnrich] = { ...updated[indexToEnrich], enriched: true }
-              }
-              return updated
-            })
-            i++
-          } else {
-            if (pagerdutyIntervalRef.current) {
-              clearInterval(pagerdutyIntervalRef.current)
-              pagerdutyIntervalRef.current = null
+      // Staggered enrichment of nodes (150ms per node)
+      let i = 0
+      if (pagerdutyIntervalRef.current) clearInterval(pagerdutyIntervalRef.current)
+      pagerdutyIntervalRef.current = setInterval(() => {
+        if (i < discoveredNodes.length) {
+          const indexToEnrich = i
+          setDiscoveredNodes((prev) => {
+            const updated = [...prev]
+            if (updated[indexToEnrich]) {
+              updated[indexToEnrich] = { ...updated[indexToEnrich], enriched: true }
             }
-            setPagerdutyEnrichedDone(true)
+            return updated
+          })
+          i++
+        } else {
+          if (pagerdutyIntervalRef.current) {
+            clearInterval(pagerdutyIntervalRef.current)
+            pagerdutyIntervalRef.current = null
           }
-        }, 150)
-      }, 1200)
-    }, 900)
+          setPagerdutyEnrichedDone(true)
+          setPagerdutyState('done')
+        }
+      }, 150)
+    } catch (err) {
+      console.error("Failed to connect PagerDuty:", err)
+      setPdError(err instanceof Error ? err.message : 'Validation failed. Invalid token or network issue.')
+      setPagerdutyState('disconnected')
+      setShowPdInput(true)
+    }
   }
 
   const handleBackToStep1 = () => {
@@ -294,41 +313,78 @@ export default function OnboardingPage() {
               </div>
 
               {/* PagerDuty integration item */}
-              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/20 border border-border/50">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-destructive/10 text-destructive">
-                    <AlertTriangle className="w-5 h-5" />
+              <div className="flex flex-col gap-3 p-4 rounded-xl bg-muted/20 border border-border/50">
+                <div className="flex items-center justify-between w-full">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-destructive/10 text-destructive">
+                      <AlertTriangle className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-sm">PagerDuty</h3>
+                      <p className="text-xs text-muted-foreground">Reads incident streams & alerts</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-sm">PagerDuty</h3>
-                    <p className="text-xs text-muted-foreground">Reads incident streams & alerts</p>
-                  </div>
+                  {pagerdutyState === 'done' ? (
+                    <Badge className="bg-success/10 text-success border-success/20 gap-1 h-8 px-3" variant="outline">
+                      <CheckCircle2 className="w-3.5 h-3.5" />
+                      Connected
+                    </Badge>
+                  ) : pagerdutyState === 'connecting' ? (
+                    <Badge className="bg-primary/10 text-primary border-primary/20 gap-1 h-8 px-3 animate-pulse" variant="outline">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                      Connecting…
+                    </Badge>
+                  ) : pagerdutyState === 'scanning' ? (
+                    <Badge className="bg-warning/10 text-warning border-warning/20 gap-1 h-8 px-3 animate-pulse" variant="outline">
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
+                      Scanning…
+                    </Badge>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-8 px-4 font-semibold"
+                      onClick={handleConnectPagerDuty}
+                      disabled={githubState !== 'done'}
+                    >
+                      {showPdInput ? 'Cancel' : 'Connect'}
+                    </Button>
+                  )}
                 </div>
-                {pagerdutyState === 'done' ? (
-                  <Badge className="bg-success/10 text-success border-success/20 gap-1 h-8 px-3" variant="outline">
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    Connected
-                  </Badge>
-                ) : pagerdutyState === 'connecting' ? (
-                  <Button size="sm" variant="outline" className="h-8 gap-2 font-medium" disabled>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                    Connecting…
-                  </Button>
-                ) : pagerdutyState === 'scanning' ? (
-                  <Button size="sm" variant="outline" className="h-8 gap-2 font-medium" disabled>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />
-                    Scanning…
-                  </Button>
-                ) : (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="h-8 px-4 font-semibold"
-                    onClick={handleConnectPagerDuty}
-                    disabled={githubState !== 'done'}
-                  >
-                    Connect
-                  </Button>
+
+                {showPdInput && pagerdutyState === 'disconnected' && (
+                  <div className="space-y-3 pt-2 border-t border-border/30 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="text-xs text-muted-foreground">
+                      Enter your PagerDuty REST API Key. You can generate one in PagerDuty under{" "}
+                      <a 
+                        href="https://support.pagerduty.com/main/docs/api-access-keys" 
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="text-primary hover:underline inline-flex items-center gap-0.5"
+                      >
+                        Integrations → API Access Keys
+                        <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                      </a>.
+                    </div>
+                    <div className="flex gap-2">
+                      <input
+                        type="password"
+                        placeholder="e.g. y_NbAkKc..."
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                        value={pagerdutyToken}
+                        onChange={(e) => setPagerdutyToken(e.target.value)}
+                      />
+                      <Button size="sm" className="h-9 px-4 font-semibold" onClick={submitPagerDutyToken}>
+                        Submit
+                      </Button>
+                    </div>
+                    {pdError && (
+                      <div className="text-xs text-destructive flex items-center gap-1 font-medium">
+                        <AlertCircle className="w-3.5 h-3.5" />
+                        {pdError}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             </div>

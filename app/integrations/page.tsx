@@ -51,6 +51,10 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [syncing, setSyncing] = useState(false)
+  const [showPdForm, setShowPdForm] = useState(false)
+  const [pdToken, setPdToken] = useState('')
+  const [connectingPd, setConnectingPd] = useState(false)
+  const [pdError, setPdError] = useState<string | null>(null)
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -92,8 +96,8 @@ export default function IntegrationsPage() {
         id: 'pagerduty',
         name: 'PagerDuty',
         description: 'Ingests real-time alert logs and triggers incidents correlating them to changes.',
-        status: 'disconnected',
-        health: 'warning',
+        status: status.pagerduty.connected ? 'connected' : 'disconnected',
+        health: status.pagerduty.connected ? 'healthy' : 'warning',
         config: status.pagerduty.config,
         note: status.pagerduty.note,
         synced_repos_count: 0,
@@ -180,6 +184,44 @@ export default function IntegrationsPage() {
     } catch (err) {
       console.error('Disconnect failed:', err)
       alert('Failed to disconnect. Please try again.')
+    }
+  }
+
+  const handleConnectPagerDuty = async () => {
+    if (!pdToken.trim()) {
+      setPdError('API Token cannot be empty')
+      return
+    }
+    setPdError(null)
+    setConnectingPd(true)
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      await apiFetch('/integrations/pagerduty/connect', {
+        method: 'POST',
+        body: JSON.stringify({ token: pdToken.trim() })
+      })
+      const data = await apiFetch('/integrations/status') as StatusResponse
+      setStatus(data)
+      setShowPdForm(false)
+      setPdToken('')
+    } catch (err) {
+      console.error('Failed to connect PagerDuty:', err)
+      setPdError(err instanceof Error ? err.message : 'Connection failed. Invalid token or network issue.')
+    } finally {
+      setConnectingPd(false)
+    }
+  }
+
+  const handleDisconnectPagerDuty = async () => {
+    if (!confirm('Disconnect PagerDuty? This will delete the registered webhook subscription and clear credentials.')) return
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      await apiFetch('/integrations/pagerduty/disconnect', { method: 'DELETE' })
+      const data = await apiFetch('/integrations/status') as StatusResponse
+      setStatus(data)
+    } catch (err) {
+      console.error('Disconnect failed:', err)
+      alert('Failed to disconnect PagerDuty. Please try again.')
     }
   }
 
@@ -323,6 +365,50 @@ export default function IntegrationsPage() {
                     )}
                   </div>
 
+                  {integration.id === 'pagerduty' && showPdForm && integration.status === 'disconnected' && (
+                    <div className="space-y-3 mb-6 p-4 border border-border bg-background rounded-lg animate-in fade-in duration-200">
+                      <div className="text-xs text-muted-foreground">
+                        Enter your PagerDuty REST API Key. You can generate one in PagerDuty under{" "}
+                        <a 
+                          href="https://support.pagerduty.com/main/docs/api-access-keys" 
+                          target="_blank" 
+                          rel="noreferrer"
+                          className="text-primary hover:underline inline-flex items-center gap-0.5"
+                        >
+                          Integrations → API Access Keys
+                          <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                        </a>.
+                      </div>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          placeholder="e.g. y_NbAkKc..."
+                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                          value={pdToken}
+                          onChange={(e) => setPdToken(e.target.value)}
+                        />
+                        <Button 
+                          size="sm" 
+                          className="h-9 px-4 font-semibold" 
+                          onClick={handleConnectPagerDuty}
+                          disabled={connectingPd}
+                        >
+                          {connectingPd ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            'Submit'
+                          )}
+                        </Button>
+                      </div>
+                      {pdError && (
+                        <div className="text-xs text-destructive flex items-center gap-1 font-medium">
+                          <AlertCircle className="w-3.5 h-3.5" />
+                          {pdError}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex gap-2">
                     {integration.id === 'github' && integration.status === 'connected' && (
                       <>
@@ -346,9 +432,24 @@ export default function IntegrationsPage() {
                         Connect GitHub
                       </Button>
                     )}
-                    {integration.id === 'pagerduty' && (
-                      <Button size="sm" variant="outline" className="flex-1" disabled>
-                        Configure
+                    {integration.id === 'pagerduty' && integration.status === 'connected' && (
+                      <Button size="sm" variant="outline" className="flex-1 gap-1.5" onClick={handleDisconnectPagerDuty}>
+                        <Unlink className="w-3.5 h-3.5" />
+                        Disconnect
+                      </Button>
+                    )}
+                    {integration.id === 'pagerduty' && integration.status === 'disconnected' && (
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="flex-1 gap-1.5" 
+                        onClick={() => {
+                          setShowPdForm(!showPdForm)
+                          setPdError(null)
+                        }}
+                      >
+                        <Link2 className="w-3.5 h-3.5" />
+                        {showPdForm ? 'Cancel' : 'Connect PagerDuty'}
                       </Button>
                     )}
                   </div>
