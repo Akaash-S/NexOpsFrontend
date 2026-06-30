@@ -84,8 +84,8 @@ export default function OnboardingPage() {
                 tier,
                 owner: r.owner || 'unknown',
                 alertHistory: {
-                  count30d: Math.floor(Math.random() * 15) + 2,
-                  noisyRuleIds: Math.random() > 0.5 ? ['rule-123'] : []
+                  count30d: 0,
+                  noisyRuleIds: []
                 }
               }
             }))
