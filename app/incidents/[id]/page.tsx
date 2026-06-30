@@ -331,14 +331,13 @@ export default function IncidentInvestigationPage() {
   const stat = statusConfig[incident.status as keyof typeof statusConfig] ?? statusConfig.open
 
   const confirmedCount = incident.candidateCauses.filter(
-    (c: any) => feedbackState[`${incidentId}::${c.id}`] === true || feedbackState[`${incidentId}::${c.deployId}`] === true
+    (c: any) => feedbackState[`${incidentId}::${c.id}`] === true
   ).length
 
   const pendingCount = incident.candidateCauses.filter(
     (c: any) => {
       const stateKey = `${incidentId}::${c.id}`
-      const stateKeyAlt = `${incidentId}::${c.deployId}`
-      return feedbackState[stateKey] === null || feedbackState[stateKey] === undefined || feedbackState[stateKeyAlt] === null || feedbackState[stateKeyAlt] === undefined
+      return feedbackState[stateKey] === null || feedbackState[stateKey] === undefined
     }
   ).length
 
@@ -428,11 +427,11 @@ export default function IncidentInvestigationPage() {
                 <div className="space-y-4">
                   {incident.candidateCauses.map((cause: CandidateCause, i: number) => (
                     <CandidateRow
-                      key={cause.deployId}
+                      key={cause.id}
                       cause={cause}
                       rank={i}
-                      localConfirmed={feedbackState[`${incidentId}::${cause.deployId}`] ?? null}
-                      onConfirm={(v) => handleConfirm(cause.deployId, v)}
+                      localConfirmed={feedbackState[`${incidentId}::${cause.id}`] ?? null}
+                      onConfirm={(v) => handleConfirm(cause.id, v)}
                       getNodeById={getNodeById}
                     />
                   ))}
