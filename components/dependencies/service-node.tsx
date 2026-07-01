@@ -2,7 +2,7 @@
 
 import { Handle, Position } from 'reactflow'
 import { Badge } from '@/components/ui/badge'
-import { CheckCircle, AlertTriangle } from 'lucide-react'
+import { CheckCircle2, AlertTriangle, XCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 interface ServiceNodeProps {
@@ -17,55 +17,73 @@ interface ServiceNodeProps {
   isConnecting?: boolean
 }
 
-export function ServiceNode({ data, selected, isConnecting }: ServiceNodeProps) {
-  const statusColors = {
-    healthy: 'bg-success text-success-foreground',
-    warning: 'bg-warning text-warning-foreground',
-    critical: 'bg-destructive text-destructive-foreground',
+export function ServiceNode({ data, selected }: ServiceNodeProps) {
+  // Node card visual style keyed on health status
+  const nodeStyle = {
+    healthy: {
+      border: 'border-green-500',
+      bg: 'bg-green-950/60',
+      icon: <CheckCircle2 className="w-3.5 h-3.5 text-green-400" />,
+      healthText: 'text-green-400',
+      badgeBg: 'bg-green-500/15 text-green-400 border-green-500/30',
+      label: 'Healthy',
+    },
+    warning: {
+      border: 'border-yellow-500',
+      bg: 'bg-yellow-950/50',
+      icon: <AlertTriangle className="w-3.5 h-3.5 text-yellow-400" />,
+      healthText: 'text-yellow-400',
+      badgeBg: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30',
+      label: 'Warning',
+    },
+    critical: {
+      border: 'border-red-500',
+      bg: 'bg-red-950/50',
+      icon: <XCircle className="w-3.5 h-3.5 text-red-400" />,
+      healthText: 'text-red-400',
+      badgeBg: 'bg-red-500/15 text-red-400 border-red-500/30',
+      label: 'Critical',
+    },
   }
 
-  const criticalityColors = {
-    critical: 'bg-destructive/10 text-destructive border-destructive/20',
-    high: 'bg-warning/10 text-warning border-warning/20',
-    medium: 'bg-primary/10 text-primary border-primary/20',
-    low: 'bg-muted text-muted-foreground border-border',
-  }
+  const style = nodeStyle[data.status]
 
   return (
     <div
       className={cn(
-        'px-4 py-3 rounded-lg border-2 transition-all duration-200 shadow-md',
-        selected
-          ? 'border-primary bg-primary/10'
-          : 'border-border bg-background',
-        data.highlighted && 'ring-2 ring-primary ring-offset-2 ring-offset-background'
+        'px-4 py-3 rounded-xl border-2 transition-all duration-200 shadow-lg min-w-[150px]',
+        style.border,
+        style.bg,
+        selected && 'ring-2 ring-white/40 ring-offset-1 ring-offset-transparent',
+        data.highlighted && 'ring-2 ring-white/60 ring-offset-1 ring-offset-transparent scale-105'
       )}
     >
-      <Handle type="target" position={Position.Top} />
+      <Handle type="target" position={Position.Top} className="!bg-gray-500" />
 
-      <div className="text-center">
+      <div className="text-center space-y-1.5">
         {/* Service Name */}
-        <p className="font-semibold text-sm text-foreground max-w-[150px] line-clamp-2">
+        <p className="font-semibold text-sm text-white max-w-[150px] line-clamp-2 leading-tight">
           {data.label}
         </p>
 
-        {/* Health Badge */}
-        <div className="flex items-center justify-center gap-1 mt-2 mb-2">
-          {data.status === 'healthy' && <CheckCircle className="w-3 h-3 text-success" />}
-          {data.status !== 'healthy' && <AlertTriangle className="w-3 h-3 text-warning" />}
-          <span className="text-xs font-semibold">{data.health}%</span>
+        {/* Health % + icon */}
+        <div className="flex items-center justify-center gap-1">
+          {style.icon}
+          <span className={cn('text-xs font-bold', style.healthText)}>
+            {data.health}%
+          </span>
         </div>
 
-        {/* Criticality Badge */}
+        {/* Status badge */}
         <Badge
           variant="outline"
-          className={cn('text-xs h-5', criticalityColors[data.criticality as keyof typeof criticalityColors])}
+          className={cn('text-[10px] h-4 px-1.5 font-semibold border', style.badgeBg)}
         >
-          {data.criticality}
+          {style.label}
         </Badge>
       </div>
 
-      <Handle type="source" position={Position.Bottom} />
+      <Handle type="source" position={Position.Bottom} className="!bg-gray-500" />
     </div>
   )
 }
