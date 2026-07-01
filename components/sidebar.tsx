@@ -59,7 +59,7 @@ const navSections: NavSection[] = [
 
 function NavItemComponent({ item, isActive }: { item: NavItem; isActive: boolean }) {
   return (
-    <Link href={item.href}>
+    <Link href={item.href} prefetch={false}>
       <Button
         variant="ghost"
         size="sm"

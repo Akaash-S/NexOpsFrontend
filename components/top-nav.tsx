@@ -49,7 +49,7 @@ export function TopNav() {
             </Button>
 
             {/* Logo */}
-            <Link href="/dashboard" className="flex items-center gap-2 whitespace-nowrap">
+            <Link href="/dashboard" className="flex items-center gap-2 whitespace-nowrap" prefetch={false}>
               <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
                 <span className="text-xs font-bold text-primary-foreground">N</span>
               </div>
