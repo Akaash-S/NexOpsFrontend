@@ -127,7 +127,7 @@ export default function OnboardingPage() {
     }
   }, [step])
 
-  const handleConnectGithub = () => {
+  const handleConnectGithub = async () => {
     if (githubState !== 'disconnected') return
     if (!currentUser || !currentUser.id) {
       alert("Error: User session not found. Please log in again.")
@@ -135,8 +135,15 @@ export default function OnboardingPage() {
     }
     setGithubState('connecting')
     
-    // Redirect to real GitHub connect endpoint
-    window.location.href = `http://localhost:8000/api/v1/integrations/github/connect?uid=${currentUser.id}`
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      const { url } = await apiFetch('/integrations/github/oauth-url')
+      window.location.href = url
+    } catch (err) {
+      console.error('Failed to get GitHub OAuth URL:', err)
+      alert('Failed to start GitHub connection. Please try again.')
+      setGithubState('disconnected')
+    }
   }
 
   const handleConnectPagerDuty = () => {
