@@ -61,9 +61,9 @@ function deriveStatus(ciStatus: string, healthScore: number): 'healthy' | 'warni
 }
 
 function deriveCriticality(healthScore: number): string {
-  if (healthScore >= 95) return 'critical'
-  if (healthScore >= 85) return 'high'
-  if (healthScore >= 70) return 'medium'
+  if (healthScore < 50) return 'critical'
+  if (healthScore < 70) return 'high'
+  if (healthScore < 85) return 'medium'
   return 'low'
 }
 
@@ -178,8 +178,8 @@ export function DependencyGraph({
     [layoutNodes, searchQuery]
   )
 
-  const [nodes, setNodes, onNodesChange] = useNodesState(filteredBySearch)
-  const [edges, setEdges, onEdgesChange] = useEdgesState(layoutEdges)
+  const [nodes, setNodes, onNodesChange] = useNodesState([])
+  const [edges, setEdges, onEdgesChange] = useEdgesState([])
 
   useEffect(() => {
     setNodes(filteredBySearch)
@@ -318,7 +318,7 @@ dependencies:
   }
 
   return (
-    <div className="relative w-full h-full" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
+    <div className="relative w-full h-full">
       {topology && topology.edges.length === 0 && (
         <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2 p-3 bg-card/95 backdrop-blur-md border border-border rounded-lg max-w-2xl mx-auto shadow-md transition-all">
           <div className="flex items-center justify-between gap-3">
@@ -380,7 +380,7 @@ dependencies:
           )}
         </div>
       )}
-      <div style={{ width: '100%', height: '600px' }}>
+      <div style={{ width: '100%', height: '100%' }}>
         <ReactFlow
           nodes={decoratedNodes}
           edges={decoratedEdges}
