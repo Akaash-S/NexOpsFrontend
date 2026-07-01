@@ -16,7 +16,7 @@ import { ServiceNode } from './service-node'
 import { CardSkeleton } from '@/components/loading-state'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Loader2, AlertTriangle, Network } from 'lucide-react'
+import { Loader2, AlertTriangle, Network, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
@@ -129,6 +129,8 @@ export function DependencyGraph({
   const [topology, setTopology] = useState<TopologyResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [showExample, setShowExample] = useState(false)
+  const [copied, setCopied] = useState(false)
 
   useEffect(() => {
     async function loadTopology() {
@@ -240,6 +242,20 @@ export function DependencyGraph({
     onNodeSelect(null)
   }, [onNodeSelect])
 
+  const handleCopy = () => {
+    const yaml = `service:
+  name: repo-a               # Name of the service
+  tier: service              # ingress | service | data
+
+dependencies:
+  - repo: your-username/repo-b
+    type: api                # api | library | hard | soft
+    label: calls API`
+    navigator.clipboard.writeText(yaml)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 2000)
+  }
+
   if (loading) {
     return (
       <div className="w-full h-full flex items-center justify-center">
@@ -287,16 +303,64 @@ export function DependencyGraph({
   return (
     <div className="relative w-full h-full">
       {topology && topology.edges.length === 0 && (
-        <div className="absolute top-4 left-4 right-4 z-10 flex items-start sm:items-center gap-3 p-3 bg-card/90 backdrop-blur-md border border-border rounded-lg max-w-2xl mx-auto shadow-md">
-          <Network className="w-5 h-5 text-primary shrink-0 mt-0.5 sm:mt-0" />
-          <div className="text-xs">
-            <span className="font-semibold text-foreground">No service dependencies configured yet.</span>{" "}
-            <span className="text-muted-foreground">
-              To draw relationship lines and links between your services, create a{" "}
-              <code className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono border border-border">nexops.yaml</code>{" "}
-              file in the root of your repositories.
-            </span>
+        <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2 p-3 bg-card/95 backdrop-blur-md border border-border rounded-lg max-w-2xl mx-auto shadow-md transition-all">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <Network className="w-4 h-4 text-primary shrink-0" />
+              <div className="text-xs font-semibold text-foreground">
+                No service dependencies configured yet.
+              </div>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-6 px-2 text-[10px] gap-1"
+              onClick={() => setShowExample(!showExample)}
+            >
+              {showExample ? (
+                <>
+                  Hide Template <ChevronUp className="w-3 h-3" />
+                </>
+              ) : (
+                <>
+                  View Template <ChevronDown className="w-3 h-3" />
+                </>
+              )}
+            </Button>
           </div>
+          
+          <div className="text-[11px] text-muted-foreground leading-relaxed">
+            To draw relationship lines and links between your services, create a{" "}
+            <code className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono border border-border">nexops.yaml</code>{" "}
+            file in the root of your repositories.
+          </div>
+
+          {showExample && (
+            <div className="mt-1 bg-muted/60 rounded border border-border/50 p-2.5 relative group/code font-mono text-[10px] text-muted-foreground whitespace-pre-wrap select-all">
+              <div className="absolute top-2 right-2 opacity-0 group-hover/code:opacity-100 transition-opacity">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-6 w-6"
+                  onClick={handleCopy}
+                >
+                  {copied ? (
+                    <Check className="w-3 h-3 text-success" />
+                  ) : (
+                    <Copy className="w-3 h-3" />
+                  )}
+                </Button>
+              </div>
+{`service:
+  name: repo-a               # The name of the service
+  tier: service              # ingress | service | data
+
+dependencies:
+  - repo: your-username/repo-b
+    type: api                # api | library | hard | soft
+    label: calls API`}
+            </div>
+          )}
         </div>
       )}
       <div style={{ width: '100%', height: '100%' }}>
