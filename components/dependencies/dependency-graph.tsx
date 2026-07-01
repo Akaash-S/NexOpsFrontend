@@ -318,7 +318,7 @@ dependencies:
   }
 
   return (
-    <div className="relative w-full h-full">
+    <div className="relative w-full h-full" style={{ width: '100%', height: '100%', minHeight: '500px' }}>
       {topology && topology.edges.length === 0 && (
         <div className="absolute top-4 left-4 right-4 z-10 flex flex-col gap-2 p-3 bg-card/95 backdrop-blur-md border border-border rounded-lg max-w-2xl mx-auto shadow-md transition-all">
           <div className="flex items-center justify-between gap-3">
