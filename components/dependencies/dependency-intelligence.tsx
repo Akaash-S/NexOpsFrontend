@@ -28,9 +28,21 @@ export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligen
     async function loadData() {
       try {
         const { apiFetch } = await import('@/lib/api-client')
-        const data = await apiFetch('/dependencies/topology')
-        setTopology(data)
-        const found = data.nodes?.find((n: any) => n.id === nodeId)
+        const rawData = await apiFetch('/dependencies/topology') as any
+        
+        // Map camelCase fields to snake_case for UI components
+        const mappedNodes = (rawData.nodes || []).map((n: any) => ({
+          ...n,
+          health_score: n.health_score ?? n.healthScore ?? 100.0,
+          ci_status: n.ci_status ?? n.ciStatus ?? 'unknown',
+          open_issues: n.open_issues ?? n.openIssues ?? 0,
+        }))
+
+        setTopology({
+          nodes: mappedNodes,
+          edges: rawData.edges || []
+        })
+        const found = mappedNodes.find((n: any) => n.id === nodeId)
         setNode(found || null)
       } catch (err) {
         console.error('Failed to load node intelligence:', err)

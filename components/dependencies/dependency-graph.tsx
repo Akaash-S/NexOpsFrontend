@@ -136,8 +136,25 @@ export function DependencyGraph({
     async function loadTopology() {
       try {
         const { apiFetch } = await import('@/lib/api-client')
-        const data = await apiFetch('/dependencies/topology') as TopologyResponse
-        setTopology(data)
+        const rawData = await apiFetch('/dependencies/topology') as any
+        
+        // Map camelCase fields to snake_case for UI components
+        const mappedNodes = (rawData.nodes || []).map((node: any) => ({
+          ...node,
+          health_score: node.health_score ?? node.healthScore ?? 100.0,
+          ci_status: node.ci_status ?? node.ciStatus ?? 'unknown',
+          open_issues: node.open_issues ?? node.openIssues ?? 0,
+        }))
+
+        const mappedEdges = (rawData.edges || []).map((edge: any) => ({
+          ...edge,
+          is_broken: edge.is_broken ?? edge.isBroken ?? false,
+        }))
+
+        setTopology({
+          nodes: mappedNodes,
+          edges: mappedEdges
+        })
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load topology')
       } finally {
