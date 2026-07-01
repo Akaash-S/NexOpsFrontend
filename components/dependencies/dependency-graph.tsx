@@ -285,21 +285,36 @@ export function DependencyGraph({
   }
 
   return (
-    <div style={{ width: '100%', height: '100%' }}>
-      <ReactFlow
-        nodes={decoratedNodes}
-        edges={decoratedEdges}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onNodeClick={handleNodeClick}
-        onPaneClick={handlePaneClick}
-        nodeTypes={memoizedNodeTypes}
-        fitView
-      >
-        <Background />
-        <Controls />
-        <MiniMap />
-      </ReactFlow>
+    <div className="relative w-full h-full">
+      {topology && topology.edges.length === 0 && (
+        <div className="absolute top-4 left-4 right-4 z-10 flex items-start sm:items-center gap-3 p-3 bg-card/90 backdrop-blur-md border border-border rounded-lg max-w-2xl mx-auto shadow-md">
+          <Network className="w-5 h-5 text-primary shrink-0 mt-0.5 sm:mt-0" />
+          <div className="text-xs">
+            <span className="font-semibold text-foreground">No service dependencies configured yet.</span>{" "}
+            <span className="text-muted-foreground">
+              To draw relationship lines and links between your services, create a{" "}
+              <code className="bg-muted px-1.5 py-0.5 rounded text-[10px] font-mono border border-border">nexops.yaml</code>{" "}
+              file in the root of your repositories.
+            </span>
+          </div>
+        </div>
+      )}
+      <div style={{ width: '100%', height: '100%' }}>
+        <ReactFlow
+          nodes={decoratedNodes}
+          edges={decoratedEdges}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onNodeClick={handleNodeClick}
+          onPaneClick={handlePaneClick}
+          nodeTypes={memoizedNodeTypes}
+          fitView
+        >
+          <Background />
+          <Controls />
+          <MiniMap />
+        </ReactFlow>
+      </div>
     </div>
   )
 }
