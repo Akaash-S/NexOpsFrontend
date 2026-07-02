@@ -1,3 +1,6 @@
+'use client'
+
+import { useState, useEffect } from 'react'
 import { PageContent, PageHeader, Grid, MetricCard, EmptyState } from '@/components/layout'
 import { HealthOverview } from '@/components/dashboard/health-overview'
 import { ActiveIncidents } from '@/components/dashboard/active-incidents'
@@ -5,42 +8,89 @@ import { RecentChanges } from '@/components/dashboard/recent-changes'
 import { Recommendations } from '@/components/dashboard/recommendations'
 import { ImpactMap } from '@/components/dashboard/impact-map'
 import { Activity, AlertTriangle, GitCommitHorizontal, Search } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { CardSkeleton } from '@/components/loading-state'
 
-export const metadata = {
-  title: 'Dashboard | NexOps',
-  description: 'NexOps correlation engine — what caused this incident, and how do we know?',
-}
+export default function DashboardPage() {
+  const [loading, setLoading] = useState(true)
+  const [summary, setSummary] = useState<any>(null)
+  const [incidents, setIncidents] = useState<any[]>([])
+  const [deployments, setDeployments] = useState<any[]>([])
 
-export default async function DashboardPage(props: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>
-}) {
-  const resolvedParams = await props.searchParams
-  const isEmpty = resolvedParams.empty === 'true'
+  useEffect(() => {
+    async function loadDashboardData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [summaryData, incidentsData, deploymentsData] = await Promise.all([
+          apiFetch('/analytics/dashboard/summary'),
+          apiFetch('/incidents'),
+          apiFetch('/deployments'),
+        ])
+        setSummary(summaryData)
+        setIncidents(incidentsData)
+        setDeployments(deploymentsData)
+      } catch (err) {
+        console.error("Failed to load dashboard metrics:", err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadDashboardData()
+  }, [])
 
-  if (isEmpty) {
+  if (loading) {
     return (
       <PageContent>
         <PageHeader
           title="Dashboard"
           description="Correlation engine — active incidents with ranked causal candidates, change blast radius, and dependency topology"
         />
-        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
-          <EmptyState
-            icon={<AlertTriangle className="w-12 h-12 text-muted-foreground/60" />}
-            title="Welcome to NexOps"
-            description="Your workspace is not receiving telemetry or alert data yet. Connect your integrations to populate this dashboard."
-            action={
-              <Button asChild>
-                <Link href="/settings?tab=workspace">Set Up Workspace</Link>
-              </Button>
-            }
-          />
+        <Grid columns={4} className="mb-6">
+          <CardSkeleton className="h-32" />
+          <CardSkeleton className="h-32" />
+          <CardSkeleton className="h-32" />
+          <CardSkeleton className="h-32" />
+        </Grid>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2 space-y-6">
+            <CardSkeleton className="h-96" />
+            <CardSkeleton className="h-64" />
+          </div>
+          <div className="space-y-6">
+            <CardSkeleton className="h-96" />
+            <CardSkeleton className="h-64" />
+          </div>
         </div>
       </PageContent>
     )
   }
+
+  // Active Incidents
+  const activeIncidents = incidents.filter(i => i.status !== 'resolved')
+  const activeCount = activeIncidents.length
+  const investigatingCount = activeIncidents.filter(i => i.status === 'investigating').length
+
+  // Unconfirmed Candidates
+  let unconfirmedCandidatesCount = 0
+  activeIncidents.forEach(incident => {
+    const causes = incident.candidateCauses || incident.candidate_causes || []
+    causes.forEach((cause: any) => {
+      if (cause.confirmed === null) {
+        unconfirmedCandidatesCount++
+      }
+    })
+  })
+
+  // Changes in last 24h
+  const last24h = new Date(Date.now() - 24 * 60 * 60 * 1000)
+  const recentDeploys = deployments.filter(d => new Date(d.deployedAt || d.created_at) >= last24h)
+  const recentCount = recentDeploys.length
+  const failedDeploysCount = recentDeploys.filter(d => d.status === 'failed').length
+
+  // Services Healthy (healthScore >= 90)
+  const repos = summary?.repos || []
+  const totalServices = repos.length
+  const healthyServices = repos.filter((r: any) => (r.healthScore || r.health_score || 0) >= 90).length
+  const degradedOrCritical = totalServices - healthyServices
 
   return (
     <PageContent>
@@ -53,31 +103,31 @@ export default async function DashboardPage(props: {
       <Grid columns={4} className="mb-6">
         <MetricCard
           label="Active Incidents"
-          value={2}
-          change="2 investigating"
-          trend="down"
+          value={activeCount}
+          change={`${investigatingCount} investigating`}
+          trend={activeCount > 0 ? "down" : "up"}
           icon={<AlertTriangle className="w-6 h-6 text-destructive" />}
           href="/incidents"
         />
         <MetricCard
           label="Unconfirmed Candidates"
-          value={4}
-          change="Awaiting human review"
+          value={unconfirmedCandidatesCount}
+          change={unconfirmedCandidatesCount > 0 ? "Awaiting human review" : "All reviewed"}
           icon={<Search className="w-6 h-6 text-warning" />}
           href="/incidents"
         />
         <MetricCard
           label="Changes (24h)"
-          value={4}
-          change="1 linked to incident"
+          value={recentCount}
+          change={`${failedDeploysCount} failed`}
           icon={<GitCommitHorizontal className="w-6 h-6 text-primary" />}
           href="/recent-changes"
         />
         <MetricCard
           label="Services Healthy"
-          value="6/9"
-          change="3 degraded or critical"
-          trend="down"
+          value={`${healthyServices}/${totalServices}`}
+          change={`${degradedOrCritical} degraded or critical`}
+          trend={degradedOrCritical > 0 ? "down" : "up"}
           icon={<Activity className="w-6 h-6 text-success" />}
           href="/services"
         />
@@ -105,4 +155,3 @@ export default async function DashboardPage(props: {
     </PageContent>
   )
 }
-

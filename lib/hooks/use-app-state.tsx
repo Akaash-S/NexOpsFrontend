@@ -202,7 +202,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     try {
       const { apiFetch } = await import('@/lib/api-client');
       await apiFetch(`/incidents/${incidentId}/feedback`, {
-        method: 'POST',
+        method: 'PATCH',
         body: JSON.stringify({
           candidateCauseId: deployId,
           confirmed: value
