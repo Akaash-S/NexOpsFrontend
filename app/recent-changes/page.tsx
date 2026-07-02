@@ -182,13 +182,20 @@ function ChangeCard({ change, topology }: { change: any; topology: any }) {
 function RecentChangesPageContent() {
   const searchParams = useSearchParams()
   const isEmpty = searchParams?.get('empty') === 'true'
-  const [search, setSearch] = useState('')
+  const [search, setSearch] = useState(searchParams?.get('search') || '')
   const [sortBy, setSortBy] = useState('time')
   const [riskFilter, setRiskFilter] = useState('all')
 
   const [deployments, setDeployments] = useState<any[]>([])
   const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
   const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const searchVal = searchParams?.get('search')
+    if (searchVal) {
+      setSearch(searchVal)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (isEmpty) {

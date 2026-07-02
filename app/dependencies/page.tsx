@@ -45,7 +45,11 @@ export default function DependenciesPage() {
           {/* Intelligence Panel */}
           {selectedNode && (
             <div className="w-96 flex-shrink-0 h-full">
-              <DependencyIntelligence nodeId={selectedNode} onClose={() => setSelectedNode(null)} />
+              <DependencyIntelligence 
+                nodeId={selectedNode} 
+                onClose={() => setSelectedNode(null)} 
+                onSelectNode={setSelectedNode}
+              />
             </div>
           )}
         </div>

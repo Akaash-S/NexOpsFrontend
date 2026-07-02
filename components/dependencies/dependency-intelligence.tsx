@@ -5,21 +5,18 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { AlertTriangle, Zap, CheckCircle, GitBranch, X, Loader2 } from 'lucide-react'
+import { AlertTriangle, GitBranch, X, Loader2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { cn } from '@/lib/utils'
 
 interface DependencyIntelligenceProps {
   nodeId: string
   onClose?: () => void
+  onSelectNode?: (id: string) => void
 }
 
-const iconMap = {
-  success: <CheckCircle className="w-4 h-4 text-success" />,
-  warning: <AlertTriangle className="w-4 h-4 text-warning" />,
-  critical: <AlertTriangle className="w-4 h-4 text-destructive" />,
-  info: <Zap className="w-4 h-4 text-primary" />,
-}
-
-export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligenceProps) {
+export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: DependencyIntelligenceProps) {
+  const router = useRouter()
   const [node, setNode] = useState<any>(null)
   const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
   const [loading, setLoading] = useState(true)
@@ -82,18 +79,10 @@ export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligen
     )
   }
 
+  // Upstream: nodes that this node depends on (source = nodeId, target = upstream)
   const up = topology.edges?.filter((e: any) => e.source === nodeId) || []
+  // Downstream: nodes that depend on this node (target = nodeId, source = downstream)
   const down = topology.edges?.filter((e: any) => e.target === nodeId) || []
-
-  const upstreamNames = up.map((e: any) => {
-    const n = topology.nodes?.find((n: any) => n.id === e.target)
-    return n?.name || e.target.substring(0, 8)
-  })
-
-  const downstreamNames = down.map((e: any) => {
-    const n = topology.nodes?.find((n: any) => n.id === e.source)
-    return n?.name || e.source.substring(0, 8)
-  })
 
   const healthStatus = node.ci_status === 'failing' ? 'critical' : (node.ci_status === 'unknown' ? 'warning' : (node.health_score < 80 ? 'warning' : 'healthy'))
 
@@ -106,7 +95,11 @@ export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligen
             <h3 className="font-semibold text-foreground">{node.name}</h3>
             <div className="flex gap-2">
               <Badge variant="outline">{Math.round(node.health_score)}% Health</Badge>
-              <Badge variant="outline">{healthStatus}</Badge>
+              <Badge variant="outline" className={cn(
+                healthStatus === 'critical' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+                healthStatus === 'warning' ? 'bg-warning/10 text-warning border-warning/20' :
+                'bg-success/10 text-success border-success/20'
+              )}>{healthStatus}</Badge>
             </div>
             {node.owner && (
               <p className="text-xs text-muted-foreground">Owned by {node.owner}</p>
@@ -153,16 +146,27 @@ export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligen
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Depends On</h4>
           <div className="space-y-1.5">
-            {upstreamNames.length === 0 ? (
+            {up.length === 0 ? (
               <p className="text-xs text-muted-foreground">No upstream dependencies</p>
             ) : (
-              upstreamNames.map((name: string) => (
-                <Card key={name} className="p-2 flex items-center gap-2">
-                  <GitBranch className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-foreground flex-1">{name}</span>
-                  <Badge variant="outline" className="text-xs">Required</Badge>
-                </Card>
-              ))
+              up.map((e: any) => {
+                const n = topology.nodes?.find((n: any) => n.id === e.target)
+                const name = n?.name || e.target.substring(0, 8)
+                return (
+                  <Card 
+                    key={e.id} 
+                    className={cn(
+                      "p-2 flex items-center gap-2 transition-colors",
+                      onSelectNode ? "cursor-pointer hover:bg-muted/60 hover:border-primary/40" : ""
+                    )}
+                    onClick={() => onSelectNode?.(e.target)}
+                  >
+                    <GitBranch className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs text-foreground flex-1">{name}</span>
+                    <Badge variant="outline" className="text-xs">Required</Badge>
+                  </Card>
+                )
+              })
             )}
           </div>
         </div>
@@ -171,24 +175,48 @@ export function DependencyIntelligence({ nodeId, onClose }: DependencyIntelligen
         <div className="space-y-2">
           <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Dependents</h4>
           <div className="space-y-1.5">
-            {downstreamNames.length === 0 ? (
+            {down.length === 0 ? (
               <p className="text-xs text-muted-foreground">No downstream dependents</p>
             ) : (
-              downstreamNames.map((name: string) => (
-                <Card key={name} className="p-2 flex items-center gap-2">
-                  <GitBranch className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs text-foreground flex-1">{name}</span>
-                  <Badge variant="outline" className="text-xs">Depends</Badge>
-                </Card>
-              ))
+              down.map((e: any) => {
+                const n = topology.nodes?.find((n: any) => n.id === e.source)
+                const name = n?.name || e.source.substring(0, 8)
+                return (
+                  <Card 
+                    key={e.id} 
+                    className={cn(
+                      "p-2 flex items-center gap-2 transition-colors",
+                      onSelectNode ? "cursor-pointer hover:bg-muted/60 hover:border-primary/40" : ""
+                    )}
+                    onClick={() => onSelectNode?.(e.source)}
+                  >
+                    <GitBranch className="w-3 h-3 text-muted-foreground" />
+                    <span className="text-xs text-foreground flex-1">{name}</span>
+                    <Badge variant="outline" className="text-xs">Depends</Badge>
+                  </Card>
+                )
+              })
             )}
           </div>
         </div>
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-2 pt-4 border-t border-border">
-          <Button size="sm" variant="outline">View Details</Button>
-          <Button size="sm">View Deployments</Button>
+          <Button 
+            size="sm" 
+            variant="outline" 
+            className="cursor-pointer"
+            onClick={() => router.push(`/services?selected=${node.id}`)}
+          >
+            View Details
+          </Button>
+          <Button 
+            size="sm"
+            className="cursor-pointer"
+            onClick={() => router.push(`/recent-changes?search=${node.name}`)}
+          >
+            View Deployments
+          </Button>
         </div>
       </div>
     </ScrollArea>

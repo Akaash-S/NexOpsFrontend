@@ -15,7 +15,16 @@ function ServicesPageContent() {
   const isEmpty = searchParams?.get('empty') === 'true'
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedService, setSelectedService] = useState<string | null>(null)
+  const [selectedService, setSelectedService] = useState<string | null>(
+    searchParams?.get('selected') || null
+  )
+
+  useEffect(() => {
+    const selected = searchParams?.get('selected')
+    if (selected) {
+      setSelectedService(selected)
+    }
+  }, [searchParams])
 
   useEffect(() => {
     if (isEmpty) {
