@@ -35,25 +35,63 @@ function ServicesPageContent() {
     async function loadServices() {
       try {
         const { apiFetch } = await import('@/lib/api-client')
-        const repos = await apiFetch('/repos')
+        const [repos, topology, deployments] = await Promise.all([
+          apiFetch('/repos'),
+          apiFetch('/dependencies/topology'),
+          apiFetch('/deployments')
+        ]) as [any[], any, any[]]
         
-        const mapped = repos.map((repo: any) => ({
-          id: repo.id,
-          name: repo.name,
-          team: repo.owner || '@team-platform',
-          health: Math.round(repo.healthScore || 100),
-          status: (repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning'),
-          deployments: 14,
-          dependencies: [],
-          dependents: [],
-          lastDeployed: repo.lastCommitAt ? new Date(repo.lastCommitAt).toLocaleDateString() : 'N/A',
-          owner: repo.owner || '@team-platform',
-          criticality: repo.name.includes('gateway') || repo.name.includes('auth') || repo.name.includes('payment') ? 'critical' : 'medium',
-          changeFailureRate: 0,
-          deploymentFrequency: 'daily',
-          mttr: '15m',
-          incidents30d: repo.issueCount || 0
-        }))
+        const mapped = repos.map((repo: any) => {
+          // Find dependencies (upstream) and dependents (downstream)
+          const repoDeps = (topology.edges || [])
+            .filter((e: any) => e.source === repo.id)
+            .map((e: any) => {
+              const targetNode = topology.nodes?.find((n: any) => n.id === e.target)
+              return targetNode?.name || e.target
+            })
+
+          const repoDependents = (topology.edges || [])
+            .filter((e: any) => e.target === repo.id)
+            .map((e: any) => {
+              const sourceNode = topology.nodes?.find((n: any) => n.id === e.source)
+              return sourceNode?.name || e.source
+            })
+
+          // Filter deployments for this repo
+          const repoDeploys = (deployments || []).filter((d: any) => d.repo_id === repo.id)
+          const deploymentsCount = repoDeploys.length
+          
+          let lastDeployedStr = 'N/A'
+          if (repoDeploys.length > 0) {
+            const sortedDeploys = [...repoDeploys].sort((a: any, b: any) => 
+              new Date(b.deployed_at).getTime() - new Date(a.deployed_at).getTime()
+            )
+            lastDeployedStr = new Date(sortedDeploys[0].deployed_at).toLocaleDateString()
+          } else if (repo.lastCommitAt) {
+            lastDeployedStr = new Date(repo.lastCommitAt).toLocaleDateString()
+          }
+
+          const failedDeploys = repoDeploys.filter((d: any) => d.status === 'failed' || d.status === 'rolled_back').length
+          const cfr = deploymentsCount > 0 ? Math.round((failedDeploys / deploymentsCount) * 100) : 0
+
+          return {
+            id: repo.id,
+            name: repo.name,
+            team: repo.owner || '@team-platform',
+            health: Math.round(repo.healthScore || 100),
+            status: (repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning'),
+            deployments: deploymentsCount || 14,
+            dependencies: repoDeps,
+            dependents: repoDependents,
+            lastDeployed: lastDeployedStr,
+            owner: repo.owner || '@team-platform',
+            criticality: repo.name.includes('gateway') || repo.name.includes('auth') || repo.name.includes('payment') ? 'critical' : 'medium',
+            changeFailureRate: cfr,
+            deploymentFrequency: deploymentsCount > 10 ? 'multiple-daily' : (deploymentsCount > 3 ? 'daily' : 'weekly'),
+            mttr: '15m',
+            incidents30d: repo.issueCount || 0
+          }
+        })
         setServices(mapped)
       } catch (err) {
         console.error("Failed to load services:", err)
