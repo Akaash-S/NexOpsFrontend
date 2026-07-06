@@ -111,7 +111,7 @@ function ChangeCard({ change, topology }: { change: any; topology: any }) {
       </div>
 
       {/* Blast Radius — always visible */}
-      {blastRadius && (
+      {blastRadius && blastRadius.riskBasis && blastRadius.riskBasis.length > 0 && (
         <div className="bg-muted/30 rounded-lg p-4 border border-border space-y-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-sm font-semibold">
@@ -234,10 +234,8 @@ function RecentChangesPageContent() {
       
       const directCount = directDependents.length
       
-      const riskScore = Math.min(100, (allDownstream.length * 20) + (isFailing ? 40 : 15))
-      const riskBasis = allDownstream.length > 0
-        ? `Impacts ${allDownstream.length} services downstream (direct & transitively) in the dependency tree.`
-        : `Isolated service. Zero downstream dependencies affected.`
+      const riskScore = dep.riskScore ?? 0.0
+      const riskBasis = dep.riskBasis ? dep.riskBasis.split(", ") : []
 
       return {
         ...dep,
@@ -251,7 +249,7 @@ function RecentChangesPageContent() {
         impact: riskScore >= 70 ? 'high' : (riskScore >= 40 ? 'medium' : 'low'),
         blastRadius: {
           riskScore,
-          riskBasis: [riskBasis],
+          riskBasis,
           directServices: directDependents,
           downstreamServices: allDownstream.filter(id => !directDependents.includes(id))
         }
