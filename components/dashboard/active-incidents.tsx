@@ -82,10 +82,13 @@ function CandidateCauseRow({ cause, onConfirm, repos }: CandidateCauseRowProps) 
         </div>
       </div>
 
+      {/* Render reasoning inline by default */}
+      <div className="mt-2.5">
+        <ScoreWithReasoning score={cause.score} reasons={reasons} />
+      </div>
+
       {expanded && (
         <div className="mt-3 space-y-3">
-          {/* Consolidated Reasoning Explainer */}
-          <ScoreWithReasoning score={cause.score} reasons={reasons} />
 
           {/* Confirm / Reject controls */}
           {confirmed === null && (

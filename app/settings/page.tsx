@@ -26,7 +26,9 @@ function SettingsPageContent() {
     density, 
     setDensity, 
     setAuthenticated,
-    currentUser
+    currentUser,
+    setCurrentUser,
+    authLoading
   } = useAppState()
 
   // Tab routing support
@@ -91,16 +93,103 @@ function SettingsPageContent() {
     highRiskDeploy: true,
   })
 
-  const handleSave = (sectionName: string) => {
+  // Sync settings from db on load
+  useEffect(() => {
+    if (currentUser?.preferences) {
+      const prefs = currentUser.preferences
+      if (prefs.notifySlack) setNotifySlack(prefs.notifySlack)
+      if (prefs.notifyEmail) setNotifyEmail(prefs.notifyEmail)
+      if (prefs.codeownersPath) setCodeownersPath(prefs.codeownersPath)
+      if (prefs.watchedServices) setWatchedServices(prefs.watchedServices)
+    }
+  }, [currentUser, setWatchedServices])
+
+  const handleSave = async (sectionName: string, updatedPrefs?: any) => {
     setIsSaving(true)
-    setTimeout(() => {
-      setIsSaving(false)
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      const payload = updatedPrefs || {
+        notifySlack,
+        notifyEmail,
+        watchedServices,
+        codeownersPath,
+      }
+      const updatedUser = await apiFetch('/users/me/preferences', {
+        method: 'PATCH',
+        body: JSON.stringify(payload)
+      })
+      if (currentUser) {
+        setCurrentUser({
+          ...currentUser,
+          preferences: updatedUser.preferences || {}
+        })
+      }
+      
       addNotification({
         title: 'Settings Saved',
         description: `Your ${sectionName} changes have been successfully updated.`,
         type: 'success',
       })
-    }, 600)
+    } catch (err) {
+      console.error('Failed to save settings:', err)
+      addNotification({
+        title: 'Error Saving Settings',
+        description: 'An error occurred while saving your settings to the server.',
+        type: 'error',
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const updateSlackPref = (key: string, value: boolean) => {
+    const updated = { ...notifySlack, [key]: value }
+    setNotifySlack(updated)
+    handleSave('Slack settings', {
+      notifySlack: updated,
+      notifyEmail,
+      watchedServices,
+      codeownersPath,
+    })
+  }
+
+  const updateEmailPref = (key: string, value: boolean) => {
+    const updated = { ...notifyEmail, [key]: value }
+    setNotifyEmail(updated)
+    handleSave('Email settings', {
+      notifySlack,
+      notifyEmail: updated,
+      watchedServices,
+      codeownersPath,
+    })
+  }
+
+  if (authLoading) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Settings & Preferences"
+          description="Configure your personal interface options, notification scopes, and workspace connections"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground animate-pulse">Loading settings...</div>
+        </div>
+      </PageContent>
+    )
+  }
+
+  if (!currentUser) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="Settings & Preferences"
+          description="Configure your personal interface options, notification scopes, and workspace connections"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground">No active session. Please sign in.</div>
+        </div>
+      </PageContent>
+    )
   }
 
   const handleSignOut = () => {
@@ -310,15 +399,15 @@ function SettingsPageContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs">
                     <label className="text-muted-foreground">New incident on watched service</label>
-                    <Switch checked={notifySlack.newIncident} onCheckedChange={(v) => { setNotifySlack(p=>({...p, newIncident: v})); handleSave('Slack settings') }} />
+                    <Switch checked={notifySlack.newIncident} onCheckedChange={(v) => updateSlackPref('newIncident', v)} />
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <label className="text-muted-foreground">Candidate cause awaiting feedback</label>
-                    <Switch checked={notifySlack.candidateAwaiting} onCheckedChange={(v) => { setNotifySlack(p=>({...p, candidateAwaiting: v})); handleSave('Slack settings') }} />
+                    <Switch checked={notifySlack.candidateAwaiting} onCheckedChange={(v) => updateSlackPref('candidateAwaiting', v)} />
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <label className="text-muted-foreground">High-risk deploy on watched service</label>
-                    <Switch checked={notifySlack.highRiskDeploy} onCheckedChange={(v) => { setNotifySlack(p=>({...p, highRiskDeploy: v})); handleSave('Slack settings') }} />
+                    <Switch checked={notifySlack.highRiskDeploy} onCheckedChange={(v) => updateSlackPref('highRiskDeploy', v)} />
                   </div>
                 </div>
               </div>
@@ -331,15 +420,15 @@ function SettingsPageContent() {
                 <div className="space-y-3">
                   <div className="flex items-center justify-between text-xs">
                     <label className="text-muted-foreground">New incident on watched service</label>
-                    <Switch checked={notifyEmail.newIncident} onCheckedChange={(v) => { setNotifyEmail(p=>({...p, newIncident: v})); handleSave('Email settings') }} />
+                    <Switch checked={notifyEmail.newIncident} onCheckedChange={(v) => updateEmailPref('newIncident', v)} />
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <label className="text-muted-foreground">Candidate cause awaiting feedback</label>
-                    <Switch checked={notifyEmail.candidateAwaiting} onCheckedChange={(v) => { setNotifyEmail(p=>({...p, candidateAwaiting: v})); handleSave('Email settings') }} />
+                    <Switch checked={notifyEmail.candidateAwaiting} onCheckedChange={(v) => updateEmailPref('candidateAwaiting', v)} />
                   </div>
                   <div className="flex items-center justify-between text-xs">
                     <label className="text-muted-foreground">High-risk deploy on watched service</label>
-                    <Switch checked={notifyEmail.highRiskDeploy} onCheckedChange={(v) => { setNotifyEmail(p=>({...p, highRiskDeploy: v})); handleSave('Email settings') }} />
+                    <Switch checked={notifyEmail.highRiskDeploy} onCheckedChange={(v) => updateEmailPref('highRiskDeploy', v)} />
                   </div>
                 </div>
               </div>

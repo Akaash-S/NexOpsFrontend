@@ -283,7 +283,7 @@ export default function IncidentInvestigationPage() {
       owner: node.owner || '@team-platform (from CODEOWNERS)',
       alertHistory: {
         count30d: node.vulnerabilities ? node.vulnerabilities + 2 : 2,
-        noisyRuleIds: []
+        noisyRuleIds: node.noisy_rule_ids || []
       }
     }
   }

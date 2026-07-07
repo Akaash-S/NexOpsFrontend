@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export default function ProfilePage() {
-  const { currentUser, feedbackState } = useAppState()
+  const { currentUser, feedbackState, authLoading } = useAppState()
   const [repos, setRepos] = useState<any[]>([])
   const [incidents, setIncidents] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -95,7 +95,7 @@ export default function ProfilePage() {
     low: { class: 'bg-info/10 text-info border-info/20' },
   } as const
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <PageContent>
         <PageHeader
@@ -104,6 +104,20 @@ export default function ProfilePage() {
         />
         <div className="flex items-center justify-center min-h-[50vh]">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </PageContent>
+    )
+  }
+
+  if (!currentUser) {
+    return (
+      <PageContent>
+        <PageHeader
+          title="User Profile"
+          description="Personal workspace — manage your service ownership, alert triage history, and notification settings"
+        />
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground">No active session. Please sign in.</div>
         </div>
       </PageContent>
     )

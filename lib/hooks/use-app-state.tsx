@@ -26,8 +26,8 @@ interface AppContextType {
   getUnreadCount: () => number;
   
   // User state
-  currentUser: { name: string; email: string; avatar?: string; id?: string } | null;
-  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string } | null) => void;
+  currentUser: { name: string; email: string; avatar?: string; id?: string; preferences?: any } | null;
+  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string; preferences?: any } | null) => void;
   
   // Sidebar state
   sidebarOpen: boolean;
@@ -66,7 +66,7 @@ export function useAppState() {
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string; id?: string } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string; id?: string; preferences?: any } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Authentication & Onboarding state
@@ -108,9 +108,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                 const dbUser = await res.json();
                 setCurrentUser({
                   id: dbUser.id,
-                  name: dbUser.fullName || fbUser.displayName || 'Developer',
+                  name: dbUser.full_name || dbUser.fullName || fbUser.displayName || 'Developer',
                   email: dbUser.email || fbUser.email || '',
-                  avatar: dbUser.avatarUrl || fbUser.photoURL || ''
+                  avatar: dbUser.avatarUrl || fbUser.photoURL || '',
+                  preferences: dbUser.preferences || {}
                 });
                 setAuthenticated(true);
                 setOnboardingComplete(dbUser.onboardingCompleted || false);
