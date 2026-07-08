@@ -15,6 +15,28 @@ export default function ErrorPage({
   useEffect(() => {
     // Log the error to an error reporting service
     console.error(error)
+
+    // Auto-reload the page on ChunkLoadError to fetch the latest deployment chunks
+    const isChunkError = 
+      error.name === 'ChunkLoadError' || 
+      /Failed to load chunk/i.test(error.message) ||
+      /Loading chunk .* failed/i.test(error.message);
+      
+    if (isChunkError) {
+      console.warn("React boundary: ChunkLoadError detected. Reloading page...")
+      try {
+        const lastReload = sessionStorage.getItem('chunk_load_reload');
+        const now = Date.now();
+        if (!lastReload || (now - parseInt(lastReload, 10)) > 10000) {
+          sessionStorage.setItem('chunk_load_reload', now.toString());
+          window.location.reload();
+        } else {
+          console.error("Repeated ChunkLoadError within 10s. Aborting auto-reload.");
+        }
+      } catch (err) {
+        window.location.reload();
+      }
+    }
   }, [error])
 
   return (
