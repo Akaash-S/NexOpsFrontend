@@ -137,9 +137,17 @@ export default function ProfilePage() {
           {/* Identity Basics Card */}
           <Card className="p-6 border border-border bg-card">
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
-                <User className="w-10 h-10" />
-              </div>
+              {currentUser?.avatar ? (
+                <img
+                  src={currentUser.avatar}
+                  alt={currentUser.name ?? 'User Profile'}
+                  className="w-20 h-20 rounded-full border border-primary/20 shadow-inner object-cover"
+                />
+              ) : (
+                <div className="w-20 h-20 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shadow-inner">
+                  <User className="w-10 h-10" />
+                </div>
+              )}
               <div>
                 <h2 className="text-xl font-bold">{currentUser?.name ?? 'John Doe'}</h2>
                 <p className="text-sm text-muted-foreground">{currentUser?.email ?? 'john.doe@nexops.internal'}</p>

@@ -26,7 +26,8 @@ export function TopNav() {
     setAuthenticated,
     notifications,
     markNotificationAsRead,
-    markAllAsRead
+    markAllAsRead,
+    currentUser
   } = useAppState()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   
@@ -189,8 +190,16 @@ export function TopNav() {
             {/* User Profile */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <User className="w-5 h-5" />
+                <Button variant="ghost" size="icon" className="overflow-hidden rounded-full border border-border/40 w-8 h-8">
+                  {currentUser?.avatar ? (
+                    <img 
+                      src={currentUser.avatar} 
+                      alt={currentUser.name || 'User Profile'} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <User className="w-5 h-5" />
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
