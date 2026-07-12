@@ -155,6 +155,29 @@ export function ActiveIncidents() {
     loadData()
   }, [])
 
+  // Listen for realtime incident creation
+  useEffect(() => {
+    const handleIncidentCreated = (e: Event) => {
+      const customEvent = e as CustomEvent
+      const detail = customEvent.detail
+      if (detail && detail.incident) {
+        const newIncident = {
+          ...detail.incident,
+          candidateCauses: detail.candidate_causes || []
+        }
+        setIncidents((prev) => {
+          if (prev.some((i) => i.id === newIncident.id)) return prev
+          return [newIncident, ...prev]
+        })
+      }
+    }
+
+    window.addEventListener('nexops:incident.created', handleIncidentCreated)
+    return () => {
+      window.removeEventListener('nexops:incident.created', handleIncidentCreated)
+    }
+  }, [])
+
   const activeIncidents = incidents.filter((i) => i.status !== 'resolved').slice(0, 3)
   const activeCount = incidents.filter((i) => i.status !== 'resolved').length
 

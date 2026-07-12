@@ -262,6 +262,63 @@ export default function IncidentInvestigationPage() {
     }
   }, [incidentId])
 
+  // Listen for realtime updates to this incident
+  useEffect(() => {
+    const handleIncidentCreated = (e: Event) => {
+      const customEvent = e as CustomEvent
+      const detail = customEvent.detail
+      if (detail && detail.incident && detail.incident.id === incidentId) {
+        const incidentData = detail.incident
+        const candidate_causes = detail.candidate_causes || []
+
+        const mappedCauses = candidate_causes.map((c: any) => ({
+          id: c.id,
+          deployId: c.eventId || c.event_id || 'unknown-deploy',
+          service: c.repoId || c.repo_id,
+          matchScore: c.score || 0,
+          matchReasons: typeof c.reason === 'string' ? c.reason.split(';') : (Array.isArray(c.reason) ? c.reason : [c.reason || '']),
+          confirmed: c.confirmed
+        }))
+
+        const start = new Date(incidentData.startedAt || incidentData.started_at)
+        const end = incidentData.resolvedAt ? new Date(incidentData.resolvedAt) : new Date()
+        const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
+        const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
+
+        // Check if there is an existing timeline, otherwise fallback
+        let timeline = incident?.timeline || []
+        if (timeline.length === 0) {
+          timeline = [
+            { time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
+            { time: new Date(start.getTime() + 180000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
+            { time: new Date(start.getTime() + 480000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: `On-Call engineer acknowledged and began investigation` }
+          ]
+        }
+
+        setIncident({
+          id: incidentData.id,
+          title: incidentData.title,
+          description: incidentData.description || '',
+          severity: (incidentData.severity || 'medium').toLowerCase(),
+          status: incidentData.status || 'open',
+          duration,
+          impactedUsers: incidentData.affectedUsers || incidentData.affected_users || 1200,
+          lead: incidentData.assignee || 'On-Call Bot',
+          startTime: start.toLocaleString(),
+          relatedAlerts: incidentData.relatedAlerts || 3,
+          timeline,
+          candidateCauses: mappedCauses,
+          affectedServices: mappedCauses.map((c: any) => c.service)
+        })
+      }
+    }
+
+    window.addEventListener('nexops:incident.created', handleIncidentCreated)
+    return () => {
+      window.removeEventListener('nexops:incident.created', handleIncidentCreated)
+    }
+  }, [incidentId, incident])
+
   const deriveTier = (name: string): 'ingress' | 'service' | 'data' => {
     const nameLower = name.toLowerCase();
     if (nameLower.includes('gateway') || nameLower.includes('frontend')) {

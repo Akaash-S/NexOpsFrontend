@@ -7,6 +7,8 @@ import { PageLayout } from './layout'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { Loader2 } from 'lucide-react'
 
+import { useRealtime } from '@/lib/hooks/use-realtime'
+
 /**
  * Main application shell wrapper
  * Handles authentication redirection, top navigation, sidebar, and layout structure
@@ -15,6 +17,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const { isAuthenticated, onboardingComplete, authLoading } = useAppState()
+
+  // Initialize global real-time WebSocket connection
+  useRealtime()
 
   const isPreApp = ['/', '/login', '/onboarding'].includes(pathname)
   
