@@ -10,6 +10,7 @@ import { SpotlightNav } from '@/components/ui/vengeance/spotlight-nav'
 import { PerspectiveGrid } from '@/components/ui/vengeance/perspective-grid'
 import { AnimatedButton } from '@/components/ui/vengeance/animated-button'
 import { GlassFrame } from '@/components/ui/vengeance/glass-frame'
+import { ContainerScroll } from '@/components/ui/container-scroll-animation'
 import { 
   AlertTriangle, 
   Zap, 
@@ -544,32 +545,33 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* SECTION 2.3: SOLUTION REVEAL — Glass Framed Screenshot */}
+      {/* SECTION 2.3: SOLUTION REVEAL — Container Scroll 3D Showcase */}
       <section 
         ref={solutionContainerRef} 
-        className="py-24 bg-[#08090d] border-t border-border/30 px-6 text-center"
+        className="py-12 bg-[#08090d] border-t border-border/30 px-6 text-center overflow-hidden"
       >
-        <div className="max-w-5xl mx-auto space-y-12">
-          <div className="space-y-3">
-            <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5 font-mono text-xs uppercase px-3 py-1">The Solution</Badge>
-            <h2 className="text-3xl font-extrabold tracking-tight text-foreground">
-              One view. Auto-correlated root causes.
-            </h2>
-            <p className="text-sm text-muted-foreground max-w-lg mx-auto">
-              NexOps unifies commits, deploys, and active alert records into a single dashboard. Real telemetry maps candidate causes dynamically.
-            </p>
-          </div>
-
-          {/* Genuine application screenshot in Vengeance UI GlassFrame */}
-          <div className="solution-screenshot-wrapper max-w-4xl mx-auto">
-            <GlassFrame>
+        <div className="solution-screenshot-wrapper max-w-6xl mx-auto">
+          <ContainerScroll
+            titleComponent={
+              <div className="space-y-3 mb-8">
+                <Badge variant="outline" className="border-primary/20 text-primary bg-primary/5 font-mono text-xs uppercase px-3 py-1">The Solution</Badge>
+                <h2 className="text-3xl lg:text-5xl font-extrabold tracking-tight text-foreground">
+                  One view. Auto-correlated root causes.
+                </h2>
+                <p className="text-sm text-muted-foreground max-w-lg mx-auto">
+                  NexOps unifies commits, deploys, and active alert records into a single dashboard. Real telemetry maps candidate causes dynamically.
+                </p>
+              </div>
+            }
+          >
+            <GlassFrame className="h-full border-none p-0 bg-transparent shadow-none">
               <img 
                 src="/screenshot-incident.png" 
                 alt="NexOps incident triage console showing ranked candidate causes" 
-                className="rounded-xl w-full border border-border/60 object-cover object-top shadow-2xl h-[420px]" 
+                className="rounded-xl w-full h-full object-cover object-top shadow-2xl" 
               />
             </GlassFrame>
-          </div>
+          </ContainerScroll>
         </div>
       </section>
 
