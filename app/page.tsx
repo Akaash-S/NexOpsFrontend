@@ -11,6 +11,7 @@ import { PerspectiveGrid } from '@/components/ui/vengeance/perspective-grid'
 import { AnimatedButton } from '@/components/ui/vengeance/animated-button'
 import { GlassFrame } from '@/components/ui/vengeance/glass-frame'
 import { ContainerScroll } from '@/components/ui/container-scroll-animation'
+import PricingComponent from '@/components/ui/pricing-card'
 import { 
   AlertTriangle, 
   Zap, 
@@ -782,6 +783,11 @@ export default function LandingPage() {
             Detailed incident matching reasons and telemetry paths ship with every NexOps workspace tier. No simulated metrics, no black box algorithms.
           </p>
         </div>
+      </section>
+
+      {/* SECTION: PRICING & TIERS */}
+      <section className="bg-[#090b0f] border-t border-border/30 py-12">
+        <PricingComponent />
       </section>
 
       {/* SECTION 2.7: CTA SECTION with Vengeance UI AnimatedButton */}
