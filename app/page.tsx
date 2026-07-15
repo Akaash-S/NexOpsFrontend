@@ -358,23 +358,23 @@ export default function LandingPage() {
       {/* Vengeance UI Spotlight Navbar */}
       <SpotlightNav />
 
-      {/* SECTION 2.1: Hero Section (Scatter to Converge + Three.js Shader Animation + Vengeance PerspectiveGrid) */}
+      {/* SECTION 2.1: Hero Section (Three.js Ambient Shader + Centered Wordmark Lockup) */}
       <PerspectiveGrid 
         ref={heroContainerRef}
-        className="min-h-screen flex flex-col justify-center items-center overflow-hidden px-6 lg:px-8 border-none pt-16 relative"
+        className="h-screen flex flex-col items-center justify-center overflow-hidden border-none relative p-0"
       >
         {/* Three.js Ambient Shader Animation Background */}
         <ShaderAnimation />
 
         {/* Centered Large Bold NexOps Wordmark Lockup */}
-        <div className="z-10 text-center flex flex-col items-center justify-center max-w-5xl mx-auto px-4 py-8">
-          {/* Large Bold Wordmark */}
-          <h1 className="text-7xl sm:text-8xl md:text-[9.5rem] lg:text-[11.5rem] font-extrabold tracking-tighter leading-none text-slate-100 select-none mb-6">
+        <div className="z-10 text-center flex flex-col items-center justify-center w-full px-4 relative">
+          {/* Large Bold Wordmark (Dead Centered Vertically & Horizontally) */}
+          <h1 className="text-7xl sm:text-8xl md:text-[9.5rem] lg:text-[11.5rem] font-extrabold tracking-tighter leading-none text-slate-100 select-none">
             NexOps
           </h1>
 
           {/* Subhead and Tagline Content (Revealed on 2-3 Scrolls) */}
-          <div className={cn("space-y-5 max-w-2xl mx-auto transition-opacity duration-300", !reducedMotion && "hero-subcontent-block opacity-0")}>
+          <div className={cn("space-y-4 max-w-2xl mx-auto mt-6 transition-all duration-300", !reducedMotion && "hero-subcontent-block opacity-0")}>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold">
               NexOps Incident Correlation Engine
             </div>
@@ -387,15 +387,15 @@ export default function LandingPage() {
               NexOps compiles commits, deploys, and active alert records into a unified auto-derived dependency map, proving root causes with absolute reasons.
             </p>
 
-            <div className="flex items-center justify-center gap-3 pt-3">
+            <div className="flex items-center justify-center gap-3 pt-2">
               <Link href="/login">
-                <AnimatedButton variant="primary" size="lg">
+                <AnimatedButton variant="primary" size="lg" className="rounded-full">
                   Launch Engine
                   <ArrowRight className="w-4 h-4" />
                 </AnimatedButton>
               </Link>
             </div>
-            <span className="text-xs text-muted-foreground/60 italic block pt-2">Scroll down to trace the evidence</span>
+            <span className="text-xs text-muted-foreground/60 italic block pt-1">Scroll down to trace the evidence</span>
           </div>
         </div>
       </PerspectiveGrid>
