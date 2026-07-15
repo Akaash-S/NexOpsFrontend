@@ -2,7 +2,6 @@
 
 import React from 'react'
 import Link from 'next/link'
-import { motion } from 'framer-motion'
 import { ArrowRight } from 'lucide-react'
 import { AnimatedButton } from './animated-button'
 
@@ -10,11 +9,10 @@ export function SpotlightNav() {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border/50 z-50 transition-colors">
       <div className="flex items-center justify-between h-full px-6 lg:px-8 max-w-7xl mx-auto">
-        <Link href="/" className="flex items-center gap-2 group">
-          <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center shadow-sm shadow-primary/30 group-hover:scale-105 transition-transform">
-            <span className="text-xs font-extrabold text-primary-foreground">N</span>
-          </div>
-          <span className="font-bold text-sm tracking-tight text-foreground">NexOps</span>
+        <Link href="/" className="flex items-center group">
+          <span className="font-extrabold text-lg tracking-tight text-foreground group-hover:text-primary transition-colors">
+            NexOps
+          </span>
         </Link>
 
         <div className="flex items-center gap-4">
