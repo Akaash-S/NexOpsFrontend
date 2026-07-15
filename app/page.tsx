@@ -401,11 +401,11 @@ export default function LandingPage() {
         {/* Scattered Signal Cards (Converging on Scroll) */}
         {!reducedMotion && (
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            {/* Card 1: PagerDuty Incident */}
+            {/* Card 1: Incident */}
             <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-destructive/30 bg-[#161012]/90 shadow-lg backdrop-blur-md">
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="outline" className="text-[10px] text-destructive border-destructive/20 bg-destructive/5 font-mono">INCIDENT</Badge>
-                <span className="text-[10px] text-muted-foreground">PagerDuty</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
               </div>
               <div className="flex gap-2 items-start">
                 <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
@@ -413,11 +413,11 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Card 2: GitHub Commit */}
+            {/* Card 2: Commit */}
             <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-success/30 bg-[#0f1612]/90 shadow-lg backdrop-blur-md">
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="outline" className="text-[10px] text-success border-success/20 bg-success/5 font-mono">COMMIT</Badge>
-                <span className="text-[10px] text-muted-foreground">GitHub</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
               </div>
               <div className="flex gap-2 items-start">
                 <GitCommit className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
@@ -429,7 +429,7 @@ export default function LandingPage() {
             <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-warning/30 bg-[#161410]/90 shadow-lg backdrop-blur-md">
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="outline" className="text-[10px] text-warning border-warning/20 bg-warning/5 font-mono">RULE MATCH</Badge>
-                <span className="text-[10px] text-muted-foreground">Anomaly Engine</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
               </div>
               <div className="flex gap-2 items-start">
                 <Zap className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
@@ -441,7 +441,7 @@ export default function LandingPage() {
             <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-primary/20 bg-[#101416]/90 shadow-lg backdrop-blur-md">
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-mono">NOTIFICATION</Badge>
-                <span className="text-[10px] text-muted-foreground">Slack</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
               </div>
               <div className="flex gap-2 items-start">
                 <BellOff className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
@@ -453,7 +453,7 @@ export default function LandingPage() {
             <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-primary/30 bg-primary/10 shadow-lg backdrop-blur-md">
               <div className="flex items-center justify-between mb-2">
                 <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-mono">DEPLOYMENT</Badge>
-                <span className="text-[10px] text-muted-foreground">Vercel</span>
+                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
               </div>
               <div className="flex gap-2 items-start">
                 <RefreshCw className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
