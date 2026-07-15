@@ -12,6 +12,7 @@ import { AnimatedButton } from '@/components/ui/vengeance/animated-button'
 import { GlassFrame } from '@/components/ui/vengeance/glass-frame'
 import { ContainerScroll } from '@/components/ui/container-scroll-animation'
 import PricingComponent from '@/components/ui/pricing-card'
+import { ShaderAnimation } from '@/components/ui/shader-animation'
 import { 
   AlertTriangle, 
   Zap, 
@@ -389,11 +390,14 @@ export default function LandingPage() {
       {/* Vengeance UI Spotlight Navbar */}
       <SpotlightNav />
 
-      {/* SECTION 2.1: Hero Section (Scatter to Converge + Vengeance PerspectiveGrid) */}
+      {/* SECTION 2.1: Hero Section (Scatter to Converge + Three.js Shader Animation + Vengeance PerspectiveGrid) */}
       <PerspectiveGrid 
         ref={heroContainerRef}
-        className="min-h-screen flex flex-col justify-center items-center overflow-hidden px-6 lg:px-8 border-none pt-16"
+        className="min-h-screen flex flex-col justify-center items-center overflow-hidden px-6 lg:px-8 border-none pt-16 relative"
       >
+        {/* Three.js Ambient Shader Animation Background */}
+        <ShaderAnimation />
+
         {/* Scattered Signal Cards (Converging on Scroll) */}
         {!reducedMotion && (
           <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
