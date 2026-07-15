@@ -25,47 +25,28 @@ export function ShaderAnimation() {
       }
     `
 
-    // Fragment shader with subtle diagonal light streaks drifting across near-black dark mode + fine film noise
+    // Dynamic fragment shader producing animated flowing WebGL math wave curves
     const fragmentShader = `
+      #define TWO_PI 6.2831853072
+      #define PI 3.14159265359
+
       precision highp float;
       uniform vec2 resolution;
       uniform float time;
 
-      // Pseudo-random noise helper
-      float random(vec2 st) {
-        return fract(sin(dot(st.xy, vec2(12.9898, 78.233))) * 43758.5453123);
-      }
-
       void main(void) {
-        vec2 st = gl_FragCoord.xy / resolution.xy;
+        vec2 uv = (gl_FragCoord.xy * 2.0 - resolution.xy) / min(resolution.x, resolution.y);
+        float t = time * 0.04;
+        float lineWidth = 0.0025;
+
+        vec3 color = vec3(0.0);
+        for(int j = 0; j < 3; j++){
+          for(int i = 0; i < 5; i++){
+            color[j] += lineWidth * float(i * i) / abs(fract(t - 0.01 * float(j) + float(i) * 0.01) * 5.0 - length(uv) + mod(uv.x + uv.y, 0.2));
+          }
+        }
         
-        // Diagonal coordinates for drifting streaks
-        float angle = 0.65; // ~37 degree diagonal tilt
-        vec2 rotSt = vec2(
-          st.x * cos(angle) - st.y * sin(angle),
-          st.x * sin(angle) + st.y * cos(angle)
-        );
-
-        float t = time * 0.08;
-
-        // Soft drifting diagonal light streaks
-        float streak1 = sin(rotSt.x * 6.0 + t) * 0.5 + 0.5;
-        float streak2 = cos(rotSt.x * 12.0 - t * 0.7) * 0.5 + 0.5;
-        float combinedStreaks = pow(streak1 * streak2, 2.5) * 0.18;
-
-        // Dark base background color matching OKLch deep slate (#090b0f)
-        vec3 baseColor = vec3(0.035, 0.043, 0.06);
-        // Accent streak light color (subtle cornflower blue glow)
-        vec3 streakColor = vec3(0.39, 0.58, 0.93) * combinedStreaks;
-
-        // Combine base and streak ambient glow
-        vec3 color = baseColor + streakColor;
-
-        // Subtle film grain noise
-        float grain = (random(st + vec2(time * 0.01)) - 0.5) * 0.035;
-        color += vec3(grain);
-
-        gl_FragColor = vec4(color, 1.0);
+        gl_FragColor = vec4(color[0], color[1], color[2], 0.85);
       }
     `
 
@@ -85,6 +66,7 @@ export function ShaderAnimation() {
       uniforms: uniforms,
       vertexShader: vertexShader,
       fragmentShader: fragmentShader,
+      transparent: true
     })
 
     const mesh = new THREE.Mesh(geometry, material)
@@ -146,7 +128,7 @@ export function ShaderAnimation() {
   return (
     <div
       ref={containerRef}
-      className="w-full h-full absolute inset-0 pointer-events-none opacity-80"
+      className="w-full h-full absolute inset-0 pointer-events-none mix-blend-screen opacity-70 z-0"
       style={{
         background: "transparent",
         overflow: "hidden",
