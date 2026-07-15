@@ -7,7 +7,7 @@ import { AnimatedButton } from './animated-button'
 
 export function SpotlightNav() {
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 bg-background/80 backdrop-blur-md border-b border-border/50 z-50 transition-colors">
+    <header className="fixed top-0 left-0 right-0 h-16 bg-transparent border-b border-white/5 backdrop-blur-sm z-50 transition-colors">
       <div className="flex items-center justify-between h-full px-6 lg:px-8 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center group">
           <span className="font-extrabold text-lg tracking-tight text-foreground group-hover:text-primary transition-colors">

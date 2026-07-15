@@ -104,9 +104,32 @@ export default function LandingPage() {
 
     const ctx = gsap.context(() => {
       // ==========================================
-      // SECTION 2.1: HERO — Clean Wordmark Lockup
-      // Wordmark and subhead are static and immediately legible
+      // SECTION 2.1: HERO — Pinned Scroll Reveal
+      // Initial load displays ONLY centered NexOps wordmark; 
+      // 2-3 scrolls reveal the tagline, subhead, and CTA block
       // ==========================================
+      const heroTimeline = gsap.timeline({
+        scrollTrigger: {
+          trigger: heroContainerRef.current,
+          start: 'top top',
+          end: '+=150%',
+          pin: true,
+          scrub: 1,
+          anticipatePin: 1
+        }
+      })
+
+      heroTimeline.fromTo('.hero-subcontent-block', {
+        opacity: 0,
+        y: 40,
+        pointerEvents: 'none'
+      }, {
+        opacity: 1,
+        y: 0,
+        pointerEvents: 'auto',
+        duration: 1,
+        ease: 'power2.out'
+      })
 
 
       // ==========================================
@@ -350,8 +373,8 @@ export default function LandingPage() {
             NexOps
           </h1>
 
-          {/* Subhead and Tagline Content */}
-          <div className="space-y-5 max-w-2xl mx-auto">
+          {/* Subhead and Tagline Content (Revealed on 2-3 Scrolls) */}
+          <div className={cn("space-y-5 max-w-2xl mx-auto transition-opacity duration-300", !reducedMotion && "hero-subcontent-block opacity-0")}>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold">
               NexOps Incident Correlation Engine
             </div>
