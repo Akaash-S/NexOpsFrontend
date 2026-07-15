@@ -104,64 +104,9 @@ export default function LandingPage() {
 
     const ctx = gsap.context(() => {
       // ==========================================
-      // SECTION 2.1: HERO — Scatter to Converge
-      // GSAP owns initial scatter state and scroll scrub properties
+      // SECTION 2.1: HERO — Clean Wordmark Lockup
+      // Wordmark and subhead are static and immediately legible
       // ==========================================
-      const scatterCards = gsap.utils.toArray('.hero-scatter-card')
-
-      scatterCards.forEach((card: any, index: number) => {
-        const angle = (index / scatterCards.length) * Math.PI * 2
-        const radius = 260 + Math.random() * 80
-        gsap.set(card, {
-          x: Math.cos(angle) * radius * 1.4,
-          y: Math.sin(angle) * radius,
-          z: Math.random() * 80 - 40,
-          rotation: (Math.random() - 0.5) * 50,
-          opacity: 0.2,
-          scale: 0.85
-        })
-      })
-
-      const heroTimeline = gsap.timeline({
-        scrollTrigger: {
-          trigger: heroContainerRef.current,
-          start: 'top top',
-          end: '+=150%',
-          pin: true,
-          scrub: 1,
-          anticipatePin: 1
-        }
-      })
-
-      // Converge scatter cards to center
-      heroTimeline.to(scatterCards, {
-        x: 0,
-        y: 0,
-        z: 0,
-        rotation: 0,
-        opacity: 0.9,
-        scale: 1,
-        stagger: 0.05,
-        ease: 'power1.inOut'
-      })
-
-      // Merge visual into glowing resolved card
-      heroTimeline.to('.hero-resolved-card', {
-        boxShadow: '0 0 50px 15px rgba(100, 149, 237, 0.35)',
-        borderColor: 'oklch(0.64 0.15 262)',
-        scale: 1.04,
-        duration: 0.3
-      }, '-=0.1')
-
-      // Resolve headline and subhead in sync
-      heroTimeline.fromTo('.hero-text-block', {
-        opacity: 0,
-        y: 30
-      }, {
-        opacity: 1,
-        y: 0,
-        duration: 0.4
-      }, '-=0.2')
 
 
       // ==========================================
@@ -398,96 +343,28 @@ export default function LandingPage() {
         {/* Three.js Ambient Shader Animation Background */}
         <ShaderAnimation />
 
-        {/* Scattered Signal Cards (Converging on Scroll) */}
-        {!reducedMotion && (
-          <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-            {/* Card 1: Incident */}
-            <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-destructive/30 bg-[#161012]/90 shadow-lg backdrop-blur-md">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-[10px] text-destructive border-destructive/20 bg-destructive/5 font-mono">INCIDENT</Badge>
-                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
-              </div>
-              <div className="flex gap-2 items-start">
-                <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
-                <div className="text-[11px] font-bold text-slate-200">DB Conn Pool Exhaustion</div>
-              </div>
-            </div>
+        {/* Centered Large Bold NexOps Wordmark Lockup */}
+        <div className="z-10 text-center flex flex-col items-center justify-center max-w-5xl mx-auto px-4 py-8">
+          {/* Large Bold Wordmark */}
+          <h1 className="text-7xl sm:text-8xl md:text-[9.5rem] lg:text-[11.5rem] font-extrabold tracking-tighter leading-none text-slate-100 select-none mb-6">
+            NexOps
+          </h1>
 
-            {/* Card 2: Commit */}
-            <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-success/30 bg-[#0f1612]/90 shadow-lg backdrop-blur-md">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-[10px] text-success border-success/20 bg-success/5 font-mono">COMMIT</Badge>
-                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
-              </div>
-              <div className="flex gap-2 items-start">
-                <GitCommit className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
-                <div className="text-[11px] font-mono text-slate-200">9c7f8bb: config max_connections</div>
-              </div>
-            </div>
-
-            {/* Card 3: Alert Rule */}
-            <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-warning/30 bg-[#161410]/90 shadow-lg backdrop-blur-md">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-[10px] text-warning border-warning/20 bg-warning/5 font-mono">RULE MATCH</Badge>
-                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
-              </div>
-              <div className="flex gap-2 items-start">
-                <Zap className="w-4 h-4 text-warning flex-shrink-0 mt-0.5" />
-                <div className="text-[11px] font-bold text-slate-200">Temporal correlation (15m window)</div>
-              </div>
-            </div>
-
-            {/* Card 4: Notification Thread */}
-            <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-primary/20 bg-[#101416]/90 shadow-lg backdrop-blur-md">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-mono">NOTIFICATION</Badge>
-                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
-              </div>
-              <div className="flex gap-2 items-start">
-                <BellOff className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                <div className="text-[11px] text-slate-200">Alert piped to #ops-triage</div>
-              </div>
-            </div>
-
-            {/* Card 5: Service Deploy */}
-            <div className="hero-scatter-card absolute w-[240px] p-4 rounded-xl border border-primary/30 bg-primary/10 shadow-lg backdrop-blur-md">
-              <div className="flex items-center justify-between mb-2">
-                <Badge variant="outline" className="text-[10px] text-primary border-primary/20 bg-primary/5 font-mono">DEPLOYMENT</Badge>
-                <span className="text-[10px] text-muted-foreground font-semibold">NexOps</span>
-              </div>
-              <div className="flex gap-2 items-start">
-                <RefreshCw className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-                <div className="text-[11px] text-slate-200">user-service v1.0.4 success</div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Center Resolved Target Card */}
-        <div className="w-full max-w-[500px] z-10 text-center flex flex-col items-center">
-          <div className="hero-resolved-card w-[340px] p-6 rounded-2xl border border-border bg-[#111318]/95 backdrop-blur-xl shadow-2xl transition-all duration-300 mb-8">
-            <div className="flex items-center gap-2 mb-3 justify-center">
-              <div className="w-2.5 h-2.5 rounded-full bg-primary animate-ping" />
-              <span className="text-xs uppercase tracking-widest font-bold text-primary">Correlation Engine Online</span>
-            </div>
-            <div className="border border-primary/20 bg-primary/5 p-4 rounded-xl text-center space-y-1">
-              <span className="text-[10px] text-muted-foreground font-mono">PROBABLE ROOT CAUSE</span>
-              <h3 className="font-bold text-sm text-foreground">User Service (v1.0.4)</h3>
-              <p className="text-xs text-success font-semibold">91% Certainty Match</p>
-            </div>
-          </div>
-
-          <div className={cn("space-y-4", !reducedMotion && "hero-text-block opacity-0")}>
+          {/* Subhead and Tagline Content */}
+          <div className="space-y-5 max-w-2xl mx-auto">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-primary/20 bg-primary/5 text-primary text-xs font-semibold">
               NexOps Incident Correlation Engine
             </div>
-            <h1 className="text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-foreground">
-              What caused this incident,<br />and how do we know?
-            </h1>
-            <p className="text-sm lg:text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
+            
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-slate-200">
+              What caused this incident, and how do we know?
+            </h2>
+            
+            <p className="text-sm lg:text-base text-muted-foreground leading-relaxed max-w-lg mx-auto">
               NexOps compiles commits, deploys, and active alert records into a unified auto-derived dependency map, proving root causes with absolute reasons.
             </p>
-            <div className="flex items-center justify-center gap-3 pt-2">
+
+            <div className="flex items-center justify-center gap-3 pt-3">
               <Link href="/login">
                 <AnimatedButton variant="primary" size="lg">
                   Launch Engine
@@ -495,7 +372,7 @@ export default function LandingPage() {
                 </AnimatedButton>
               </Link>
             </div>
-            <span className="text-xs text-muted-foreground/60 italic block pt-3">Scroll down to trace the evidence</span>
+            <span className="text-xs text-muted-foreground/60 italic block pt-2">Scroll down to trace the evidence</span>
           </div>
         </div>
       </PerspectiveGrid>
