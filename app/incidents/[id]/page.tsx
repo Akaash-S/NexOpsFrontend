@@ -118,8 +118,8 @@ function CandidateRow({ cause, rank, localConfirmed, onConfirm, getNodeById }: C
               <span>{node.owner}</span>
             </div>
             {(node.alertHistory.noisyRuleIds?.length ?? 0) > 0 && (
-              <div className="flex items-center gap-2">
-                <BellOff className="w-3 h-3 text-muted-foreground" />
+              <div className="flex items-center gap-2 text-amber-400 font-medium bg-amber-500/10 border border-amber-500/20 rounded-md px-2.5 py-1 my-1">
+                <BellOff className="w-3.5 h-3.5 text-amber-400 shrink-0" />
                 <span>{node.alertHistory.noisyRuleIds!.length} alert rule{node.alertHistory.noisyRuleIds!.length > 1 ? 's' : ''} on this service rarely correlate with real incidents</span>
               </div>
             )}
@@ -340,7 +340,7 @@ export default function IncidentInvestigationPage() {
       owner: node.owner || '@team-platform (from CODEOWNERS)',
       alertHistory: {
         count30d: node.vulnerabilities ? node.vulnerabilities + 2 : 2,
-        noisyRuleIds: node.noisy_rule_ids || []
+        noisyRuleIds: node.noisyRuleIds || node.noisy_rule_ids || []
       }
     }
   }
