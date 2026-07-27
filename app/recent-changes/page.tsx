@@ -304,11 +304,11 @@ function RecentChangesPageContent() {
         <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
           <EmptyState
             icon={<GitCommitHorizontal className="w-12 h-12 text-muted-foreground/60" />}
-            title="No Recent Changes"
-            description="No deployments or infrastructure changes have been recorded. Integrate your CI/CD pipeline to track revisions."
+            title="No Recent Changes Recorded"
+            description="No deployments or infrastructure changes detected yet. Deployments appear automatically when GitHub deployment events occur or when repositories are synced."
             action={
               <Button asChild>
-                <Link href="/settings?tab=workspace">Setup Deployment Tracking</Link>
+                <Link href="/integrations">Manage GitHub Integration</Link>
               </Button>
             }
           />

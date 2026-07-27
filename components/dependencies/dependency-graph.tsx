@@ -242,15 +242,20 @@ export function DependencyGraph({
       edges.map((edge) => {
         const sourceHighlighted = highlightedNodes.has(edge.source)
         const targetHighlighted = highlightedNodes.has(edge.target)
+        const isPathActive = sourceHighlighted && targetHighlighted
         return {
           ...edge,
-          animated: edge.animated || (sourceHighlighted && targetHighlighted),
-          style: sourceHighlighted && targetHighlighted
-            ? { ...edge.style, stroke: 'var(--primary)', strokeWidth: 2 }
+          animated: edge.animated || isPathActive,
+          style: isPathActive
+            ? {
+                ...edge.style,
+                stroke: impactMode ? '#f59e0b' : '#3b82f6',
+                strokeWidth: impactMode ? 2.5 : 2,
+              }
             : edge.style,
         }
       }),
-    [edges, highlightedNodes]
+    [edges, highlightedNodes, impactMode]
   )
 
   const memoizedNodeTypes = useMemo(() => nodeTypes, [])
@@ -380,7 +385,21 @@ dependencies:
           )}
         </div>
       )}
-      <div style={{ width: '100%', height: '100%' }}>
+      <div style={{ width: '100%', height: '100%' }} className="relative">
+        <div className={cn(
+          "absolute top-4 right-4 z-10 px-3.5 py-2 rounded-lg border text-xs font-mono font-medium shadow-lg backdrop-blur-md transition-all flex items-center gap-2",
+          impactMode 
+            ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
+            : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+        )}>
+          <span className={cn("w-2 h-2 rounded-full animate-pulse", impactMode ? "bg-amber-500" : "bg-blue-500")} />
+          <span>
+            {impactMode 
+              ? (selectedNode ? `BLAST RADIUS IMPACT: Showing downstream services affected by ${selectedNode}` : "BLAST RADIUS IMPACT MODE: Click any service node to trace downstream impact")
+              : (selectedNode ? `DEPENDENCY MODE: Showing upstream dependencies for ${selectedNode}` : "DEPENDENCY MODE: Showing full topology graph. Click node for upstream dependencies")
+            }
+          </span>
+        </div>
         <ReactFlow
           nodes={decoratedNodes}
           edges={decoratedEdges}
