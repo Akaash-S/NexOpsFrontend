@@ -83,7 +83,8 @@ function ChangeCard({ change, topology }: { change: any; topology: any }) {
     </Badge>
   ) : null
 
-  const commitSha = change.commitHash || change.commit_hash || (change.id && change.id.length >= 7 ? change.id.substring(0, 8) : change.id)
+  const rawSha = change.commitHash || change.commit_hash || change.id || ''
+  const displaySha = rawSha.length > 7 ? rawSha.substring(0, 7) : rawSha
   const envName = change.environment || 'production'
 
   return (
@@ -95,7 +96,7 @@ function ChangeCard({ change, topology }: { change: any; topology: any }) {
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2 mb-1">
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2 mb-1.5 flex-wrap">
                 <Badge variant="secondary" className="text-xs font-semibold">{change.serviceName}</Badge>
                 <Badge variant="outline" className="text-xs font-mono uppercase bg-muted/40">
@@ -211,23 +212,23 @@ function ChangeCard({ change, topology }: { change: any; topology: any }) {
 
               {/* Extended Deployment Metadata Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-md bg-background/50 border border-border/40 text-xs">
-                <div>
-                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Commit SHA</span>
-                  <span className="font-mono font-medium text-foreground">{commitSha}</span>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5 truncate">Commit SHA</span>
+                  <span className="font-mono font-medium text-foreground truncate block" title={rawSha}>{displaySha}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Environment</span>
-                  <span className="font-medium text-foreground capitalize">{envName}</span>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5 truncate">Environment</span>
+                  <span className="font-medium text-foreground capitalize truncate block" title={envName}>{envName}</span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Status</span>
-                  <span className={cn("font-semibold capitalize", isFailing ? "text-destructive" : "text-success")}>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5 truncate">Status</span>
+                  <span className={cn("font-semibold capitalize truncate block", isFailing ? "text-destructive" : "text-success")}>
                     {change.status || 'success'}
                   </span>
                 </div>
-                <div>
-                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Triggered By</span>
-                  <span className="font-medium text-foreground truncate block">{change.author}</span>
+                <div className="min-w-0">
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5 truncate">Triggered By</span>
+                  <span className="font-medium text-foreground truncate block" title={change.author}>{change.author}</span>
                 </div>
               </div>
             </div>
