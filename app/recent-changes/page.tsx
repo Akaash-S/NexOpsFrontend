@@ -14,57 +14,42 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { 
-  Package, 
-  Settings, 
-  AlertTriangle, 
-  CheckCircle2, 
-  AlertCircle, 
-  Flame, 
-  ChevronDown, 
-  ChevronUp, 
-  Search, 
-  GitCommitHorizontal, 
-  Loader2,
-  Clock,
-  GitBranch,
-  User,
-  ExternalLink,
-  Layers,
-  Activity,
-  ArrowUpRight,
-  ShieldAlert,
-  Sparkles,
-  RefreshCw,
-  GitCommit
-} from 'lucide-react'
+import { Package, Settings, AlertTriangle, CheckCircle, AlertCircle, Flame, ChevronDown, ChevronUp, Search, GitCommitHorizontal, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
-const impactConfig = {
-  high: { 
-    label: 'High Impact', 
-    bg: 'bg-destructive/15 text-destructive border-destructive/30',
-    dot: 'bg-destructive',
-    borderLeft: 'border-l-destructive',
-    glow: 'group-hover:shadow-destructive/10'
-  },
-  medium: { 
-    label: 'Medium Impact', 
-    bg: 'bg-amber-500/15 text-amber-400 border-amber-500/30',
-    dot: 'bg-amber-400',
-    borderLeft: 'border-l-amber-500',
-    glow: 'group-hover:shadow-amber-500/10'
-  },
-  low: { 
-    label: 'Low Impact', 
-    bg: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
-    dot: 'bg-emerald-400',
-    borderLeft: 'border-l-emerald-500',
-    glow: 'group-hover:shadow-emerald-500/10'
-  },
+const typeConfig = {
+  deployment: { icon: Package, label: 'Deployment', color: 'text-primary' },
+  infrastructure: { icon: Settings, label: 'Infrastructure', color: 'text-accent' },
 } as const
+
+const impactConfig = {
+  high: { label: 'High Impact', bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/20' },
+  medium: { label: 'Medium Impact', bg: 'bg-warning/10', text: 'text-warning', border: 'border-warning/20' },
+  low: { label: 'Low Impact', bg: 'bg-success/10', text: 'text-success', border: 'border-success/20' },
+} as const
+
+function RiskPill({ score, basis }: { score: number; basis: string }) {
+  const color =
+    score >= 70 ? 'bg-destructive/10 text-destructive border-destructive/20' :
+    score >= 40 ? 'bg-warning/10 text-warning border-warning/20' :
+    'bg-success/10 text-success border-success/20'
+  const label = score >= 70 ? 'High' : score >= 40 ? 'Medium' : 'Low'
+
+  return (
+    <div className="mt-3 pt-3 border-t border-border/50">
+      <div className="flex items-center gap-2 mb-1.5">
+        <Flame className="w-3.5 h-3.5 text-warning flex-shrink-0" />
+        <span className="text-xs font-semibold text-muted-foreground">Blast Radius</span>
+        <Badge variant="outline" className={cn('text-xs ml-auto', color)}>
+          {score} — {label} Risk
+        </Badge>
+      </div>
+      <p className="text-xs text-muted-foreground italic">{basis}</p>
+    </div>
+  )
+}
 
 function getDownstreamDependents(nodeId: string, edges: any[]): string[] {
   const visited = new Set<string>()
@@ -86,179 +71,169 @@ function getDownstreamDependents(nodeId: string, edges: any[]): string[] {
 function ChangeCard({ change, topology }: { change: any; topology: any }) {
   const [expanded, setExpanded] = useState(false)
   const isFailing = change.status === 'failed'
+  const TypeIcon = Package
+  const typeColor = typeConfig.deployment.color
   const impact = impactConfig[change.impact as keyof typeof impactConfig] ?? impactConfig.medium
   const blastRadius = change.blastRadius
-  const riskScore = blastRadius?.riskScore ?? 0
 
-  const env = (change.environment || change.env || 'production').toLowerCase()
-  const isProduction = env.includes('prod') || env === 'production'
+  const incidentBadge = isFailing ? (
+    <Badge variant="outline" className="text-xs bg-destructive/10 text-destructive border-destructive/20 gap-1">
+      <AlertTriangle className="w-3 h-3" />
+      Deployment failed
+    </Badge>
+  ) : null
 
-  const commitSha = change.commit_hash || change.commitHash || change.sha || change.id
-  const shortSha = commitSha ? commitSha.substring(0, 7) : 'head'
+  const commitSha = change.commitHash || change.commit_hash || (change.id && change.id.length >= 7 ? change.id.substring(0, 8) : change.id)
+  const envName = change.environment || 'production'
 
   return (
-    <Card 
-      className={cn(
-        'transition-all duration-300 relative overflow-hidden group border-border/60 bg-card/60 backdrop-blur-md hover:bg-card/90 hover:border-primary/40 shadow-sm hover:shadow-lg',
-        'border-l-4', impact.borderLeft,
-        isFailing && 'border-l-destructive border-destructive/40 bg-destructive/5'
-      )}
-    >
-      <div className="p-5 space-y-4">
-        {/* Top Meta Header */}
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-2 flex-wrap">
-            {/* Service Pill */}
-            <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 px-2.5 py-1 text-xs font-semibold gap-1.5 rounded-md">
-              <Layers className="w-3.5 h-3.5" />
-              {change.serviceName}
-            </Badge>
-
-            {/* Environment Badge */}
-            <Badge 
-              variant="outline" 
+    <Card className={cn('p-5 transition-all hover:border-border/80', isFailing && 'border-destructive/30 bg-destructive/5')}>
+      {/* Header row */}
+      <div className="flex items-start gap-3 mb-4">
+        <div className={cn('mt-0.5 flex-shrink-0 p-2 rounded-lg bg-secondary/50', typeColor)}>
+          <TypeIcon className="w-5 h-5" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <Badge variant="secondary" className="text-xs font-semibold">{change.serviceName}</Badge>
+                <Badge variant="outline" className="text-xs font-mono uppercase bg-muted/40">
+                  {envName}
+                </Badge>
+                <Badge variant="outline" className={cn('text-xs font-medium', impact.text, impact.border)}>
+                  {impact.label}
+                </Badge>
+                {incidentBadge}
+              </div>
+              <p className="font-semibold text-base text-foreground leading-snug">{change.message}</p>
+              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+                <span>{change.time}</span>
+                <span>·</span>
+                <span>by <strong className="text-foreground font-medium">{change.author}</strong></span>
+                {change.version && (
+                  <>
+                    <span>·</span>
+                    <span className="font-mono">v{change.version}</span>
+                  </>
+                )}
+              </p>
+            </div>
+            
+            {/* Main Details / Less Toggle Button */}
+            <button
+              type="button"
+              aria-expanded={expanded}
+              onClick={() => setExpanded(!expanded)}
               className={cn(
-                'text-[11px] font-mono uppercase px-2 py-0.5 rounded-md border',
-                isProduction 
-                  ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                  : 'bg-blue-500/10 text-blue-400 border-blue-500/20'
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all border shadow-sm shrink-0',
+                expanded 
+                  ? 'bg-secondary text-secondary-foreground border-border hover:bg-secondary/80' 
+                  : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
               )}
             >
-              <GitBranch className="w-3 h-3 inline mr-1" />
-              {env}
-            </Badge>
-
-            {/* Impact Badge */}
-            <Badge variant="outline" className={cn('text-[11px] font-medium px-2 py-0.5 rounded-md border gap-1', impact.bg)}>
-              <span className={cn('w-1.5 h-1.5 rounded-full inline-block', impact.dot)} />
-              {impact.label}
-            </Badge>
-
-            {/* Failed Badge */}
-            {isFailing && (
-              <Badge variant="outline" className="text-[11px] bg-destructive/15 text-destructive border-destructive/30 gap-1 font-semibold animate-pulse">
-                <AlertTriangle className="w-3 h-3" />
-                Deployment Failed
-              </Badge>
-            )}
-          </div>
-
-          {/* Timestamp */}
-          <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-mono ml-auto">
-            <Clock className="w-3.5 h-3.5 text-muted-foreground/70" />
-            <span>{change.time}</span>
+              {expanded ? (
+                <>
+                  <ChevronUp className="w-3.5 h-3.5" />
+                  <span>Less</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3.5 h-3.5" />
+                  <span>Details</span>
+                </>
+              )}
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Change Detail Main Row */}
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1.5 flex-1 min-w-0">
-            {/* Commit Message */}
-            <h3 className="font-semibold text-base text-foreground tracking-tight leading-snug break-words">
-              {change.message}
-            </h3>
+      {/* Blast Radius Section */}
+      {blastRadius && (
+        <div className="bg-muted/20 rounded-lg p-4 border border-border/60 space-y-3 mt-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <Flame className="w-4 h-4 text-warning" />
+              Blast Radius Analysis
+            </div>
+          </div>
 
-            {/* Commit Author & SHA Bar */}
-            <div className="flex items-center gap-3 text-xs text-muted-foreground flex-wrap pt-0.5">
-              <div className="inline-flex items-center gap-1 bg-muted/40 hover:bg-muted/70 px-2 py-0.5 rounded text-mono font-mono text-[11px] text-foreground/80 border border-border/40 transition-colors">
-                <GitCommit className="w-3 h-3 text-primary" />
-                <span>{shortSha}</span>
-              </div>
+          {/* Primary Risk Score Bar */}
+          <ScoreWithReasoning
+            label="Risk Score"
+            score={blastRadius.riskScore}
+            reasons={blastRadius.riskBasis}
+            variant="risk"
+          />
 
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <User className="w-3.5 h-3.5 text-muted-foreground/70" />
-                <span>by <strong className="text-foreground/90 font-medium">{change.author}</strong></span>
-              </div>
-
-              {change.version && (
-                <span className="text-muted-foreground/70 font-mono text-[11px]">
-                  v{change.version}
-                </span>
+          {/* Direct services affected */}
+          <div>
+            <p className="text-xs text-muted-foreground mb-1.5 font-medium">
+              Direct services affected ({blastRadius.directServices.length})
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {blastRadius.directServices.map((svc: string) => {
+                const node = topology.nodes.find((n: any) => n.id === svc)
+                return (
+                  <Badge key={svc} variant="outline" className="text-xs bg-background/60 gap-1">
+                    {node?.name ?? svc}
+                  </Badge>
+                )
+              })}
+              {blastRadius.directServices.length === 0 && (
+                <span className="text-xs text-muted-foreground/70 italic">None identified</span>
               )}
             </div>
           </div>
 
-          {/* Quick Actions / Status Pill */}
-          <div className="flex items-center gap-2 shrink-0">
-            {change.incidents > 0 && (
-              <Badge className="bg-amber-500/15 text-amber-400 border border-amber-500/30 text-xs px-2.5 py-1 gap-1">
-                <ShieldAlert className="w-3.5 h-3.5 text-amber-400" />
-                1 Incident Linked
-              </Badge>
-            )}
-          </div>
-        </div>
-
-        {/* Blast Radius Section */}
-        {blastRadius && (
-          <div className="bg-muted/20 rounded-xl p-4 border border-border/50 space-y-3.5 transition-all">
-            {/* Blast Radius Bar Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-                <Flame className={cn('w-4 h-4', riskScore >= 70 ? 'text-destructive animate-bounce' : 'text-amber-400')} />
-                <span>Blast Radius Risk Engine</span>
-              </div>
-
-              <button
-                type="button"
-                className="text-xs font-medium text-muted-foreground hover:text-foreground flex items-center gap-1 bg-background/50 hover:bg-background/80 px-2.5 py-1 rounded-md border border-border/40 transition-all"
-                onClick={() => setExpanded(!expanded)}
-              >
-                {expanded ? 'Hide Details' : 'Expand Details'}
-                {expanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
-              </button>
-            </div>
-
-            {/* Score with Reasoning component */}
-            <ScoreWithReasoning
-              label="Risk Score"
-              score={blastRadius.riskScore}
-              reasons={blastRadius.riskBasis}
-              variant="risk"
-            />
-
-            {/* Direct Services List */}
-            <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                Directly Affected Services ({blastRadius.directServices.length})
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {blastRadius.directServices.map((svc: string) => {
-                  const node = topology.nodes.find((n: any) => n.id === svc)
-                  return (
-                    <Badge key={svc} variant="outline" className="text-xs gap-1 bg-background/60 border-border/70">
-                      <Layers className="w-3 h-3 text-primary" />
-                      {node?.name ?? svc}
-                    </Badge>
-                  )
-                })}
-                {blastRadius.directServices.length === 0 && (
-                  <span className="text-xs text-muted-foreground/60 italic">None identified</span>
-                )}
-              </div>
-            </div>
-
-            {/* Downstream Expanded View */}
-            {expanded && blastRadius.downstreamServices && blastRadius.downstreamServices.length > 0 && (
-              <div className="pt-2 border-t border-border/30">
-                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-2">
-                  Downstream Services Affected ({blastRadius.downstreamServices.length})
+          {/* Expanded Drawer Details */}
+          {expanded && (
+            <div className="pt-3 border-t border-border/40 space-y-3.5 animate-in fade-in-50 duration-200">
+              {/* Downstream Services */}
+              <div>
+                <p className="text-xs text-muted-foreground mb-1.5 font-medium">
+                  Downstream services affected ({blastRadius.downstreamServices.length})
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {blastRadius.downstreamServices.map((svc: string) => {
                     const node = topology.nodes.find((n: any) => n.id === svc)
                     return (
-                      <Badge key={svc} variant="secondary" className="text-xs gap-1 bg-muted/60">
+                      <Badge key={svc} variant="secondary" className="text-xs">
                         {node?.name ?? svc}
                       </Badge>
                     )
                   })}
+                  {blastRadius.downstreamServices.length === 0 && (
+                    <span className="text-xs text-muted-foreground/70 italic">No downstream services impacted</span>
+                  )}
                 </div>
               </div>
-            )}
-          </div>
-        )}
-      </div>
+
+              {/* Extended Deployment Metadata Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-3 rounded-md bg-background/50 border border-border/40 text-xs">
+                <div>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Commit SHA</span>
+                  <span className="font-mono font-medium text-foreground">{commitSha}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Environment</span>
+                  <span className="font-medium text-foreground capitalize">{envName}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Status</span>
+                  <span className={cn("font-semibold capitalize", isFailing ? "text-destructive" : "text-success")}>
+                    {change.status || 'success'}
+                  </span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block text-[10px] uppercase font-mono mb-0.5">Triggered By</span>
+                  <span className="font-medium text-foreground truncate block">{change.author}</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </Card>
   )
 }
@@ -273,25 +248,6 @@ function RecentChangesPageContent() {
   const [deployments, setDeployments] = useState<any[]>([])
   const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
   const [loading, setLoading] = useState(true)
-  const [refreshing, setRefreshing] = useState(false)
-
-  const loadData = async () => {
-    try {
-      setRefreshing(true)
-      const { apiFetch } = await import('@/lib/api-client')
-      const [deploymentsData, topologyData] = await Promise.all([
-        apiFetch('/deployments'),
-        apiFetch('/dependencies/topology')
-      ])
-      setDeployments(deploymentsData)
-      setTopology(topologyData)
-    } catch (err) {
-      console.error("Failed to load recent changes:", err)
-    } finally {
-      setLoading(false)
-      setRefreshing(false)
-    }
-  }
 
   useEffect(() => {
     const searchVal = searchParams?.get('search')
@@ -304,6 +260,22 @@ function RecentChangesPageContent() {
     if (isEmpty) {
       setLoading(false)
       return
+    }
+
+    async function loadData() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const [deploymentsData, topologyData] = await Promise.all([
+          apiFetch('/deployments'),
+          apiFetch('/dependencies/topology')
+        ])
+        setDeployments(deploymentsData)
+        setTopology(topologyData)
+      } catch (err) {
+        console.error("Failed to load recent changes:", err)
+      } finally {
+        setLoading(false)
+      }
     }
     loadData()
   }, [isEmpty])
@@ -319,6 +291,8 @@ function RecentChangesPageContent() {
         .map((e) => e.source || e.from)
       const allDownstream = getDownstreamDependents(dep.repoId, topology.edges)
       
+      const directCount = directDependents.length
+      
       const riskScore = dep.riskScore ?? 0.0
       const riskBasis = dep.riskBasis ? dep.riskBasis.split(", ") : []
 
@@ -326,7 +300,7 @@ function RecentChangesPageContent() {
         ...dep,
         serviceName,
         service: dep.repoId,
-        message: dep.changelog || 'No deployment notes provided.',
+        message: dep.changelog || 'No deployment notes.',
         time: dep.deployedAt ? new Date(dep.deployedAt).toLocaleString() : 'Just now',
         author: dep.deployedBy || 'system',
         incidents: isFailing ? 1 : 0,
@@ -348,8 +322,7 @@ function RecentChangesPageContent() {
         const matchesSearch =
           c.serviceName.toLowerCase().includes(search.toLowerCase()) ||
           c.message.toLowerCase().includes(search.toLowerCase()) ||
-          c.id.toLowerCase().includes(search.toLowerCase()) ||
-          c.author.toLowerCase().includes(search.toLowerCase())
+          c.id.toLowerCase().includes(search.toLowerCase())
         
         let matchesRisk = true
         if (riskFilter === 'high') matchesRisk = c.blastRadius.riskScore >= 70
@@ -373,9 +346,8 @@ function RecentChangesPageContent() {
           title="Recent Changes"
           description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
         />
-        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <div className="text-sm font-medium text-muted-foreground animate-pulse">Loading recent deployment changes...</div>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
       </PageContent>
     )
@@ -388,13 +360,13 @@ function RecentChangesPageContent() {
           title="Recent Changes"
           description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
         />
-        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border/60 rounded-2xl bg-card/30 p-8 mt-6">
+        <div className="flex items-center justify-center min-h-[50vh] border border-dashed border-border rounded-xl bg-card/20 p-8 mt-6">
           <EmptyState
             icon={<GitCommitHorizontal className="w-12 h-12 text-muted-foreground/60" />}
             title="No Recent Changes Recorded"
             description="No deployments or infrastructure changes detected yet. Deployments appear automatically when GitHub deployment events occur or when repositories are synced."
             action={
-              <Button asChild className="rounded-lg">
+              <Button asChild>
                 <Link href="/integrations">Manage GitHub Integration</Link>
               </Button>
             }
@@ -410,125 +382,76 @@ function RecentChangesPageContent() {
 
   return (
     <PageContent>
-      {/* Header with Refresh Control */}
-      <div className="flex items-start justify-between gap-4 mb-2 flex-wrap">
-        <PageHeader
-          title="Recent Changes"
-          description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
-        />
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={loadData}
-          disabled={refreshing}
-          className="rounded-lg gap-2 text-xs font-medium border-border/60 bg-card/50 hover:bg-card shrink-0"
-        >
-          <RefreshCw className={cn('w-3.5 h-3.5', refreshing && 'animate-spin text-primary')} />
-          {refreshing ? 'Syncing...' : 'Refresh Feed'}
-        </Button>
-      </div>
+      <PageHeader
+        title="Recent Changes"
+        description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
+      />
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <Card className="p-5 bg-card/60 backdrop-blur-md border-border/60 shadow-sm relative overflow-hidden group hover:border-primary/40 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Total Changes</span>
-            <div className="p-2 rounded-lg bg-primary/10 text-primary">
-              <Activity className="w-4 h-4" />
-            </div>
-          </div>
-          <div className="text-3xl font-extrabold tracking-tight text-foreground">{totalChanges}</div>
-          <div className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1">
-            <Clock className="w-3 h-3" /> Recorded in change feed
-          </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-3 gap-4 mb-8">
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Total Changes</div>
+          <div className="text-2xl font-bold">{totalChanges}</div>
+          <div className="text-xs text-muted-foreground mt-1">Last 24 hours</div>
         </Card>
-
-        <Card className="p-5 bg-card/60 backdrop-blur-md border-border/60 shadow-sm relative overflow-hidden group hover:border-destructive/40 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">High Risk Changes</span>
-            <div className={cn('p-2 rounded-lg', highRiskCount > 0 ? 'bg-destructive/15 text-destructive' : 'bg-emerald-500/10 text-emerald-400')}>
-              <Flame className="w-4 h-4" />
-            </div>
-          </div>
-          <div className={cn('text-3xl font-extrabold tracking-tight', highRiskCount > 0 ? 'text-destructive' : 'text-emerald-400')}>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">High Risk</div>
+          <div className={cn('text-2xl font-bold', highRiskCount > 0 ? 'text-destructive' : 'text-success')}>
             {highRiskCount}
           </div>
-          <div className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1">
-            <ShieldAlert className="w-3 h-3" /> Risk score ≥ 70
-          </div>
+          <div className="text-xs text-muted-foreground mt-1">Risk score ≥ 70</div>
         </Card>
-
-        <Card className="p-5 bg-card/60 backdrop-blur-md border-border/60 shadow-sm relative overflow-hidden group hover:border-amber-500/40 transition-all">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Incident Linked</span>
-            <div className={cn('p-2 rounded-lg', incidentLinked > 0 ? 'bg-amber-500/15 text-amber-400' : 'bg-muted text-muted-foreground')}>
-              <AlertTriangle className="w-4 h-4" />
-            </div>
-          </div>
-          <div className={cn('text-3xl font-extrabold tracking-tight', incidentLinked > 0 ? 'text-amber-400' : 'text-foreground')}>
+        <Card className="p-4">
+          <div className="text-sm text-muted-foreground">Linked to Incidents</div>
+          <div className={cn('text-2xl font-bold', incidentLinked > 0 ? 'text-warning' : '')}>
             {incidentLinked}
           </div>
-          <div className="text-xs text-muted-foreground/80 mt-1 flex items-center gap-1">
-            <CheckCircle2 className="w-3 h-3" /> Active incident correlation
-          </div>
+          <div className="text-xs text-muted-foreground mt-1">Changes with active incident</div>
         </Card>
       </div>
 
-      {/* Filter and Control Bar */}
-      <div className="flex items-center gap-3 mb-6 flex-wrap">
-        <div className="relative flex-1 min-w-[240px]">
+      {/* Filters */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
-            placeholder="Search by service, commit message, author, or SHA..."
-            className="pl-9 bg-card/50 border-border/60 focus:bg-card text-sm rounded-lg"
+            placeholder="Search service, change..."
+            className="pl-9"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-
         <Select value={riskFilter} onValueChange={setRiskFilter}>
-          <SelectTrigger className="w-48 bg-card/50 border-border/60 rounded-lg text-xs font-medium">
-            <SelectValue placeholder="Filter by risk" />
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="Risk level" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Risk Levels</SelectItem>
-            <SelectItem value="high">High Risk (≥70)</SelectItem>
-            <SelectItem value="medium">Medium Risk (40–69)</SelectItem>
-            <SelectItem value="low">Low Risk (&lt;40)</SelectItem>
-            <SelectItem value="incidents">Has Linked Incidents</SelectItem>
+            <SelectItem value="all">All risk levels</SelectItem>
+            <SelectItem value="high">High risk (≥70)</SelectItem>
+            <SelectItem value="medium">Medium risk (40–69)</SelectItem>
+            <SelectItem value="low">Low risk (&lt;40)</SelectItem>
+            <SelectItem value="incidents">Has linked incidents</SelectItem>
           </SelectContent>
         </Select>
-
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-44 bg-card/50 border-border/60 rounded-lg text-xs font-medium">
+          <SelectTrigger className="w-44">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="time">Most Recent</SelectItem>
-            <SelectItem value="risk-desc">Highest Risk First</SelectItem>
-            <SelectItem value="risk-asc">Lowest Risk First</SelectItem>
-            <SelectItem value="incidents">Incident Linked First</SelectItem>
+            <SelectItem value="time">Most recent</SelectItem>
+            <SelectItem value="risk-desc">Highest risk first</SelectItem>
+            <SelectItem value="risk-asc">Lowest risk first</SelectItem>
+            <SelectItem value="incidents">Incident-linked first</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      {/* Change Feed Cards */}
+      {/* Change Feed */}
       <div className="space-y-4">
         {filteredChanges.length === 0 ? (
-          <div className="text-center py-16 px-6 text-muted-foreground border border-dashed border-border/60 rounded-xl bg-card/20 space-y-3">
-            <CheckCircle2 className="w-10 h-10 mx-auto opacity-40 text-primary" />
-            <h4 className="font-semibold text-base text-foreground">No Changes Match Your Filter</h4>
-            <p className="text-xs text-muted-foreground max-w-sm mx-auto">
-              Try adjusting your search query or clearing risk filters to view all deployment events.
-            </p>
-            <Button 
-              variant="outline" 
-              size="sm" 
-              onClick={() => { setSearch(''); setRiskFilter('all'); }}
-              className="mt-2 text-xs rounded-lg"
-            >
-              Reset Filters
-            </Button>
+          <div className="text-center p-12 text-muted-foreground border border-dashed rounded-lg">
+            <CheckCircle className="w-8 h-8 mx-auto mb-3 opacity-30" />
+            <p>No changes match your filters.</p>
           </div>
         ) : (
           filteredChanges.map((change) => <ChangeCard key={change.id} change={change} topology={topology} />)
@@ -546,9 +469,8 @@ export default function RecentChangesPage() {
           title="Recent Changes"
           description="Deploy and infrastructure change feed — with computed blast radius and historical incident correlation"
         />
-        <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-          <Loader2 className="w-8 h-8 text-primary animate-spin" />
-          <div className="text-sm font-medium text-muted-foreground animate-pulse">Loading recent deployment changes...</div>
+        <div className="flex items-center justify-center min-h-[50vh]">
+          <div className="text-sm text-muted-foreground animate-pulse">Loading changes...</div>
         </div>
       </PageContent>
     }>
@@ -556,3 +478,4 @@ export default function RecentChangesPage() {
     </Suspense>
   )
 }
+
