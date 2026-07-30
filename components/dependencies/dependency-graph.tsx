@@ -54,8 +54,7 @@ interface TopologyResponse {
 }
 
 function deriveStatus(ciStatus: string, healthScore: number): 'healthy' | 'warning' | 'critical' {
-  if (ciStatus === 'failing') return 'critical'
-  if (ciStatus === 'unknown') return 'warning'
+  if (ciStatus === 'failing' || healthScore < 50) return 'critical'
   if (healthScore < 80) return 'warning'
   return 'healthy'
 }

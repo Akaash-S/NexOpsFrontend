@@ -84,7 +84,7 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
   // Downstream: nodes that depend on this node (target = nodeId, source = downstream)
   const down = topology.edges?.filter((e: any) => e.target === nodeId) || []
 
-  const healthStatus = node.ci_status === 'failing' ? 'critical' : (node.ci_status === 'unknown' ? 'warning' : (node.health_score < 80 ? 'warning' : 'healthy'))
+  const healthStatus = node.ci_status === 'failing' || node.health_score < 50 ? 'critical' : (node.health_score < 80 ? 'warning' : 'healthy')
 
   return (
     <ScrollArea className="h-full border border-border rounded-lg">
@@ -115,9 +115,17 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
         {/* Health Trend */}
         <Card className="p-3 bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">CI Status</p>
-          <p className="text-sm font-semibold text-foreground capitalize">{node.ci_status || 'unknown'}</p>
+          <div className="flex items-center gap-2 mt-1">
+            <Badge variant="outline" className={cn(
+              node.ci_status === 'passing' ? 'bg-success/10 text-success border-success/20' :
+              node.ci_status === 'failing' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+              'bg-muted/40 text-muted-foreground border-border'
+            )}>
+              {node.ci_status === 'passing' ? 'Passing' : (node.ci_status === 'failing' ? 'Failing' : 'Unconfigured / No Runs')}
+            </Badge>
+          </div>
           {node.language && (
-            <p className="text-xs text-muted-foreground mt-1">Language: {node.language}</p>
+            <p className="text-xs text-muted-foreground mt-2">Language: {node.language}</p>
           )}
         </Card>
 
