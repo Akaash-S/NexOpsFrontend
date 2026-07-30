@@ -261,6 +261,12 @@ export function DependencyGraph({
 
   const memoizedNodeTypes = useMemo(() => nodeTypes, [])
 
+  const selectedNodeName = useMemo(() => {
+    if (!selectedNode || !topology) return null
+    const n = topology.nodes?.find((item: any) => item.id === selectedNode || (item.id && item.id.toLowerCase() === selectedNode.toLowerCase()))
+    return n?.name || selectedNode
+  }, [selectedNode, topology])
+
   const handlePaneClick = useCallback(() => {
     onNodeSelect(null)
   }, [onNodeSelect])
@@ -322,12 +328,6 @@ dependencies:
       </div>
     )
   }
-
-  const selectedNodeName = useMemo(() => {
-    if (!selectedNode || !topology) return null
-    const n = topology.nodes.find((item: any) => item.id === selectedNode || (item.id && item.id.toLowerCase() === selectedNode.toLowerCase()))
-    return n?.name || selectedNode
-  }, [selectedNode, topology])
 
   return (
     <div className="relative w-full h-full">
