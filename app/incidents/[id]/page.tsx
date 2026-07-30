@@ -194,31 +194,31 @@ export default function IncidentInvestigationPage() {
         ])
 
         // Map backend fields to the ones expected by the UI
-        const mappedCauses = (incidentData.candidateCauses || incidentData.candidate_causes || []).map((c: any) => ({
+        const mappedCauses = (incidentData.candidateCauses ?? incidentData.candidate_causes ?? []).map((c: any) => ({
           id: c.id,
-          deployId: c.eventId || c.event_id || 'unknown-deploy',
-          service: c.repoId || c.repo_id,
-          matchScore: c.score || 0,
-          matchReasons: typeof c.reason === 'string' ? c.reason.split(';') : (Array.isArray(c.reason) ? c.reason : [c.reason || '']),
+          deployId: c.eventId ?? c.event_id ?? 'unknown-deploy',
+          service: c.repoId ?? c.repo_id,
+          matchScore: c.score ?? 0,
+          matchReasons: typeof c.reason === 'string' ? c.reason.split(';') : (Array.isArray(c.reason) ? c.reason : [c.reason ?? '']),
           confirmed: c.confirmed
         }))
 
         // Fetch events for timeline mapping
         let timeline = []
         try {
-          const primaryRepoId = incidentData.rootCauseRepoId || mappedCauses[0]?.service
+          const primaryRepoId = incidentData.rootCauseRepoId ?? incidentData.root_cause_repo_id ?? mappedCauses[0]?.service
           if (primaryRepoId) {
             const eventsData = await apiFetch(`/events?repo_id=${primaryRepoId}`)
             if (eventsData && eventsData.length > 0) {
               timeline = eventsData.slice(0, 5).map((e: any) => {
-                const tsStr = e.timestamp || e.createdAt || e.created_at
+                const tsStr = e.timestamp ?? e.createdAt ?? e.created_at
                 const dateObj = tsStr ? new Date(tsStr) : null
                 const validTime = dateObj && !isNaN(dateObj.getTime())
                   ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                   : 'Recent'
                 return {
                   time: validTime,
-                  event: e.message || 'System event recorded'
+                  event: e.message ?? 'System event recorded'
                 }
               })
             }
@@ -228,7 +228,7 @@ export default function IncidentInvestigationPage() {
         }
 
         if (timeline.length === 0) {
-          const start = new Date(incidentData.startedAt || incidentData.started_at)
+          const start = new Date(incidentData.startedAt ?? incidentData.started_at ?? incidentData.created_at ?? Date.now())
           timeline = [
             { time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
             { time: new Date(start.getTime() + 180000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
