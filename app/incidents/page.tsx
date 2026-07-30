@@ -34,13 +34,13 @@ function IncidentsPageContent() {
         ])
         
         const mapped = incidentsData.map((inc: any) => {
-          const start = new Date(inc.startedAt || inc.started_at)
-          const end = inc.resolvedAt ? new Date(inc.resolvedAt) : new Date()
+          const start = new Date(inc.startedAt ?? inc.started_at ?? inc.created_at ?? Date.now())
+          const end = (inc.resolvedAt || inc.resolved_at) ? new Date(inc.resolvedAt ?? inc.resolved_at) : new Date()
           const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
           const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
           
-          const topCauses = inc.candidateCauses || inc.candidate_causes || []
-          const affectedServices = topCauses.map((c: any) => reposData.find((r: any) => r.id === c.repoId)?.name || c.repoId)
+          const topCauses = inc.candidateCauses ?? inc.candidate_causes ?? []
+          const affectedServices = topCauses.map((c: any) => reposData.find((r: any) => r.id === (c.repoId ?? c.repo_id))?.name ?? c.repoId ?? c.repo_id)
           if (affectedServices.length === 0) {
             affectedServices.push('Platform')
           }
