@@ -158,7 +158,12 @@ function IncidentsPageContent() {
   const openCount = incidents.filter((i) => i.status === 'open' || i.status === 'investigating').length
   const criticalCount = incidents.filter((i) => i.severity === 'critical' && i.status !== 'resolved').length
   const totalIncidents = incidents.length
-  const avgMTTR = '18m'
+  
+  const resolvedIncidents = incidents.filter((i) => i.status === 'resolved')
+  const avgMTTRMins = resolvedIncidents.length > 0
+    ? Math.round(resolvedIncidents.reduce((acc, i) => acc + (i.durationMins || 0), 0) / resolvedIncidents.length)
+    : 0
+  const avgMTTR = resolvedIncidents.length > 0 ? (avgMTTRMins < 60 ? `${avgMTTRMins}m` : `${Math.floor(avgMTTRMins / 60)}h ${avgMTTRMins % 60}m`) : 'N/A'
 
   return (
     <PageContent>
