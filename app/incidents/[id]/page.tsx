@@ -210,10 +210,17 @@ export default function IncidentInvestigationPage() {
           if (primaryRepoId) {
             const eventsData = await apiFetch(`/events?repo_id=${primaryRepoId}`)
             if (eventsData && eventsData.length > 0) {
-              timeline = eventsData.slice(0, 5).map((e: any) => ({
-                time: new Date(e.createdAt || e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                event: e.message
-              }))
+              timeline = eventsData.slice(0, 5).map((e: any) => {
+                const tsStr = e.timestamp || e.createdAt || e.created_at
+                const dateObj = tsStr ? new Date(tsStr) : null
+                const validTime = dateObj && !isNaN(dateObj.getTime())
+                  ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : 'Recent'
+                return {
+                  time: validTime,
+                  event: e.message || 'System event recorded'
+                }
+              })
             }
           }
         } catch (timelineErr) {
