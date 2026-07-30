@@ -376,6 +376,7 @@ export default function LandingPage() {
       <section 
         id="hero"
         ref={heroSectionRef}
+        style={{ backgroundImage: "url('/images/hero-poster.webp')", backgroundSize: 'cover', backgroundPosition: 'center' }}
         className={cn(
           "relative min-h-screen flex flex-col items-center justify-center pt-24 pb-12 px-6 overflow-hidden bg-[oklch(0.12_0_0)]",
           (reducedMotion || isMobile) && "py-28"

@@ -10,24 +10,28 @@ const geist = Geist({ subsets: ["latin"] })
 const geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: 'NexOps - Engineering Intelligence Platform',
-  description: 'Engineering intelligence platform to understand what changed, what is impacted, what is unhealthy, why failures occurred, and what actions should be taken next.',
+  metadataBase: new URL('https://nexops-frontend.vercel.app'),
+  title: 'NexOps — Incident Correlation Engine',
+  description: "What caused this incident, and how do we know? NexOps reads your deploys and alerts, ranks the likely cause, and shows its reasoning — so you're not guessing at 2 a.m.",
   generator: 'v0.app',
-  icons: {
-    icon: [
+  openGraph: {
+    title: 'NexOps — Incident Correlation Engine',
+    description: "What caused this incident, and how do we know? NexOps reads your deploys and alerts, ranks the likely cause, and shows its reasoning — so you're not guessing at 2 a.m.",
+    url: 'https://nexops-frontend.vercel.app',
+    siteName: 'NexOps',
+    images: [
       {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
+        url: '/opengraph-image.png',
+        width: 1200,
+        height: 630,
+        alt: 'NexOps Incident Correlation Engine',
       },
     ],
+    type: 'website',
+  },
+  icons: {
+    icon: '/favicon.ico',
+    shortcut: '/icon.png',
     apple: '/apple-icon.png',
   },
 }
