@@ -895,10 +895,10 @@ function SettingsPageContent() {
 
               <Button 
                 variant="destructive" 
-                className="w-full gap-2 h-10 text-sm font-medium border border-destructive/20 bg-destructive/10 hover:bg-destructive/20 text-destructive shadow-sm"
+                className="w-full gap-2 h-10 text-sm font-semibold text-white bg-destructive hover:bg-destructive/90 shadow-md cursor-pointer"
                 onClick={handleSignOut}
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-4 h-4 text-white" />
                 Sign Out from NexOps
               </Button>
             </Card>

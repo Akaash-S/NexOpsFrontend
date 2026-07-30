@@ -144,4 +144,16 @@
   .dark main {
     @apply bg-slate-900;
   }
+
+  /* Global hand cursor for interactive elements */
+  button, 
+  a, 
+  [role="button"], 
+  [role="tab"], 
+  [role="switch"], 
+  [role="menuitem"], 
+  [data-radix-collection-item],
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
 }
