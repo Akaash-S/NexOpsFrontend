@@ -10,6 +10,7 @@ interface ServiceNodeProps {
     label: string
     health: number
     status: 'healthy' | 'warning' | 'critical' | 'disconnected'
+    ciStatus?: string
     criticality: string
     highlighted?: boolean
   }
@@ -56,6 +57,21 @@ export function ServiceNode({ data, selected }: ServiceNodeProps) {
 
   const style = nodeStyle[data.status] || nodeStyle.healthy
 
+  // CI status badge styling & label directly on node card
+  const getCiBadge = () => {
+    if (data.status === 'disconnected') {
+      return { text: 'Disconnected', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' }
+    }
+    const ci = data.ciStatus || 'unknown'
+    if (ci === 'passing') return { text: 'CI: Passing', cls: 'bg-green-500/15 text-green-400 border-green-500/30' }
+    if (ci === 'failing') return { text: 'CI: Failing', cls: 'bg-red-500/15 text-red-400 border-red-500/30' }
+    if (ci === 'running') return { text: 'CI: Running', cls: 'bg-blue-500/15 text-blue-400 border-blue-500/30' }
+    if (ci === 'no_runs') return { text: 'CI: No Runs', cls: 'bg-amber-500/15 text-amber-400 border-amber-500/30' }
+    return { text: 'CI: Unconfigured', cls: 'bg-muted/40 text-muted-foreground border-border/60' }
+  }
+
+  const ciBadge = getCiBadge()
+
   return (
     <div
       className={cn(
@@ -82,12 +98,12 @@ export function ServiceNode({ data, selected }: ServiceNodeProps) {
           </span>
         </div>
 
-        {/* Status badge */}
+        {/* Direct CI Status Badge */}
         <Badge
           variant="outline"
-          className={cn('text-[10px] h-4 px-1.5 font-semibold border', style.badgeBg)}
+          className={cn('text-[10px] h-4 px-1.5 font-semibold border', ciBadge.cls)}
         >
-          {style.label}
+          {ciBadge.text}
         </Badge>
       </div>
 

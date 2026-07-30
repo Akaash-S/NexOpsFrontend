@@ -94,6 +94,7 @@ function layoutGraph(nodes: TopologyNode[], edges: TopologyEdge[]): { flowNodes:
         label: node.name,
         health: Math.round(node.health_score),
         status: node.status === 'disconnected' ? 'disconnected' : deriveStatus(node.ci_status, node.health_score),
+        ciStatus: node.ci_status,
         criticality: deriveCriticality(node.health_score),
       },
     }
