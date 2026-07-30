@@ -11,11 +11,12 @@ import { cn } from '@/lib/utils'
 
 interface DependencyIntelligenceProps {
   nodeId: string
+  impactMode?: boolean
   onClose?: () => void
   onSelectNode?: (id: string) => void
 }
 
-export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: DependencyIntelligenceProps) {
+export function DependencyIntelligence({ nodeId, impactMode = false, onClose, onSelectNode }: DependencyIntelligenceProps) {
   const router = useRouter()
   const [node, setNode] = useState<any>(null)
   const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
@@ -116,9 +117,89 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
 
   const healthStatus = node.ci_status === 'failing' || node.health_score < 50 ? 'critical' : (node.health_score < 80 ? 'warning' : 'healthy')
 
+  const renderUpstreamSection = () => (
+    <div className="space-y-2">
+      <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center justify-between">
+        <span>Depends On (Upstream)</span>
+        <Badge variant="outline" className="text-[10px] h-4">{up.length}</Badge>
+      </h4>
+      <div className="space-y-1.5">
+        {up.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No upstream dependencies</p>
+        ) : (
+          up.map((e: any) => {
+            const n = topology.nodes?.find((n: any) => n.id === e.target)
+            const name = n?.name || e.target.substring(0, 8)
+            return (
+              <Card 
+                key={e.id} 
+                className={cn(
+                  "p-2 flex items-center gap-2 transition-colors",
+                  onSelectNode ? "cursor-pointer hover:bg-muted/60 hover:border-primary/40" : ""
+                )}
+                onClick={() => onSelectNode?.(e.target)}
+              >
+                <GitBranch className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs text-foreground flex-1">{name}</span>
+                <Badge variant="outline" className="text-xs">Required</Badge>
+              </Card>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+
+  const renderDownstreamSection = () => (
+    <div className="space-y-2">
+      <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center justify-between">
+        <span>Blast Radius (Downstream Impact)</span>
+        <Badge variant="outline" className={cn("text-[10px] h-4", down.length > 0 ? "bg-amber-500/15 text-amber-400 border-amber-500/30" : "")}>{down.length}</Badge>
+      </h4>
+      <div className="space-y-1.5">
+        {down.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No downstream dependents affected</p>
+        ) : (
+          down.map((e: any) => {
+            const n = topology.nodes?.find((n: any) => n.id === e.source)
+            const name = n?.name || e.source.substring(0, 8)
+            return (
+              <Card 
+                key={e.id} 
+                className={cn(
+                  "p-2 flex items-center gap-2 transition-colors border-amber-500/30 bg-amber-950/20",
+                  onSelectNode ? "cursor-pointer hover:bg-amber-900/30 hover:border-amber-500/60" : ""
+                )}
+                onClick={() => onSelectNode?.(e.source)}
+              >
+                <AlertTriangle className="w-3 h-3 text-amber-400" />
+                <span className="text-xs text-foreground flex-1">{name}</span>
+                <Badge variant="outline" className="text-xs border-amber-500/40 text-amber-400">Impacted</Badge>
+              </Card>
+            )
+          })
+        )}
+      </div>
+    </div>
+  )
+
   return (
     <ScrollArea className="h-full border border-border rounded-lg">
       <div className="p-4 space-y-4">
+        {/* Mode Indicator Banner */}
+        <div className={cn(
+          "px-3 py-1.5 rounded border text-xs font-medium flex items-center justify-between",
+          impactMode 
+            ? "bg-amber-500/10 text-amber-400 border-amber-500/30" 
+            : "bg-blue-500/10 text-blue-400 border-blue-500/30"
+        )}>
+          <span className="flex items-center gap-1.5">
+            <span className={cn("w-2 h-2 rounded-full", impactMode ? "bg-amber-500 animate-pulse" : "bg-blue-500")} />
+            {impactMode ? "BLAST RADIUS ANALYSIS" : "DEPENDENCY TOPOLOGY"}
+          </span>
+          <span className="text-[10px] opacity-80">{impactMode ? "Downstream View" : "Upstream View"}</span>
+        </div>
+
         {/* Header */}
         <div className="flex items-start justify-between pb-4 border-b border-border">
           <div className="space-y-2">
@@ -142,7 +223,23 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
           )}
         </div>
 
-        {/* Health Trend */}
+        {/* Impact Mode Summary Highlight Card */}
+        {impactMode && (
+          <Card className="p-3 bg-amber-950/30 border-amber-500/40">
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <p className="text-xs font-semibold text-amber-400">Cascading Blast Radius</p>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {down.length > 0
+                ? `An outage in ${node.name} will directly impact ${down.length} downstream service(s).`
+                : `${node.name} is an edge/leaf service. Outages here cause zero downstream service failures.`
+              }
+            </p>
+          </Card>
+        )}
+
+        {/* CI Status */}
         <Card className="p-3 bg-muted/50">
           <p className="text-xs text-muted-foreground mb-1">CI Status</p>
           <div className="flex items-center gap-2 mt-1">
@@ -187,63 +284,18 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
           </Card>
         </div>
 
-        {/* Dependencies (upstream) */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Depends On</h4>
-          <div className="space-y-1.5">
-            {up.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No upstream dependencies</p>
-            ) : (
-              up.map((e: any) => {
-                const n = topology.nodes?.find((n: any) => n.id === e.target)
-                const name = n?.name || e.target.substring(0, 8)
-                return (
-                  <Card 
-                    key={e.id} 
-                    className={cn(
-                      "p-2 flex items-center gap-2 transition-colors",
-                      onSelectNode ? "cursor-pointer hover:bg-muted/60 hover:border-primary/40" : ""
-                    )}
-                    onClick={() => onSelectNode?.(e.target)}
-                  >
-                    <GitBranch className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-foreground flex-1">{name}</span>
-                    <Badge variant="outline" className="text-xs">Required</Badge>
-                  </Card>
-                )
-              })
-            )}
-          </div>
-        </div>
-
-        {/* Dependents (downstream) */}
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-foreground uppercase tracking-wider">Dependents</h4>
-          <div className="space-y-1.5">
-            {down.length === 0 ? (
-              <p className="text-xs text-muted-foreground">No downstream dependents</p>
-            ) : (
-              down.map((e: any) => {
-                const n = topology.nodes?.find((n: any) => n.id === e.source)
-                const name = n?.name || e.source.substring(0, 8)
-                return (
-                  <Card 
-                    key={e.id} 
-                    className={cn(
-                      "p-2 flex items-center gap-2 transition-colors",
-                      onSelectNode ? "cursor-pointer hover:bg-muted/60 hover:border-primary/40" : ""
-                    )}
-                    onClick={() => onSelectNode?.(e.source)}
-                  >
-                    <GitBranch className="w-3 h-3 text-muted-foreground" />
-                    <span className="text-xs text-foreground flex-1">{name}</span>
-                    <Badge variant="outline" className="text-xs">Depends</Badge>
-                  </Card>
-                )
-              })
-            )}
-          </div>
-        </div>
+        {/* Dynamic Section Ordering based on Mode */}
+        {impactMode ? (
+          <>
+            {renderDownstreamSection()}
+            {renderUpstreamSection()}
+          </>
+        ) : (
+          <>
+            {renderUpstreamSection()}
+            {renderDownstreamSection()}
+          </>
+        )}
 
         {/* Action Buttons */}
         <div className="grid grid-cols-2 gap-2 pt-4 border-t border-border">

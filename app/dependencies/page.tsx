@@ -46,7 +46,8 @@ export default function DependenciesPage() {
           {selectedNode && (
             <div className="w-96 flex-shrink-0 h-full">
               <DependencyIntelligence 
-                nodeId={selectedNode} 
+                nodeId={selectedNode}
+                impactMode={impactMode}
                 onClose={() => setSelectedNode(null)} 
                 onSelectNode={setSelectedNode}
               />
