@@ -55,14 +55,14 @@ export function DependencyIntelligence({ nodeId, impactMode = false, onClose, on
               found = {
                 id: repoData.id,
                 name: repoData.name,
-                platform: repoData.platform || 'github',
-                status: repoData.status || 'active',
+                platform: repoData.platform ?? 'github',
+                status: repoData.status ?? 'active',
                 language: repoData.language,
                 health_score: repoData.health_score ?? repoData.healthScore ?? 100.0,
                 ci_status: repoData.ci_status ?? repoData.ciStatus ?? 'unknown',
                 open_issues: repoData.open_issues ?? repoData.openIssues ?? 0,
-                vulnerabilities: repoData.vulnerabilities || 0,
-                activity: repoData.activity || 100.0,
+                vulnerabilities: repoData.vulnerabilities ?? 0,
+                activity: repoData.activity ?? 0.0,
                 owner: repoData.owner,
               }
             }
