@@ -119,9 +119,16 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
             <Badge variant="outline" className={cn(
               node.ci_status === 'passing' ? 'bg-success/10 text-success border-success/20' :
               node.ci_status === 'failing' ? 'bg-destructive/10 text-destructive border-destructive/20' :
+              node.ci_status === 'running' ? 'bg-primary/10 text-primary border-primary/20' :
+              node.ci_status === 'no_runs' ? 'bg-warning/10 text-warning border-warning/20' :
               'bg-muted/40 text-muted-foreground border-border'
             )}>
-              {node.ci_status === 'passing' ? 'Passing' : (node.ci_status === 'failing' ? 'Failing' : 'Unconfigured / No Runs')}
+              {node.ci_status === 'passing' ? 'Passing' :
+               node.ci_status === 'failing' ? 'Failing' :
+               node.ci_status === 'running' ? 'Running' :
+               node.ci_status === 'no_runs' ? 'No Runs Triggered' :
+               node.ci_status === 'unconfigured' ? 'Unconfigured (No Actions)' :
+               'Unknown'}
             </Badge>
           </div>
           {node.language && (
