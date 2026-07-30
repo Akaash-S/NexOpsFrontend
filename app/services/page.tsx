@@ -105,21 +105,29 @@ function ServicesPageContent() {
 
   const [filters, setFilters] = useState({
     search: '',
-    status: 'all',
+    status: 'active',
     sortBy: 'health-asc',
   })
 
+  const activeServicesCount = services.filter((s) => s.status !== 'disconnected').length
+  const disconnectedServicesCount = services.filter((s) => s.status === 'disconnected').length
+
   const filteredServices = services
     .filter((service) => {
-      // Search
-      const searchMatch = service.name.toLowerCase().includes(filters.search.toLowerCase()) ||
-        service.team.toLowerCase().includes(filters.search.toLowerCase());
-      if (!searchMatch) return false;
+      // Search Filter
+      const searchMatch =
+        service.name.toLowerCase().includes(filters.search.toLowerCase()) ||
+        service.team.toLowerCase().includes(filters.search.toLowerCase())
+      if (!searchMatch) return false
 
       // Status Filter
-      if (filters.status !== 'all' && service.status !== filters.status) return false;
+      if (filters.status === 'active') {
+        if (service.status === 'disconnected') return false
+      } else if (filters.status !== 'all' && service.status !== filters.status) {
+        return false
+      }
 
-      return true;
+      return true
     })
     .sort((a, b) => {
       switch (filters.sortBy) {
@@ -185,7 +193,12 @@ function ServicesPageContent() {
           description="Service catalog — read-only, derived from connected source-of-truth systems"
         />
 
-        <ServiceFilters filters={filters} setFilters={setFilters} />
+        <ServiceFilters
+          filters={filters}
+          setFilters={setFilters}
+          activeCount={activeServicesCount}
+          disconnectedCount={disconnectedServicesCount}
+        />
 
         {/* Service Catalog */}
         <div className="mt-8">

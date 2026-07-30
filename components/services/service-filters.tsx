@@ -18,11 +18,21 @@ interface ServiceFiltersProps {
     sortBy: string
   }
   setFilters: (filters: any) => void
+  activeCount?: number
+  disconnectedCount?: number
 }
 
-export function ServiceFilters({ filters, setFilters }: ServiceFiltersProps) {
-  const hasActiveFilters = filters.status !== 'all'
-  const statuses = ['healthy', 'warning', 'critical']
+export function ServiceFilters({ filters, setFilters, activeCount = 0, disconnectedCount = 0 }: ServiceFiltersProps) {
+  const hasActiveFilters = filters.status !== 'active' || filters.search !== ''
+  
+  const statusOptions = [
+    { value: 'active', label: `Active Services (${activeCount})` },
+    { value: 'healthy', label: 'Healthy' },
+    { value: 'warning', label: 'Warning' },
+    { value: 'critical', label: 'Critical' },
+    { value: 'disconnected', label: `Disconnected (${disconnectedCount})` },
+    { value: 'all', label: `All Services (${activeCount + disconnectedCount})` },
+  ]
   
   const sortOptions = [
     { value: 'health-asc', label: 'Health (Low to High)' },
@@ -31,6 +41,8 @@ export function ServiceFilters({ filters, setFilters }: ServiceFiltersProps) {
     { value: 'deployments-desc', label: 'Deployments (High to Low)' },
     { value: 'name-asc', label: 'Name (A-Z)' },
   ]
+
+  const currentStatusLabel = statusOptions.find(o => o.value === filters.status)?.label || 'Active Services'
 
   return (
     <div className="flex flex-col gap-4 mb-6">
@@ -46,28 +58,25 @@ export function ServiceFilters({ filters, setFilters }: ServiceFiltersProps) {
       </div>
 
       {/* Filter Controls */}
-      <div className="flex gap-2 flex-wrap">
+      <div className="flex gap-2 flex-wrap items-center">
         {/* Status Filter */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
-              variant={filters.status !== 'all' ? 'default' : 'outline'}
+              variant={filters.status !== 'active' ? 'default' : 'outline'}
               className="gap-2"
             >
-              Status: {filters.status === 'all' ? 'All' : filters.status}
+              Status: {currentStatusLabel}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
-            <DropdownMenuItem onClick={() => setFilters({ ...filters, status: 'all' })}>
-              All
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            {statuses.map((status) => (
+            {statusOptions.map((opt) => (
               <DropdownMenuItem
-                key={status}
-                onClick={() => setFilters({ ...filters, status })}
+                key={opt.value}
+                onClick={() => setFilters({ ...filters, status: opt.value })}
+                className={filters.status === opt.value ? 'font-semibold bg-accent' : ''}
               >
-                {status.charAt(0).toUpperCase() + status.slice(1)}
+                {opt.label}
               </DropdownMenuItem>
             ))}
           </DropdownMenuContent>
@@ -97,11 +106,11 @@ export function ServiceFilters({ filters, setFilters }: ServiceFiltersProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setFilters({ ...filters, status: 'all' })}
-            className="gap-1"
+            onClick={() => setFilters({ search: '', status: 'active', sortBy: 'health-asc' })}
+            className="gap-1 text-xs text-muted-foreground hover:text-foreground"
           >
-            <X className="w-4 h-4" />
-            Clear
+            <X className="w-3.5 h-3.5" />
+            Reset to Active
           </Button>
         )}
       </div>
