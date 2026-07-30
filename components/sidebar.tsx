@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
+  BarChart3,
   Package,
   Network,
   Bug,
@@ -32,6 +33,7 @@ const navSections: NavSection[] = [
     title: 'OVERVIEW',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+      { label: 'Analytics',  href: '/analytics',  icon: <BarChart3 className="w-4 h-4" /> },
     ],
   },
   {
