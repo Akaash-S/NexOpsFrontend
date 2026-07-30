@@ -781,11 +781,23 @@ function SettingsPageContent() {
             {/* Profile Info */}
             <Card className="p-6 border border-border/80 bg-card space-y-6">
               <div className="flex items-center gap-4">
-                <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-bold">
-                  {currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : 'M'}
+                <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary text-xl font-bold overflow-hidden flex-shrink-0">
+                  {currentUser?.avatar ? (
+                    <img 
+                      src={currentUser.avatar} 
+                      alt={currentUser.name || 'User Avatar'} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`}
+                      alt={currentUser?.name || 'User Avatar'} 
+                      className="w-full h-full object-cover"
+                    />
+                  )}
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">{currentUser?.name ?? 'Matt User'}</h3>
+                  <h3 className="font-bold text-lg">{currentUser?.name ?? 'Matt Murdock'}</h3>
                   <p className="text-xs text-muted-foreground">{currentUser?.email ?? 'mattpersonal321@gmail.com'}</p>
                   <Badge variant="outline" className="mt-1.5 bg-primary/10 text-primary border-primary/20 text-[10px]">
                     Google OAuth Signed In

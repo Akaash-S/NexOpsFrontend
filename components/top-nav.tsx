@@ -191,21 +191,26 @@ export function TopNav() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="overflow-hidden rounded-full border border-border/40 w-8 h-8 hover:border-primary/40 transition-colors">
-                  {currentUser?.avatar ? (
-                    <img 
-                      src={currentUser.avatar} 
-                      alt={currentUser.name || 'User Profile'} 
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <User className="w-4 h-4 text-muted-foreground" />
-                  )}
+                  <img 
+                    src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`} 
+                    alt={currentUser?.name || 'User Profile'} 
+                    className="w-full h-full object-cover"
+                  />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56 p-2 space-y-1">
-                <div className="px-2 py-1.5 border-b border-border/40 pb-2 mb-1">
-                  <p className="text-xs font-bold text-foreground truncate">{currentUser?.name || 'Matt User'}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{currentUser?.email || 'mattpersonal321@gmail.com'}</p>
+                <div className="flex items-center gap-2.5 px-2 py-1.5 border-b border-border/40 pb-2 mb-1">
+                  <div className="w-7 h-7 rounded-full overflow-hidden border border-border/60 flex-shrink-0">
+                    <img 
+                      src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`} 
+                      alt={currentUser?.name || 'User Profile'} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-xs font-bold text-foreground truncate">{currentUser?.name || 'Matt Murdock'}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{currentUser?.email || 'mattpersonal321@gmail.com'}</p>
+                  </div>
                 </div>
                 <DropdownMenuItem onClick={() => router.push('/settings?tab=account')} className="text-xs gap-2 cursor-pointer">
                   <User className="w-3.5 h-3.5 text-primary" /> Account & Profile
