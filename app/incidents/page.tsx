@@ -48,16 +48,16 @@ function IncidentsPageContent() {
           return {
             id: inc.id,
             title: inc.title,
-            severity: (inc.severity || 'medium').toLowerCase(),
-            status: inc.status || 'open',
+            severity: (inc.severity ?? 'medium').toLowerCase(),
+            status: inc.status ?? 'open',
             startTime: start.toLocaleString(),
             duration,
             durationMins,
-            lead: inc.assignee || 'On-Call Bot',
+            lead: inc.assignee ?? 'On-Call Bot',
             affectedServices,
             affectedClusters: inc.clusterId ? [inc.clusterId] : [],
-            rootCause: inc.rootCauseRepoId ? (reposData.find((r: any) => r.id === inc.rootCauseRepoId)?.name || inc.rootCauseRepoId) : 'None confirmed',
-            impactedUsers: inc.affectedUsers || inc.affected_users || 0
+            rootCause: inc.rootCauseRepoId ? (reposData.find((r: any) => r.id === inc.rootCauseRepoId)?.name ?? inc.rootCauseRepoId) : 'None confirmed',
+            impactedUsers: inc.affectedUsers ?? inc.affected_users ?? 0
           }
         })
 
