@@ -96,7 +96,7 @@ export function RecentChanges() {
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-3 max-h-[450px] overflow-y-auto pr-1.5 scrollbar-thin">
         {displayChanges.length === 0 ? (
           <div className="text-center py-8 text-muted-foreground text-sm border border-dashed rounded-lg border-border">
             No recent changes or deployments recorded.

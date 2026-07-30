@@ -156,24 +156,20 @@ export default function DashboardPage() {
         />
       </Grid>
 
-      {/* Primary layout: Incidents + Causal Review (2/3) + Dependency Graph (1/3) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        {/* Left: the two core correlation widgets — primary real estate */}
+      {/* Primary layout: Incidents + Causal Review + Health Trend (2/3) + Topology + Recent Changes (1/3) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+        {/* Left: Core correlation & health metrics (2/3) */}
         <div className="lg:col-span-2 space-y-6">
           <ActiveIncidents />
           <Recommendations />
+          <HealthOverview />
         </div>
 
-        {/* Right: dependency graph + recent changes preview */}
+        {/* Right: Topology graph & recent changes feed (1/3) */}
         <div className="space-y-6">
           <ImpactMap />
           <RecentChanges />
         </div>
-      </div>
-
-      {/* Bottom: Health Overview — deprioritized, reduced visual weight */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <HealthOverview />
       </div>
     </PageContent>
   )
