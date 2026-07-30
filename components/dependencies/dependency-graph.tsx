@@ -323,6 +323,12 @@ dependencies:
     )
   }
 
+  const selectedNodeName = useMemo(() => {
+    if (!selectedNode || !topology) return null
+    const n = topology.nodes.find((item: any) => item.id === selectedNode || (item.id && item.id.toLowerCase() === selectedNode.toLowerCase()))
+    return n?.name || selectedNode
+  }, [selectedNode, topology])
+
   return (
     <div className="relative w-full h-full">
       {topology && topology.edges.length === 0 && (
@@ -388,16 +394,16 @@ dependencies:
       )}
       <div style={{ width: '100%', height: '100%' }} className="relative">
         <div className={cn(
-          "absolute top-4 right-4 z-10 px-3.5 py-2 rounded-lg border text-xs font-mono font-medium shadow-lg backdrop-blur-md transition-all flex items-center gap-2",
+          "absolute top-3 right-3 z-10 px-2.5 py-1 rounded-full border text-[11px] font-mono font-medium shadow-md backdrop-blur-md transition-all flex items-center gap-1.5 pointer-events-none select-none",
           impactMode 
-            ? "bg-amber-500/10 border-amber-500/30 text-amber-400"
-            : "bg-blue-500/10 border-blue-500/30 text-blue-400"
+            ? "bg-amber-950/80 border-amber-500/40 text-amber-300"
+            : "bg-blue-950/80 border-blue-500/40 text-blue-300"
         )}>
-          <span className={cn("w-2 h-2 rounded-full animate-pulse", impactMode ? "bg-amber-500" : "bg-blue-500")} />
+          <span className={cn("w-1.5 h-1.5 rounded-full animate-pulse", impactMode ? "bg-amber-400" : "bg-blue-400")} />
           <span>
             {impactMode 
-              ? (selectedNode ? `BLAST RADIUS IMPACT: Showing downstream services affected by ${selectedNode}` : "BLAST RADIUS IMPACT MODE: Click any service node to trace downstream impact")
-              : (selectedNode ? `DEPENDENCY MODE: Showing upstream dependencies for ${selectedNode}` : "DEPENDENCY MODE: Showing full topology graph. Click node for upstream dependencies")
+              ? (selectedNodeName ? `Impact: ${selectedNodeName}` : "Impact Mode")
+              : (selectedNodeName ? `Upstream: ${selectedNodeName}` : "Topology Mode")
             }
           </span>
         </div>
