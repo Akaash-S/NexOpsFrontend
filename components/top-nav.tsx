@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Menu, Search, Bell, Settings, User, Command, ChevronDown } from 'lucide-react'
+import { Menu, Search, Bell, Settings, User, Command, ChevronDown, Network, LogOut } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
