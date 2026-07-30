@@ -393,7 +393,7 @@ function RecentChangesPageContent() {
         <Card className="p-4">
           <div className="text-sm text-muted-foreground">Total Changes</div>
           <div className="text-2xl font-bold">{totalChanges}</div>
-          <div className="text-xs text-muted-foreground mt-1">Last 24 hours</div>
+          <div className="text-xs text-muted-foreground mt-1">Total recorded deployments</div>
         </Card>
         <Card className="p-4">
           <div className="text-sm text-muted-foreground">High Risk</div>
