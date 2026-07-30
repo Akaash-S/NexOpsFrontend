@@ -12,7 +12,7 @@ interface Service {
   name: string
   team: string
   health: number
-  status: 'healthy' | 'warning' | 'critical'
+  status: 'healthy' | 'warning' | 'critical' | 'disconnected'
   deployments: number
   dependencies: string[]
   dependents: string[]
@@ -35,6 +35,7 @@ const statusColors = {
   healthy: 'text-success bg-success/10 border-success/20',
   warning: 'text-warning bg-warning/10 border-warning/20',
   critical: 'text-destructive bg-destructive/10 border-destructive/20',
+  disconnected: 'text-muted-foreground bg-muted/30 border-border/60',
 }
 
 const criticalityColors = {
@@ -63,14 +64,22 @@ export function ServiceCatalog({
               key={service.id}
               className={cn(
                 'p-4 cursor-pointer transition-all hover:border-primary/50',
-                selectedService === service.id && 'border-primary bg-primary/5'
+                selectedService === service.id && 'border-primary bg-primary/5',
+                service.status === 'disconnected' && 'opacity-75 bg-muted/10 border-dashed'
               )}
               onClick={() => onSelectService(service.id)}
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h3 className="font-semibold text-foreground">{service.name}</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-semibold text-foreground">{service.name}</h3>
+                    {service.status === 'disconnected' && (
+                      <Badge variant="outline" className="text-[10px] text-amber-500/90 border-amber-500/30 bg-amber-500/10">
+                        Disconnected — Deleted on GitHub
+                      </Badge>
+                    )}
+                  </div>
                   <p className="text-xs text-muted-foreground">{service.team}</p>
                 </div>
                 <Button variant="ghost" size="icon">
@@ -85,8 +94,9 @@ export function ServiceCatalog({
                   className={cn('gap-1', statusColors[service.status])}
                 >
                   {service.status === 'healthy' && <CheckCircle className="w-3 h-3" />}
-                  {service.status !== 'healthy' && <AlertTriangle className="w-3 h-3" />}
-                  {service.health}% Health
+                  {service.status === 'disconnected' && <AlertTriangle className="w-3 h-3 text-amber-500" />}
+                  {service.status !== 'healthy' && service.status !== 'disconnected' && <AlertTriangle className="w-3 h-3" />}
+                  {service.status === 'disconnected' ? 'Disconnected' : `${service.health}% Health`}
                 </Badge>
                 <Badge
                   variant="outline"

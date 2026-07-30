@@ -79,7 +79,7 @@ function ServicesPageContent() {
             name: repo.name,
             team: repo.owner || '@team-platform',
             health: Math.round(repo.healthScore || 100),
-            status: (repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning'),
+            status: repo.status === 'disconnected' ? 'disconnected' : ((repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning')),
             deployments: deploymentsCount || 14,
             dependencies: repoDeps,
             dependents: repoDependents,
