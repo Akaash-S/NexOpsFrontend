@@ -39,7 +39,37 @@ export function DependencyIntelligence({ nodeId, onClose, onSelectNode }: Depend
           nodes: mappedNodes,
           edges: rawData.edges || []
         })
-        const found = mappedNodes.find((n: any) => n.id === nodeId)
+
+        let found = mappedNodes.find((n: any) => 
+          n.id === nodeId || 
+          (n.id && n.id.toLowerCase() === nodeId.toLowerCase()) || 
+          (n.name && n.name.toLowerCase() === nodeId.toLowerCase())
+        )
+
+        // Fallback: If not found in topology array, fetch repo directly by ID
+        if (!found && nodeId) {
+          try {
+            const repoData = await apiFetch(`/repos/${nodeId}`) as any
+            if (repoData) {
+              found = {
+                id: repoData.id,
+                name: repoData.name,
+                platform: repoData.platform || 'github',
+                status: repoData.status || 'active',
+                language: repoData.language,
+                health_score: repoData.health_score ?? repoData.healthScore ?? 100.0,
+                ci_status: repoData.ci_status ?? repoData.ciStatus ?? 'unknown',
+                open_issues: repoData.open_issues ?? repoData.openIssues ?? 0,
+                vulnerabilities: repoData.vulnerabilities || 0,
+                activity: repoData.activity || 100.0,
+                owner: repoData.owner,
+              }
+            }
+          } catch (repoErr) {
+            console.warn(`Direct repo fallback fetch for ${nodeId} failed:`, repoErr)
+          }
+        }
+
         setNode(found || null)
       } catch (err) {
         console.error('Failed to load node intelligence:', err)
