@@ -1,9 +1,14 @@
 'use client'
 
+import { useState } from 'react'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { AlertCircle, CheckCircle2 } from 'lucide-react'
+import { AlertCircle, CheckCircle2, FileText, ChevronRight, Clock, CheckCheck, BookOpen } from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { PostmortemEditor } from '@/components/incidents/postmortem-editor'
 
 interface Incident {
   id: string
@@ -51,6 +56,9 @@ export function IncidentTabs({
         <TabsTrigger value="resolved" onClick={() => onStatusFilterChange('resolved')}>
           Resolved
         </TabsTrigger>
+        <TabsTrigger value="postmortems" onClick={() => onStatusFilterChange('resolved')}>
+          Postmortems
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="open" className="space-y-3 mt-6">
@@ -90,6 +98,10 @@ export function IncidentTabs({
               onSelect={onSelectIncident}
             />
           ))}
+      </TabsContent>
+
+      <TabsContent value="postmortems" className="space-y-3 mt-6">
+        <PostmortemsTab incidents={incidents} />
       </TabsContent>
     </Tabs>
   )
@@ -147,5 +159,78 @@ function IncidentCard({
         </div>
       </div>
     </Card>
+  )
+}
+
+function PostmortemsTab({ incidents }: { incidents: Incident[] }) {
+  const [editingIncident, setEditingIncident] = useState<{ id: string; title: string } | null>(null)
+
+  const resolved = incidents.filter((i) => i.status === 'resolved')
+
+  if (resolved.length === 0) {
+    return (
+      <div className="p-8 text-center border border-dashed border-border rounded-lg bg-card/20">
+        <BookOpen className="w-10 h-10 text-muted-foreground/40 mx-auto mb-3" />
+        <h4 className="font-semibold text-sm text-foreground">No Resolved Incidents Yet</h4>
+        <p className="text-xs text-muted-foreground mt-1">
+          Postmortems can be created for resolved incidents. When an incident is marked resolved, its postmortem draft is auto-generated here.
+        </p>
+      </div>
+    )
+  }
+
+  return (
+    <div className="space-y-3">
+      {resolved.map((inc) => (
+        <Card key={inc.id} className="p-4 flex items-center justify-between gap-4 hover:border-primary/50 transition-colors">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-1">
+              <CheckCircle2 className="w-4 h-4 text-success shrink-0" />
+              <h4 className="font-semibold text-sm text-foreground truncate">{inc.title}</h4>
+              <Badge variant="outline" className="text-[10px] uppercase font-mono bg-muted/30">
+                Resolved ({inc.duration})
+              </Badge>
+            </div>
+
+            <p className="text-xs text-muted-foreground flex items-center gap-2 flex-wrap">
+              <span>Lead: <strong className="text-foreground">{inc.lead}</strong></span>
+              <span>·</span>
+              <span>Root Cause: <strong className="text-foreground font-mono">{inc.rootCause}</strong></span>
+              <span>·</span>
+              <span>Resolved at: {inc.startTime}</span>
+            </p>
+
+            <div className="flex flex-wrap gap-1 mt-2">
+              {inc.affectedServices.map((service) => (
+                <Badge key={service} variant="secondary" className="text-[10px]">
+                  {service}
+                </Badge>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 shrink-0">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEditingIncident({ id: inc.id, title: inc.title })}
+              className="gap-1.5 text-xs"
+            >
+              <FileText className="w-3.5 h-3.5 text-primary" />
+              <span>Edit Postmortem</span>
+            </Button>
+          </div>
+        </Card>
+      ))}
+
+      {editingIncident && (
+        <PostmortemEditor
+          incidentId={editingIncident.id}
+          incidentTitle={editingIncident.title}
+          open={!!editingIncident}
+          onClose={() => setEditingIncident(null)}
+        />
+      )}
+    </div>
   )
 }
