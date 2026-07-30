@@ -26,8 +26,8 @@ interface AppContextType {
   getUnreadCount: () => number;
   
   // User state
-  currentUser: { name: string; email: string; avatar?: string; id?: string; preferences?: any } | null;
-  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string; preferences?: any } | null) => void;
+  currentUser: { name: string; email: string; avatar?: string; id?: string; workspace_id?: string; preferences?: any } | null;
+  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string; workspace_id?: string; preferences?: any } | null) => void;
   
   // Sidebar state
   sidebarOpen: boolean;
@@ -66,7 +66,7 @@ export function useAppState() {
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string; id?: string; preferences?: any } | null>(null);
+  const [currentUser, setCurrentUser] = useState<{ name: string; email: string; avatar?: string; id?: string; workspace_id?: string; preferences?: any } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // Authentication & Onboarding state
