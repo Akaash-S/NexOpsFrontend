@@ -31,6 +31,7 @@ interface TopologyNode {
   id: string
   name: string
   platform: string
+  status?: string
   language?: string | null
   health_score: number
   ci_status: string
@@ -92,7 +93,7 @@ function layoutGraph(nodes: TopologyNode[], edges: TopologyEdge[]): { flowNodes:
       data: {
         label: node.name,
         health: Math.round(node.health_score),
-        status: deriveStatus(node.ci_status, node.health_score),
+        status: node.status === 'disconnected' ? 'disconnected' : deriveStatus(node.ci_status, node.health_score),
         criticality: deriveCriticality(node.health_score),
       },
     }

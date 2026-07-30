@@ -9,7 +9,7 @@ interface ServiceNodeProps {
   data: {
     label: string
     health: number
-    status: 'healthy' | 'warning' | 'critical'
+    status: 'healthy' | 'warning' | 'critical' | 'disconnected'
     criticality: string
     highlighted?: boolean
   }
@@ -44,9 +44,17 @@ export function ServiceNode({ data, selected }: ServiceNodeProps) {
       badgeBg: 'bg-red-500/15 text-red-400 border-red-500/30',
       label: 'Critical',
     },
+    disconnected: {
+      border: 'border-amber-500/60 border-dashed',
+      bg: 'bg-amber-950/30 opacity-80',
+      icon: <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />,
+      healthText: 'text-amber-500',
+      badgeBg: 'bg-amber-500/15 text-amber-500 border-amber-500/30',
+      label: 'Disconnected',
+    },
   }
 
-  const style = nodeStyle[data.status]
+  const style = nodeStyle[data.status] || nodeStyle.healthy
 
   return (
     <div
