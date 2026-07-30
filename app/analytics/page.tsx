@@ -123,7 +123,7 @@ export default function AnalyticsPage() {
     return acc
   }, {} as Record<string, number>)
 
-  const depPieData = Object.entries(depByStatus).map(([name, value]) => ({ name, value }))
+  const depPieData = Object.entries(depByStatus).map(([name, value]) => ({ name, value: value as number }))
 
   // Health band distribution for repos
   const healthBands = {
