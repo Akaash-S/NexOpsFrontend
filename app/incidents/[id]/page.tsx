@@ -214,7 +214,7 @@ export default function IncidentInvestigationPage() {
                 const tsStr = e.timestamp ?? e.createdAt ?? e.created_at
                 const dateObj = tsStr ? new Date(tsStr) : null
                 const validTime = dateObj && !isNaN(dateObj.getTime())
-                  ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  ? dateObj.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
                   : 'Recent'
                 return {
                   time: validTime,
@@ -227,16 +227,16 @@ export default function IncidentInvestigationPage() {
           console.error("Timeline load failed, using fallbacks:", timelineErr)
         }
 
+        const start = new Date(incidentData.startedAt ?? incidentData.started_at ?? incidentData.created_at ?? Date.now())
+
         if (timeline.length === 0) {
-          const start = new Date(incidentData.startedAt ?? incidentData.started_at ?? incidentData.created_at ?? Date.now())
           timeline = [
-            { time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
-            { time: new Date(start.getTime() + 180000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
-            { time: new Date(start.getTime() + 480000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: `On-Call engineer acknowledged and began investigation` }
+            { time: start.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
+            { time: new Date(start.getTime() + 180000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
+            { time: new Date(start.getTime() + 480000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), event: `On-Call engineer acknowledged and began investigation` }
           ]
         }
 
-        const start = new Date(incidentData.startedAt || incidentData.started_at)
         const end = incidentData.resolvedAt ? new Date(incidentData.resolvedAt) : new Date()
         const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
         const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
@@ -250,7 +250,7 @@ export default function IncidentInvestigationPage() {
           duration,
           impactedUsers: incidentData.affectedUsers || incidentData.affected_users || 1200,
           lead: incidentData.assignee || 'On-Call Bot',
-          startTime: start.toLocaleString(),
+          startTime: start.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
           relatedAlerts: incidentData.relatedAlerts || 3,
           timeline,
           candidateCauses: mappedCauses,
@@ -509,7 +509,7 @@ export default function IncidentInvestigationPage() {
               <div className="space-y-3">
                 {incident.timeline.map((entry: { time: string; event: string }, idx: number) => (
                   <div key={idx} className="flex gap-4">
-                    <div className="text-xs font-mono text-muted-foreground w-12 flex-shrink-0 pt-0.5">
+                    <div className="text-xs font-mono text-muted-foreground w-32 flex-shrink-0 pt-0.5 whitespace-nowrap">
                       {entry.time}
                     </div>
                     <div className="flex items-start gap-2 flex-1">
