@@ -187,10 +187,10 @@ export function TopNav() {
                 </div>
               </DropdownMenuContent>
             </DropdownMenu>
-            {/* User Profile */}
+            {/* User Profile & Settings Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="overflow-hidden rounded-full border border-border/40 w-8 h-8">
+                <Button variant="ghost" size="icon" className="overflow-hidden rounded-full border border-border/40 w-8 h-8 hover:border-primary/40 transition-colors">
                   {currentUser?.avatar ? (
                     <img 
                       src={currentUser.avatar} 
@@ -198,23 +198,36 @@ export function TopNav() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <User className="w-5 h-5" />
+                    <User className="w-4 h-4 text-muted-foreground" />
                   )}
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={() => router.push('/profile')}>
-                  Profile
+              <DropdownMenuContent align="end" className="w-56 p-2 space-y-1">
+                <div className="px-2 py-1.5 border-b border-border/40 pb-2 mb-1">
+                  <p className="text-xs font-bold text-foreground truncate">{currentUser?.name || 'Matt User'}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{currentUser?.email || 'mattpersonal321@gmail.com'}</p>
+                </div>
+                <DropdownMenuItem onClick={() => router.push('/settings?tab=account')} className="text-xs gap-2 cursor-pointer">
+                  <User className="w-3.5 h-3.5 text-primary" /> Account & Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => router.push('/settings?tab=preferences')}>
-                  Preferences
+                <DropdownMenuItem onClick={() => router.push('/settings?tab=preferences')} className="text-xs gap-2 cursor-pointer">
+                  <Settings className="w-3.5 h-3.5 text-accent" /> Preferences & Theme
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings?tab=notifications')} className="text-xs gap-2 cursor-pointer">
+                  <Bell className="w-3.5 h-3.5 text-warning" /> Notifications & Webhooks
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => router.push('/settings?tab=workspace')} className="text-xs gap-2 cursor-pointer">
+                  <Network className="w-3.5 h-3.5 text-success" /> Workspace Integrations
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => {
-                  setAuthenticated(false)
-                  router.push('/')
-                }}>
-                  Logout
+                <DropdownMenuItem 
+                  onClick={() => {
+                    setAuthenticated(false)
+                    router.push('/')
+                  }}
+                  className="text-xs gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                >
+                  <LogOut className="w-3.5 h-3.5" /> Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
