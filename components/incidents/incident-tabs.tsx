@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { AlertCircle, CheckCircle2, FileText, ChevronRight, Clock, CheckCheck, BookOpen } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { PostmortemEditor } from '@/components/incidents/postmortem-editor'
+import { PostmortemEditor } from './postmortem-editor'
 
 interface Incident {
   id: string
