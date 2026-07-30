@@ -248,7 +248,7 @@ export default function IncidentInvestigationPage() {
           severity: (incidentData.severity || 'medium').toLowerCase(),
           status: incidentData.status || 'open',
           duration,
-          impactedUsers: incidentData.affectedUsers || incidentData.affected_users || 1200,
+          impactedUsers: incidentData.affected_users ?? incidentData.affectedUsers ?? 0,
           lead: incidentData.assignee || 'On-Call Bot',
           startTime: start.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
           relatedAlerts: incidentData.relatedAlerts || 3,
