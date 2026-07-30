@@ -14,8 +14,9 @@ interface Service {
   name: string
   team: string
   health: number
-  status: 'healthy' | 'warning' | 'critical'
+  status: 'healthy' | 'warning' | 'critical' | 'disconnected'
   deployments: number
+  rawDeployments?: any[]
   dependencies: string[]
   dependents: string[]
   lastDeployed: string
@@ -32,13 +33,6 @@ interface ServiceDetailsDrawerProps {
   onClose: () => void
 }
 
-const deploymentData = [
-  { name: 'Week 1', deployments: 8, failures: 1 },
-  { name: 'Week 2', deployments: 12, failures: 0 },
-  { name: 'Week 3', deployments: 10, failures: 1 },
-  { name: 'Week 4', deployments: 12, failures: 0 },
-]
-
 const reliabilityData = [
   { day: 'Mon', uptime: 99.8 },
   { day: 'Tue', uptime: 99.9 },
@@ -52,11 +46,37 @@ const reliabilityData = [
 export function ServiceDetailsDrawer({ service, onClose }: ServiceDetailsDrawerProps) {
   const [isOpen, setIsOpen] = useState(true)
   const { addNotification } = useAppState()
-  
+
+  // Dynamically calculate 4-week deployment history from real deployments
+  const rawDeploys = service.rawDeployments || []
+  const now = new Date().getTime()
+  const weekMs = 7 * 24 * 60 * 60 * 1000
+
+  const deploymentData = [
+    { name: 'Week 1', deployments: 0, failures: 0 },
+    { name: 'Week 2', deployments: 0, failures: 0 },
+    { name: 'Week 3', deployments: 0, failures: 0 },
+    { name: 'Week 4', deployments: 0, failures: 0 },
+  ]
+
+  if (rawDeploys.length > 0) {
+    rawDeploys.forEach((d: any) => {
+      const depTime = new Date(d.deployed_at || d.created_at || now).getTime()
+      const diffWeeks = Math.floor((now - depTime) / weekMs)
+      if (diffWeeks >= 0 && diffWeeks < 4) {
+        const idx = 3 - diffWeeks
+        deploymentData[idx].deployments += 1
+        if (d.status === 'failed' || d.status === 'rolled_back') {
+          deploymentData[idx].failures += 1
+        }
+      }
+    })
+  }
+
   const [insights, setInsights] = useState([
-    { id: 'i1', type: 'warning', icon: AlertCircle, title: 'High deployment frequency', desc: `This service is deployed ${service.deploymentFrequency.replace('-', ' ')}. Monitor change failure rate closely.`, action: 'Create Ticket' },
-    { id: 'i2', type: 'primary', icon: Clock, title: 'MTTR Improvement Opportunity', desc: `Current MTTR is ${service.mttr}. Consider implementing better alerting and runbooks.`, action: 'Acknowledge' },
-    { id: 'i3', type: 'success', icon: TrendingDown, title: 'Strong reliability track record', desc: `Only ${service.incidents30d} incident(s) in the last 30 days. Service is well-maintained.`, action: '' }
+    { id: 'i1', type: 'warning', icon: AlertCircle, title: 'Deployment frequency status', desc: `This service is deployed ${service.deploymentFrequency.replace('-', ' ')}. Monitor change failure rate closely.`, action: 'Create Ticket' },
+    { id: 'i2', type: 'primary', icon: Clock, title: 'MTTR Tracking', desc: `Current MTTR is ${service.mttr}. Consider implementing better alerting and runbooks.`, action: 'Acknowledge' },
+    { id: 'i3', type: 'success', icon: TrendingDown, title: 'Reliability track record', desc: `Only ${service.incidents30d} incident(s) in the last 30 days. Service is well-maintained.`, action: '' }
   ])
 
   const handleAction = (id: string, actionName: string) => {

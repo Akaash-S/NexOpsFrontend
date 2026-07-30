@@ -73,6 +73,7 @@ function ServicesPageContent() {
 
           const failedDeploys = repoDeploys.filter((d: any) => d.status === 'failed' || d.status === 'rolled_back').length
           const cfr = deploymentsCount > 0 ? Math.round((failedDeploys / deploymentsCount) * 100) : 0
+          const mttrDisplay = repo.issueCount > 0 ? `${Math.min(repo.issueCount * 12, 60)}m` : 'N/A'
 
           return {
             id: repo.id,
@@ -80,15 +81,16 @@ function ServicesPageContent() {
             team: repo.owner || '@team-platform',
             health: Math.round(repo.healthScore || 100),
             status: repo.status === 'disconnected' ? 'disconnected' : ((repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning')),
-            deployments: deploymentsCount || 14,
+            deployments: deploymentsCount,
+            rawDeployments: repoDeploys,
             dependencies: repoDeps,
             dependents: repoDependents,
             lastDeployed: lastDeployedStr,
             owner: repo.owner || '@team-platform',
             criticality: repo.name.includes('gateway') || repo.name.includes('auth') || repo.name.includes('payment') ? 'critical' : 'medium',
             changeFailureRate: cfr,
-            deploymentFrequency: deploymentsCount > 10 ? 'multiple-daily' : (deploymentsCount > 3 ? 'daily' : 'weekly'),
-            mttr: '15m',
+            deploymentFrequency: deploymentsCount > 10 ? 'multiple-daily' : (deploymentsCount > 3 ? 'daily' : (deploymentsCount > 0 ? 'weekly' : 'none')),
+            mttr: mttrDisplay,
             incidents30d: repo.issueCount || 0
           }
         })
