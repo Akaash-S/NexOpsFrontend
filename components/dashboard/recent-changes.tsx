@@ -51,7 +51,7 @@ function getDownstreamDependents(nodeId: string, edges: any[]): string[] {
   return [...visited]
 }
 
-export function RecentChanges() {
+export function RecentChanges({ limit = 2 }: { limit?: number } = {}) {
   const [deployments, setDeployments] = useState<any[]>([])
   const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
   const [loading, setLoading] = useState(true)
@@ -85,7 +85,7 @@ export function RecentChanges() {
     )
   }
 
-  const displayChanges = deployments.slice(0, 4)
+  const displayChanges = deployments.slice(0, limit)
 
   return (
     <Card className="p-6">
