@@ -9,6 +9,7 @@ import {
   Network,
   Bug,
   GitCommitHorizontal,
+  Activity,
   Plug,
   Settings,
   ChevronRight,
@@ -48,6 +49,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Incidents', href: '/incidents', icon: <Bug className="w-4 h-4" /> },
       { label: 'Recent Changes', href: '/recent-changes', icon: <GitCommitHorizontal className="w-4 h-4" /> },
+      { label: 'Activity Stream', href: '/activity', icon: <Activity className="w-4 h-4" /> },
     ],
   },
   {
