@@ -157,3 +157,33 @@
     cursor: pointer !important;
   }
 }
+
+/* Landing Page Custom Styling & Intro Logo Utilities */
+.mono-text {
+  font-family: 'JetBrains Mono', monospace;
+}
+.geist-font {
+  font-family: 'Geist', sans-serif;
+}
+.glass-card {
+  background: #1E1E1E;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+.pill-button {
+  border-radius: 9999px;
+}
+.tracking-technical {
+  letter-spacing: -0.01em;
+}
+
+#main-content {
+  transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+#intro-logo {
+  position: fixed;
+  z-index: 100;
+  transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+  pointer-events: none;
+}
+
