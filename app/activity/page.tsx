@@ -41,6 +41,9 @@ import {
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
+import { useRouter } from 'next/navigation'
+import { Lock } from 'lucide-react'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 interface EventItem {
   id: string
@@ -155,7 +158,7 @@ function PayloadModal({ event, open, onClose }: { event: EventItem | null; open:
   )
 }
 
-export default function ActivityStreamPage() {
+function ActivityPageContent() {
   const router = useRouter()
   const { showExtendedNavigation } = useAppState()
   const [events, setEvents] = useState<EventItem[]>([])

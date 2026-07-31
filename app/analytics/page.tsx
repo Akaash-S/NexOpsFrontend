@@ -81,6 +81,7 @@ const HEALTH_COLORS = ['#10b981', '#6366f1', '#f59e0b', '#ef4444']
 
 import { Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 export default function AnalyticsPage() {
   const router = useRouter()
