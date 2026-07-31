@@ -113,19 +113,34 @@ export default function AnalyticsPage() {
 
   // ── Derived metrics ────────────────────────────────────────────────────────
   const activeRepos    = repos.filter((r: any) => r.status !== 'disconnected')
+  const disconnectedRepos = repos.filter((r: any) => r.status === 'disconnected')
   const totalCommits   = activity.reduce((s: number, d: any) => s + (d.commits ?? 0), 0)
   const totalDeployed  = activity.reduce((s: number, d: any) => s + (d.deployed ?? 0), 0)
   const totalIssues    = activity.reduce((s: number, d: any) => s + (d.issues ?? 0), 0)
 
-  // Deployment status breakdown for pie chart
-  const depByStatus = deployments.reduce((acc: any, d: any) => {
-    acc[d.status] = (acc[d.status] ?? 0) + 1
-    return acc
-  }, {} as Record<string, number>)
+  // 1a Fix: Safe extraction supporting both camelCase and snake_case API payloads
+  const avgHealthVal   = stats ? (stats.avgHealth ?? stats.avg_health ?? 0) : 0
+  const successRateVal = stats ? (stats.successRate ?? stats.success_rate ?? 0) : 0
+  const vulnIndexVal   = stats ? (stats.vulnerabilityIndex ?? stats.vulnerability_index ?? 0) : 0
 
-  const depPieData = Object.entries(depByStatus).map(([name, value]) => ({ name, value: value as number }))
+  // 1c Fix: Explicitly initialize all three deployment outcome categories (success, failed, running)
+  const depByStatus: Record<string, number> = {
+    success: 0,
+    failed: 0,
+    running: 0,
+  }
+  deployments.forEach((d: any) => {
+    const st = (d.status || 'running').toLowerCase()
+    if (st in depByStatus) {
+      depByStatus[st] += 1
+    } else {
+      depByStatus[st] = 1
+    }
+  })
 
-  // Health band distribution for repos
+  const depPieData = Object.entries(depByStatus).map(([name, value]) => ({ name, value }))
+
+  // Health band distribution for active repos
   const healthBands = {
     'Healthy (≥80)':  activeRepos.filter((r: any) => (r.health_score ?? r.healthScore ?? 0) >= 80).length,
     'Fair (60–79)':   activeRepos.filter((r: any) => { const h = r.health_score ?? r.healthScore ?? 0; return h >= 60 && h < 80 }).length,
@@ -167,31 +182,31 @@ export default function AnalyticsPage() {
       {/* ── KPI Row ─────────────────────────────────────────────────────── */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
-          label="Avg Health Score" value={stats ? Math.round(stats.avg_health) : 0}
+          label="Avg Health Score" value={Math.round(avgHealthVal)}
           unit="%" icon={Activity} color="text-primary"
-          trend={stats?.avg_health >= 75 ? 'up' : 'down'}
-          sub={stats ? (stats.avg_health >= 75 ? 'Within healthy range' : 'Below target threshold') : ''}
+          trend={avgHealthVal >= 75 ? 'up' : 'down'}
+          sub={stats ? (avgHealthVal >= 75 ? 'Within healthy range' : 'Below target threshold') : ''}
           loading={loading}
         />
         <StatCard
-          label="Deployment Success" value={stats ? Math.round(stats.success_rate) : 0}
+          label="Deployment Success" value={Math.round(successRateVal)}
           unit="%" icon={Rocket} color="text-success"
-          trend={stats?.success_rate >= 80 ? 'up' : 'down'}
+          trend={successRateVal >= 80 ? 'up' : 'down'}
           sub={deployments.length > 0 ? `${deployments.length} total deployments` : 'No deployments yet'}
           loading={loading}
         />
         <StatCard
-          label="Open Vulnerabilities" value={stats?.vulnerability_index ?? 0}
+          label="Open Vulnerabilities" value={vulnIndexVal}
           icon={Shield} color="text-warning"
-          trend={(stats?.vulnerability_index ?? 0) === 0 ? 'up' : 'down'}
-          sub={(stats?.vulnerability_index ?? 0) === 0 ? 'No critical alerts' : 'Needs attention'}
+          trend={vulnIndexVal === 0 ? 'up' : 'down'}
+          sub={vulnIndexVal === 0 ? 'No critical alerts' : 'Needs attention'}
           loading={loading}
         />
         <StatCard
           label="Active Repositories" value={activeRepos.length}
           icon={BarChart3} color="text-primary"
           trend="neutral"
-          sub={`${repos.length - activeRepos.length} disconnected`}
+          sub={`${disconnectedRepos.length} disconnected`}
           loading={loading}
         />
       </div>
@@ -372,18 +387,20 @@ export default function AnalyticsPage() {
         <div className="flex items-center justify-between mb-5">
           <div>
             <h2 className="font-semibold text-base text-foreground">Repository Health Details</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">All active repositories with CI status and health score</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Workspace repositories with CI status and health score</p>
           </div>
-          <Badge variant="secondary">{activeRepos.length} repos</Badge>
+          <Badge variant="secondary" className="text-xs font-mono">
+            {repos.length} total ({activeRepos.length} active, {disconnectedRepos.length} disconnected)
+          </Badge>
         </div>
 
         {loading ? (
           <div className="space-y-2">{Array.from({length: 5}).map((_, i) => (
             <div key={i} className="h-12 bg-secondary/30 rounded animate-pulse" />
           ))}</div>
-        ) : activeRepos.length === 0 ? (
+        ) : repos.length === 0 ? (
           <div className="flex items-center justify-center h-32 border border-dashed border-border rounded-lg">
-            <p className="text-sm text-muted-foreground">No active repositories — sync GitHub to get started</p>
+            <p className="text-sm text-muted-foreground">No repositories — sync GitHub to get started</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -392,18 +409,19 @@ export default function AnalyticsPage() {
                 <tr className="border-b border-border/50">
                   <th className="text-left text-xs text-muted-foreground font-medium pb-3 pr-4">Repository</th>
                   <th className="text-left text-xs text-muted-foreground font-medium pb-3 pr-4">Language</th>
-                  <th className="text-left text-xs text-muted-foreground font-medium pb-3 pr-4">CI Status</th>
+                  <th className="text-left text-xs text-muted-foreground font-medium pb-3 pr-4">CI / Connection Status</th>
                   <th className="text-right text-xs text-muted-foreground font-medium pb-3 pr-4">Health</th>
                   <th className="text-right text-xs text-muted-foreground font-medium pb-3 pr-4">Open Issues</th>
                   <th className="text-right text-xs text-muted-foreground font-medium pb-3">Activity</th>
                 </tr>
               </thead>
               <tbody>
-                {[...activeRepos]
+                {[...repos]
                   .sort((a: any, b: any) => (a.health_score ?? a.healthScore ?? 0) - (b.health_score ?? b.healthScore ?? 0))
                   .map((r: any, i: number) => {
-                    const health = r.health_score ?? r.healthScore ?? 0
-                    const hColor = health >= 80 ? 'text-success' : health >= 60 ? 'text-warning' : 'text-destructive'
+                    const isDisconnected = r.status === 'disconnected'
+                    const health = isDisconnected ? 0 : (r.health_score ?? r.healthScore ?? 0)
+                    const hColor = isDisconnected ? 'text-muted-foreground' : health >= 80 ? 'text-success' : health >= 60 ? 'text-warning' : 'text-destructive'
                     const ci = r.ci_status ?? r.ciStatus ?? 'unknown'
                     const ciColor = ci === 'passing' ? 'text-success' : ci === 'failing' ? 'text-destructive' : 'text-muted-foreground'
                     return (
@@ -413,15 +431,21 @@ export default function AnalyticsPage() {
                           <Badge variant="outline" className="text-xs">{r.language || '—'}</Badge>
                         </td>
                         <td className="py-3 pr-4">
-                          <span className={cn('flex items-center gap-1.5 text-xs font-medium capitalize', ciColor)}>
-                            {ci === 'passing' && <CheckCircle2 className="w-3.5 h-3.5" />}
-                            {ci === 'failing' && <XCircle className="w-3.5 h-3.5" />}
-                            {ci !== 'passing' && ci !== 'failing' && <Clock className="w-3.5 h-3.5" />}
-                            {ci}
-                          </span>
+                          {isDisconnected ? (
+                            <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/20 text-[10px] font-semibold">
+                              Disconnected
+                            </Badge>
+                          ) : (
+                            <span className={cn('flex items-center gap-1.5 text-xs font-medium capitalize', ciColor)}>
+                              {ci === 'passing' && <CheckCircle2 className="w-3.5 h-3.5" />}
+                              {ci === 'failing' && <XCircle className="w-3.5 h-3.5" />}
+                              {ci !== 'passing' && ci !== 'failing' && <Clock className="w-3.5 h-3.5" />}
+                              {ci}
+                            </span>
+                          )}
                         </td>
                         <td className="py-3 pr-4 text-right">
-                          <span className={cn('font-bold', hColor)}>{Math.round(health)}%</span>
+                          <span className={cn('font-bold', hColor)}>{isDisconnected ? 'N/A' : `${Math.round(health)}%`}</span>
                         </td>
                         <td className="py-3 pr-4 text-right text-muted-foreground">
                           {r.open_issues ?? r.openIssues ?? 0}
@@ -429,7 +453,7 @@ export default function AnalyticsPage() {
                         <td className="py-3 text-right">
                           <div className="inline-flex items-center gap-1">
                             {Array.from({length: 7}).map((_, wi) => {
-                              const act = r.activity ?? 0
+                              const act = isDisconnected ? 0 : (r.activity ?? 0)
                               const lit = Math.random() * 100 < act
                               return (
                                 <div
