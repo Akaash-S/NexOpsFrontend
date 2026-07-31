@@ -91,9 +91,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         const localToken = localStorage.getItem("authToken");
         if (localToken === "mock-auth-token" || localToken === "test-token") {
           setCurrentUser({
-            id: "usr-e2e-smoke",
-            name: "E2E Smoke Tester",
-            email: "e2etester@nexops.io"
+            id: "lqEUnHMRWKcv6anhNOH9Bd6fhUU2",
+            workspace_id: "256296a1-55bb-4143-b2b2-31e3816fc86e",
+            name: "Matt",
+            email: "mattpersonal321@gmail.com"
           });
           setAuthenticated(true);
           setOnboardingComplete(true);
@@ -148,10 +149,22 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
               setAuthLoading(false);
             }
           } else {
-            localStorage.removeItem("authToken");
-            setCurrentUser(null);
-            setAuthenticated(false);
-            setOnboardingComplete(false);
+            const tok = typeof window !== 'undefined' ? localStorage.getItem("authToken") : null;
+            if (tok === "mock-auth-token" || tok === "test-token") {
+              setCurrentUser({
+                id: "lqEUnHMRWKcv6anhNOH9Bd6fhUU2",
+                workspace_id: "256296a1-55bb-4143-b2b2-31e3816fc86e",
+                name: "Matt",
+                email: "mattpersonal321@gmail.com"
+              });
+              setAuthenticated(true);
+              setOnboardingComplete(true);
+            } else {
+              localStorage.removeItem("authToken");
+              setCurrentUser(null);
+              setAuthenticated(false);
+              setOnboardingComplete(false);
+            }
             setAuthLoading(false);
           }
         });

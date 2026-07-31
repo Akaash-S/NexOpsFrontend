@@ -417,12 +417,12 @@ export default function AnalyticsPage() {
               </thead>
               <tbody>
                 {[...repos]
-                  .sort((a: any, b: any) => (a.health_score ?? a.healthScore ?? 0) - (b.health_score ?? b.healthScore ?? 0))
+                  .sort((a: any, b: any) => (a.healthScore ?? a.health_score ?? 0) - (b.healthScore ?? b.health_score ?? 0))
                   .map((r: any, i: number) => {
                     const isDisconnected = r.status === 'disconnected'
-                    const health = isDisconnected ? 0 : (r.health_score ?? r.healthScore ?? 0)
+                    const health = isDisconnected ? 0 : (r.healthScore ?? r.health_score ?? 0)
                     const hColor = isDisconnected ? 'text-muted-foreground' : health >= 80 ? 'text-success' : health >= 60 ? 'text-warning' : 'text-destructive'
-                    const ci = r.ci_status ?? r.ciStatus ?? 'unknown'
+                    const ci = r.ciStatus ?? r.ci_status ?? 'unknown'
                     const ciColor = ci === 'passing' ? 'text-success' : ci === 'failing' ? 'text-destructive' : 'text-muted-foreground'
                     return (
                       <tr key={i} className="border-b border-border/30 hover:bg-secondary/20 transition-colors">

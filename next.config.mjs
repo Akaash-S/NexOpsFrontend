@@ -39,7 +39,7 @@ const nextConfig = {
               // Images: self + data URIs + Google avatars + ui-avatars CDN
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://ui-avatars.com",
               // API connections: self + backend Render URL + Firebase + Google APIs
-              "connect-src 'self' https://nexopsbackend.onrender.com https://*.googleapis.com https://*.firebaseio.com wss://nexopsbackend.onrender.com",
+              "connect-src 'self' http://localhost:8000 ws://localhost:8000 http://127.0.0.1:8000 ws://127.0.0.1:8000 https://nexopsbackend.onrender.com https://*.googleapis.com https://*.firebaseio.com wss://nexopsbackend.onrender.com",
               // Frames: Google auth popup
               "frame-src https://accounts.google.com",
               // No plugins
