@@ -48,6 +48,10 @@ interface AppContextType {
   watchedServices: string[];
   setWatchedServices: (services: string[]) => void;
   
+  // UI density
+  density: 'comfortable' | 'compact';
+  setDensity: (density: 'comfortable' | 'compact') => void;
+
   // Extended Navigation feature flag
   showExtendedNavigation: boolean;
   setShowExtendedNavigation: (show: boolean) => void;
