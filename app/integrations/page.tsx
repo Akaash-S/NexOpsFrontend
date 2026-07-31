@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
+import Link from 'next/link'
 import { PageContent, PageHeader } from '@/components/layout'
+import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { CheckCircle2, AlertCircle, AlertTriangle, Loader2, RefreshCw, Link2, Unlink, ExternalLink } from 'lucide-react'
+import { CheckCircle2, AlertCircle, AlertTriangle, Loader2, RefreshCw, Link2, Unlink, ExternalLink, ShieldCheck, Lock } from 'lucide-react'
 import { IntegrationFilters } from '@/components/integrations/integration-filters'
 import { CardSkeleton } from '@/components/loading-state'
 
@@ -18,6 +20,7 @@ interface IntegrationStatus {
 }
 
 interface StatusResponse {
+  terms_acknowledged?: boolean
   github: IntegrationStatus
   pagerduty: IntegrationStatus
 }
@@ -55,6 +58,12 @@ export default function IntegrationsPage() {
   const [pdToken, setPdToken] = useState('')
   const [connectingPd, setConnectingPd] = useState(false)
   const [pdError, setPdError] = useState<string | null>(null)
+
+  // Terms Acknowledgment Gate Modal State
+  const [showTermsGateModal, setShowTermsGateModal] = useState(false)
+  const [termsAcceptedCheckbox, setTermsAcceptedCheckbox] = useState(false)
+  const [acknowledgingTerms, setAcknowledgingTerms] = useState(false)
+  const [pendingAction, setPendingAction] = useState<'github' | 'pagerduty' | null>(null)
 
   // Filters State
   const [filters, setFilters] = useState({
@@ -141,14 +150,93 @@ export default function IntegrationsPage() {
   const disconnectedCount = integrations.filter(i => i.status === 'disconnected').length
   const issuesCount = integrations.filter(i => i.health !== 'healthy').length
 
-  const handleConnectGithub = async () => {
+  const executeConnectGithub = async () => {
     try {
       const { apiFetch } = await import('@/lib/api-client')
-      const { url } = await apiFetch('/integrations/github/oauth-url')
-      window.location.href = url
-    } catch (err) {
+      const res = await apiFetch('/integrations/github/oauth-url') as { url: string }
+      window.location.href = res.url
+    } catch (err: any) {
+      if (err?.status === 403 || err?.message?.includes('Terms of Service')) {
+        setPendingAction('github')
+        setShowTermsGateModal(true)
+        return
+      }
       console.error('Failed to get GitHub OAuth URL:', err)
       alert('Failed to start GitHub connection. Please try again.')
+    }
+  }
+
+  const handleConnectGithub = async () => {
+    if (status && !status.terms_acknowledged) {
+      setPendingAction('github')
+      setShowTermsGateModal(true)
+      return
+    }
+    await executeConnectGithub()
+  }
+
+  const executeConnectPagerDuty = async () => {
+    if (!pdToken.trim()) {
+      setPdError('API Token cannot be empty')
+      return
+    }
+    setPdError(null)
+    setConnectingPd(true)
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      await apiFetch('/integrations/pagerduty/connect', {
+        method: 'POST',
+        body: JSON.stringify({ token: pdToken.trim() })
+      })
+      const data = await apiFetch('/integrations/status') as StatusResponse
+      setStatus(data)
+      setShowPdForm(false)
+      setPdToken('')
+    } catch (err: any) {
+      if (err?.status === 403 || err?.message?.includes('Terms of Service')) {
+        setPendingAction('pagerduty')
+        setShowTermsGateModal(true)
+        return
+      }
+      console.error('Failed to connect PagerDuty:', err)
+      setPdError(err instanceof Error ? err.message : 'Connection failed. Invalid token or network issue.')
+    } finally {
+      setConnectingPd(false)
+    }
+  }
+
+  const handleConnectPagerDuty = async () => {
+    if (status && !status.terms_acknowledged) {
+      setPendingAction('pagerduty')
+      setShowTermsGateModal(true)
+      return
+    }
+    await executeConnectPagerDuty()
+  }
+
+  const handleConfirmAcknowledgment = async () => {
+    if (!termsAcceptedCheckbox) return
+    setAcknowledgingTerms(true)
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      await apiFetch('/integrations/terms/acknowledge', { method: 'POST' })
+
+      setStatus(prev => prev ? { ...prev, terms_acknowledged: true } : prev)
+      setShowTermsGateModal(false)
+      setTermsAcceptedCheckbox(false)
+
+      const actionToResume = pendingAction
+      setPendingAction(null)
+      if (actionToResume === 'github') {
+        await executeConnectGithub()
+      } else if (actionToResume === 'pagerduty') {
+        setShowPdForm(true)
+      }
+    } catch (err) {
+      console.error('Failed to acknowledge terms:', err)
+      alert('Failed to record agreement. Please try again.')
+    } finally {
+      setAcknowledgingTerms(false)
     }
   }
 
@@ -184,31 +272,6 @@ export default function IntegrationsPage() {
     } catch (err) {
       console.error('Disconnect failed:', err)
       alert('Failed to disconnect. Please try again.')
-    }
-  }
-
-  const handleConnectPagerDuty = async () => {
-    if (!pdToken.trim()) {
-      setPdError('API Token cannot be empty')
-      return
-    }
-    setPdError(null)
-    setConnectingPd(true)
-    try {
-      const { apiFetch } = await import('@/lib/api-client')
-      await apiFetch('/integrations/pagerduty/connect', {
-        method: 'POST',
-        body: JSON.stringify({ token: pdToken.trim() })
-      })
-      const data = await apiFetch('/integrations/status') as StatusResponse
-      setStatus(data)
-      setShowPdForm(false)
-      setPdToken('')
-    } catch (err) {
-      console.error('Failed to connect PagerDuty:', err)
-      setPdError(err instanceof Error ? err.message : 'Connection failed. Invalid token or network issue.')
-    } finally {
-      setConnectingPd(false)
     }
   }
 
@@ -258,13 +321,9 @@ export default function IntegrationsPage() {
           title="Integrations"
           description="Connection status for data sources that feed the correlation engine"
         />
-        <div className="flex flex-col items-center justify-center min-h-[40vh] gap-3">
-          <AlertCircle className="w-8 h-8 text-destructive" />
-          <p className="text-sm font-semibold">Failed to load integration status</p>
-          <p className="text-xs text-muted-foreground">{error}</p>
-          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
-            Retry
-          </Button>
+        <div className="p-6 border border-destructive/20 bg-destructive/5 rounded-lg text-destructive flex items-center gap-3">
+          <AlertCircle className="w-5 h-5" />
+          <span>{error}</span>
         </div>
       </PageContent>
     )
@@ -277,137 +336,157 @@ export default function IntegrationsPage() {
         description="Connection status for data sources that feed the correlation engine"
       />
 
-      {/* Summary */}
-      <div className="grid grid-cols-4 gap-4 mb-8">
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Connected</div>
+      {/* Summary KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <Card className="p-4 space-y-2 bg-card border-border">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Available</span>
+          <div className="text-2xl font-bold text-foreground">{integrations.length}</div>
+          <p className="text-xs text-muted-foreground">Providers ready for setup</p>
+        </Card>
+        <Card className="p-4 space-y-2 bg-card border-border">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Active Connections</span>
           <div className="text-2xl font-bold text-success">{connectedCount}</div>
+          <p className="text-xs text-muted-foreground">Currently operational</p>
         </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Disconnected</div>
-          <div className={disconnectedCount > 0 ? 'text-2xl font-bold text-destructive' : 'text-2xl font-bold'}>
-            {disconnectedCount}
-          </div>
+        <Card className="p-4 space-y-2 bg-card border-border">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Disconnected</span>
+          <div className="text-2xl font-bold text-muted-foreground">{disconnectedCount}</div>
+          <p className="text-xs text-muted-foreground font-mono">Awaiting setup</p>
         </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Health Issues</div>
-          <div className={issuesCount > 0 ? 'text-2xl font-bold text-warning' : 'text-2xl font-bold text-success'}>
-            {issuesCount}
-          </div>
-        </Card>
-        <Card className="p-4">
-          <div className="text-sm text-muted-foreground">Last Sync</div>
-          <div className="text-2xl font-bold">{formatTimeAgo(latestSyncAll)}</div>
+        <Card className="p-4 space-y-2 bg-card border-border">
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Latest Sync</span>
+          <div className="text-2xl font-bold text-foreground">{formatTimeAgo(latestSyncAll)}</div>
+          <p className="text-xs text-muted-foreground">Across all integrations</p>
         </Card>
       </div>
 
-      {/* Filters */}
-      <IntegrationFilters filters={filters} setFilters={setFilters} />
+      {/* Terms Acknowledgment Banner (if not yet acknowledged) */}
+      {status && !status.terms_acknowledged && (
+        <div className="mb-6 p-4 rounded-xl border border-warning/30 bg-warning/10 text-foreground flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <ShieldCheck className="w-5 h-5 text-warning shrink-0" />
+            <div className="text-sm">
+              <span className="font-semibold text-warning">Terms & Privacy Acknowledgment Required:</span>{' '}
+              A one-time agreement is required before connecting integrations. Read the{' '}
+              <Link href="/terms" target="_blank" prefetch={false} className="underline hover:text-primary font-medium">Terms of Service</Link>{' '}
+              and{' '}
+              <Link href="/privacy" target="_blank" prefetch={false} className="underline hover:text-primary font-medium">Privacy Notice</Link>.
+            </div>
+          </div>
+          <Button
+            size="sm"
+            variant="outline"
+            className="border-warning/40 text-warning hover:bg-warning/20 font-semibold shrink-0"
+            onClick={() => setShowTermsGateModal(true)}
+          >
+            Review & Agree
+          </Button>
+        </div>
+      )}
 
-      {/* Integrations Grid */}
-      <div className="mb-8">
+      {/* Filter and Control Bar */}
+      <IntegrationFilters
+        filters={filters}
+        setFilters={setFilters}
+      />
+
+      {/* Integration Cards List */}
+      <div className="mt-6">
         {filteredAndSortedIntegrations.length > 0 ? (
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {filteredAndSortedIntegrations.map((integration) => {
+              const statusBadgeVariant = integration.status === 'connected' ? 'secondary' : 'outline'
+
               return (
-                <Card key={integration.id} className="p-6 hover:border-primary/50 transition-all">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary">
-                        {integration.name[0]}
-                      </div>
-                      <h3 className="font-semibold text-lg">{integration.name}</h3>
-                    </div>
-                    {integration.health === 'healthy' ? (
-                      <CheckCircle2 className="w-5 h-5 text-success" />
-                    ) : integration.health === 'warning' ? (
-                      <AlertCircle className="w-5 h-5 text-warning" />
-                    ) : (
-                      <AlertCircle className="w-5 h-5 text-destructive" />
-                    )}
-                  </div>
-
-                  <div className="space-y-3 mb-6 bg-muted/20 p-4 rounded-lg border border-border">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Status</span>
-                      <Badge
-                        variant="outline"
-                        className={
-                          integration.status === 'connected'
-                            ? 'bg-success/10 text-success border-success/20'
-                            : 'bg-muted text-muted-foreground border-border'
-                        }
-                      >
-                        {integration.status === 'connected' ? 'Connected' : (integration.note || 'Disconnected')}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">Configuration</span>
-                      <span className="font-semibold truncate max-w-[200px]">{integration.config}</span>
-                    </div>
-                    {integration.id === 'github' && (
-                      <>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Synced Repos</span>
-                          <span className="font-semibold">{integration.synced_repos_count}</span>
+                <Card key={integration.id} className="p-6 border-border bg-card flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-start justify-between mb-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-bold text-lg">{integration.name}</h3>
+                          <Badge
+                            variant={statusBadgeVariant}
+                            className={cn('capitalize', integration.status === 'connected' && 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20')}
+                          >
+                            {integration.status}
+                          </Badge>
                         </div>
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Last Sync</span>
-                          <span className="text-xs text-muted-foreground">{formatTimeAgo(integration.latest_sync_at)}</span>
-                        </div>
-                      </>
-                    )}
-                    {integration.id === 'pagerduty' && integration.note && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
-                        <AlertTriangle className="w-3 h-3" />
-                        <span>{integration.note}</span>
-                      </div>
-                    )}
-                  </div>
 
-                  {integration.id === 'pagerduty' && showPdForm && integration.status === 'disconnected' && (
-                    <div className="space-y-3 mb-6 p-4 border border-border bg-background rounded-lg animate-in fade-in duration-200">
-                      <div className="text-xs text-muted-foreground">
-                        Enter your PagerDuty REST API Key. You can generate one in PagerDuty under{" "}
-                        <a 
-                          href="https://support.pagerduty.com/main/docs/api-access-keys" 
-                          target="_blank" 
-                          rel="noreferrer"
-                          className="text-primary hover:underline inline-flex items-center gap-0.5"
-                        >
-                          Integrations → API Access Keys
-                          <ExternalLink className="w-3 h-3 text-muted-foreground" />
-                        </a>.
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {integration.description}
+                        </p>
                       </div>
-                      <div className="flex gap-2">
-                        <input
-                          type="password"
-                          placeholder="e.g. y_NbAkKc..."
-                          className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                          value={pdToken}
-                          onChange={(e) => setPdToken(e.target.value)}
-                        />
-                        <Button 
-                          size="sm" 
-                          className="h-9 px-4 font-semibold" 
-                          onClick={handleConnectPagerDuty}
-                          disabled={connectingPd}
-                        >
-                          {connectingPd ? (
-                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                          ) : (
-                            'Submit'
-                          )}
-                        </Button>
+                    </div>
+
+                    <div className="space-y-2 mb-6 p-3 rounded bg-muted/40 border border-border/50">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">Config</span>
+                        <span className="font-mono text-xs text-foreground">{integration.config}</span>
                       </div>
-                      {pdError && (
-                        <div className="text-xs text-destructive flex items-center gap-1 font-medium">
-                          <AlertCircle className="w-3.5 h-3.5" />
-                          {pdError}
+                      {integration.id === 'github' && (
+                        <>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Synced Repos</span>
+                            <span className="font-semibold">{integration.synced_repos_count}</span>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Last Sync</span>
+                            <span className="text-xs text-muted-foreground">{formatTimeAgo(integration.latest_sync_at)}</span>
+                          </div>
+                        </>
+                      )}
+                      {integration.id === 'pagerduty' && integration.note && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-1">
+                          <AlertTriangle className="w-3 h-3" />
+                          <span>{integration.note}</span>
                         </div>
                       )}
                     </div>
-                  )}
+
+                    {integration.id === 'pagerduty' && showPdForm && integration.status === 'disconnected' && (
+                      <div className="space-y-3 mb-6 p-4 border border-border bg-background rounded-lg animate-in fade-in duration-200">
+                        <div className="text-xs text-muted-foreground">
+                          Enter your PagerDuty REST API Key. You can generate one in PagerDuty under{" "}
+                          <a
+                            href="https://support.pagerduty.com/main/docs/api-access-keys"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-primary hover:underline inline-flex items-center gap-0.5"
+                          >
+                            Integrations → API Access Keys
+                            <ExternalLink className="w-3 h-3 text-muted-foreground" />
+                          </a>.
+                        </div>
+                        <div className="flex gap-2">
+                          <input
+                            type="password"
+                            placeholder="e.g. y_NbAkKc..."
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                            value={pdToken}
+                            onChange={(e) => setPdToken(e.target.value)}
+                          />
+                          <Button
+                            size="sm"
+                            className="h-9 px-4 font-semibold"
+                            onClick={handleConnectPagerDuty}
+                            disabled={connectingPd}
+                          >
+                            {connectingPd ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              'Submit'
+                            )}
+                          </Button>
+                        </div>
+                        {pdError && (
+                          <div className="text-xs text-destructive flex items-center gap-1 font-medium">
+                            <AlertCircle className="w-3.5 h-3.5" />
+                            {pdError}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
 
                   <div className="flex gap-2">
                     {integration.id === 'github' && integration.status === 'connected' && (
@@ -439,11 +518,16 @@ export default function IntegrationsPage() {
                       </Button>
                     )}
                     {integration.id === 'pagerduty' && integration.status === 'disconnected' && (
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="flex-1 gap-1.5" 
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1 gap-1.5"
                         onClick={() => {
+                          if (status && !status.terms_acknowledged) {
+                            setPendingAction('pagerduty')
+                            setShowTermsGateModal(true)
+                            return
+                          }
                           setShowPdForm(!showPdForm)
                           setPdError(null)
                         }}
@@ -464,6 +548,71 @@ export default function IntegrationsPage() {
           </div>
         )}
       </div>
+
+      {/* Terms Acknowledgment Modal */}
+      {showTermsGateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+          <div className="bg-card border border-border rounded-xl max-w-lg w-full p-6 space-y-6 shadow-2xl">
+            <div className="space-y-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                <ShieldCheck className="w-3.5 h-3.5" /> One-Time Workspace Requirement
+              </div>
+              <h3 className="text-xl font-bold text-foreground">
+                Pilot Program Agreement & Privacy Notice
+              </h3>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                Before connecting GitHub or PagerDuty to ingest operational data into your workspace, please acknowledge the NexOps Pilot Agreement and Privacy Notice.
+              </p>
+            </div>
+
+            <div className="p-4 rounded-lg border border-border/60 bg-muted/30 space-y-3">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="terms-checkbox"
+                  checked={termsAcceptedCheckbox}
+                  onChange={(e) => setTermsAcceptedCheckbox(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
+                />
+                <label htmlFor="terms-checkbox" className="text-sm font-medium leading-relaxed cursor-pointer select-none">
+                  I agree to the{' '}
+                  <Link href="/terms" target="_blank" prefetch={false} className="text-primary hover:underline font-semibold inline-flex items-center gap-0.5">
+                    Pilot Program Agreement
+                    <ExternalLink className="w-3 h-3 text-primary/80" />
+                  </Link>{' '}
+                  and{' '}
+                  <Link href="/privacy" target="_blank" prefetch={false} className="text-primary hover:underline font-semibold inline-flex items-center gap-0.5">
+                    Privacy Notice
+                    <ExternalLink className="w-3 h-3 text-primary/80" />
+                  </Link>.
+                </label>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 pt-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowTermsGateModal(false)
+                  setPendingAction(null)
+                  setTermsAcceptedCheckbox(false)
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                className="font-semibold px-6 gap-2"
+                disabled={!termsAcceptedCheckbox || acknowledgingTerms}
+                onClick={handleConfirmAcknowledgment}
+              >
+                {acknowledgingTerms ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Confirm & Continue'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </PageContent>
   )
 }

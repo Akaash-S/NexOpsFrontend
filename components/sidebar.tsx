@@ -133,9 +133,18 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
                 </div>
               )
             })}
+
+            <div className="pt-4 border-t border-sidebar-border px-3 text-[11px] text-sidebar-foreground/50 flex items-center justify-between">
+              <Link href="/terms" prefetch={false} className="hover:text-sidebar-foreground transition-colors">Terms</Link>
+              <span>•</span>
+              <Link href="/privacy" prefetch={false} className="hover:text-sidebar-foreground transition-colors">Privacy</Link>
+              <span>•</span>
+              <span>v1.0 Pilot</span>
+            </div>
           </div>
         </ScrollArea>
       </aside>
+
     </>
   )
 }

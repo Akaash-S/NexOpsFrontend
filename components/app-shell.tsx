@@ -21,12 +21,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   // Initialize global real-time WebSocket connection
   useRealtime()
 
-  const isPreApp = ['/', '/login', '/onboarding'].includes(pathname)
+  const isPreApp = ['/', '/login', '/onboarding', '/terms', '/privacy'].includes(pathname)
+  const isStandalonePublic = ['/terms', '/privacy'].includes(pathname)
   
   // Synchronous check to see if a redirect is pending
   const isRedirecting = !authLoading && (
     (!isAuthenticated && (!isPreApp || pathname === '/onboarding')) ||
-    (isAuthenticated && !onboardingComplete && pathname !== '/onboarding') ||
+    (isAuthenticated && !onboardingComplete && pathname !== '/onboarding' && !isStandalonePublic) ||
     (isAuthenticated && onboardingComplete && ['/', '/login', '/onboarding'].includes(pathname))
   )
 
@@ -46,7 +47,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         }
       } else {
         if (!onboardingComplete) {
-          if (pathname !== '/onboarding') {
+          if (pathname !== '/onboarding' && !isStandalonePublic) {
             router.replace('/onboarding')
             return
           }
@@ -62,7 +63,8 @@ export function AppShell({ children }: { children: ReactNode }) {
     }
 
     checkAuthAndRedirect()
-  }, [pathname, isAuthenticated, onboardingComplete, router, isPreApp, authLoading])
+  }, [pathname, isAuthenticated, onboardingComplete, router, isPreApp, isStandalonePublic, authLoading])
+
 
   // Avoid flash of wrong content: render loading state during redirects or auth checks
   if (isRedirecting || checkingAuth) {
