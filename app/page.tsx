@@ -79,6 +79,51 @@ export default function LandingPage() {
 
   return (
     <div className="bg-[#111319] text-[#e1e2ea] min-h-[200vh] selection:bg-[#5d8ef1]/20 selection:text-[#aec6ff]">
+      {/* ALWAYS VISIBLE TOP NAVIGATION BAR */}
+      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-6 max-w-container-max mx-auto left-0 right-0 bg-[#111319]/80 backdrop-blur-md border-b border-white/10">
+        {/* Logo docking placeholder target */}
+        <div
+          ref={logoTargetRef}
+          id="logo-target"
+          className="font-extrabold text-2xl tracking-tight text-transparent select-none"
+        >
+          NexOps
+        </div>
+
+        <div className="flex gap-6 md:gap-10 items-center">
+          <a
+            href="#engine"
+            className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors font-medium"
+          >
+            Engine
+          </a>
+          <a
+            href="#features"
+            className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors font-medium"
+          >
+            Methodology
+          </a>
+          <a
+            href="#sandbox"
+            className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors font-medium hidden sm:inline-block"
+          >
+            Sandbox
+          </a>
+          <a
+            href="#faq"
+            className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors font-medium hidden md:inline-block"
+          >
+            FAQ
+          </a>
+
+          <Link href="/login" prefetch={false}>
+            <button className="bg-[#5d8ef1] text-[#00275e] px-6 py-2.5 font-mono text-xs font-bold uppercase pill-button transition-all hover:brightness-110 active:scale-[0.98] shadow-lg shadow-[#5d8ef1]/20">
+              Request pilot access
+            </button>
+          </Link>
+        </div>
+      </nav>
+
       {/* THE ANIMATING INTRO LOGO */}
       <div
         ref={introLogoRef}
@@ -104,58 +149,6 @@ export default function LandingPage() {
         }`}
       >
 
-        {/* Navigation Shell */}
-        <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-6 max-w-container-max mx-auto left-0 right-0 bg-[#111319]/80 backdrop-blur-md border-b border-white/5">
-          {/* Logo docking placeholder */}
-          <div
-            ref={logoTargetRef}
-            id="logo-target"
-            className="font-bold text-2xl tracking-tight text-transparent select-none"
-          >
-            NexOps
-          </div>
-
-          <div className="hidden md:flex gap-8 lg:gap-12 items-center">
-            <a
-              href="#engine"
-              className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors"
-            >
-              Engine
-            </a>
-            <a
-              href="#features"
-              className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors"
-            >
-              Methodology
-            </a>
-            <a
-              href="#sandbox"
-              className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors"
-            >
-              Sandbox
-            </a>
-            <a
-              href="#faq"
-              className="font-mono text-xs uppercase tracking-widest text-[#c3c6d4] hover:text-[#aec6ff] transition-colors"
-            >
-              FAQ
-            </a>
-
-            <Link href="/login" prefetch={false}>
-              <button className="bg-[#5d8ef1] text-[#00275e] px-6 py-2.5 font-mono text-xs font-semibold uppercase pill-button transition-all hover:brightness-110 active:scale-[0.98] shadow-lg shadow-[#5d8ef1]/20">
-                Join the Pilot
-              </button>
-            </Link>
-          </div>
-
-          <div className="md:hidden flex items-center">
-            <Link href="/login" prefetch={false}>
-              <button className="bg-[#5d8ef1] text-[#00275e] px-4 py-2 font-mono text-xs font-semibold uppercase pill-button">
-                Join Pilot
-              </button>
-            </Link>
-          </div>
-        </nav>
 
         <main className="max-w-container-max mx-auto">
           {/* HERO SECTION */}
