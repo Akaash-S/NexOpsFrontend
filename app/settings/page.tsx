@@ -31,7 +31,9 @@ function SettingsPageContent() {
     setAuthenticated,
     currentUser,
     setCurrentUser,
-    authLoading
+    authLoading,
+    showExtendedNavigation,
+    setShowExtendedNavigation
   } = useAppState()
 
   // Tab routing support
@@ -654,6 +656,41 @@ function SettingsPageContent() {
                   <div className="p-3 rounded-lg bg-muted/20 border border-border/40">
                     <span className="text-muted-foreground block text-[10px] uppercase">Region</span>
                     <div className="font-bold text-foreground text-xs mt-0.5">us-east-1</div>
+                  </div>
+                </div>
+
+                {/* Extended Navigation Feature Gate Switch */}
+                <div className="p-4 rounded-lg bg-muted/20 border border-border/40 space-y-2 mt-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div>
+                      <h4 className="font-bold text-xs text-foreground uppercase tracking-wider">Extended Navigation Features</h4>
+                      <p className="text-xs text-muted-foreground mt-0.5">Enable or gate Analytics dashboard, Activity Stream, and Postmortems across the platform.</p>
+                    </div>
+                    <Switch
+                      checked={showExtendedNavigation}
+                      onCheckedChange={async (checked) => {
+                        setShowExtendedNavigation(checked)
+                        try {
+                          const { apiFetch } = await import('@/lib/api-client')
+                          await apiFetch('/workspaces/current', {
+                            method: 'PATCH',
+                            body: JSON.stringify({ show_extended_navigation: checked })
+                          })
+                          addNotification({
+                            title: 'Workspace Settings Updated',
+                            description: `Extended navigation features are now ${checked ? 'enabled' : 'disabled'}.`,
+                            type: 'success'
+                          })
+                        } catch (err) {
+                          console.error('Failed to update extended navigation flag:', err)
+                          addNotification({
+                            title: 'Update Failed',
+                            description: 'Failed to update extended navigation setting in database.',
+                            type: 'error'
+                          })
+                        }
+                      }}
+                    />
                   </div>
                 </div>
 

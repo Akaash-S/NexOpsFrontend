@@ -18,10 +18,13 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
+import { useAppState } from '@/lib/hooks/use-app-state'
+
 interface NavItem {
   label: string
   href: string
   icon: React.ReactNode
+  extended?: boolean
 }
 
 interface NavSection {
@@ -34,7 +37,7 @@ const navSections: NavSection[] = [
     title: 'OVERVIEW',
     items: [
       { label: 'Dashboard', href: '/dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
-      { label: 'Analytics',  href: '/analytics',  icon: <BarChart3 className="w-4 h-4" /> },
+      { label: 'Analytics',  href: '/analytics',  icon: <BarChart3 className="w-4 h-4" />, extended: true },
     ],
   },
   {
@@ -49,7 +52,7 @@ const navSections: NavSection[] = [
     items: [
       { label: 'Incidents', href: '/incidents', icon: <Bug className="w-4 h-4" /> },
       { label: 'Recent Changes', href: '/recent-changes', icon: <GitCommitHorizontal className="w-4 h-4" /> },
-      { label: 'Activity Stream', href: '/activity', icon: <Activity className="w-4 h-4" /> },
+      { label: 'Activity Stream', href: '/activity', icon: <Activity className="w-4 h-4" />, extended: true },
     ],
   },
   {
@@ -84,6 +87,7 @@ function NavItemComponent({ item, isActive }: { item: NavItem; isActive: boolean
 
 export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const pathname = usePathname()
+  const { showExtendedNavigation } = useAppState()
 
   return (
     <>
@@ -104,27 +108,31 @@ export function Sidebar({ isOpen, onClose }: { isOpen: boolean; onClose: () => v
       >
         <ScrollArea className="h-full w-full">
           <div className="p-4 space-y-6">
-            {navSections.map((section) => (
-              <div key={section.title}>
-                <div className="text-[10px] font-semibold tracking-widest text-sidebar-foreground/40 mb-2 px-3 uppercase">
-                  {section.title}
+            {navSections.map((section) => {
+              const visibleItems = section.items.filter((item) => !item.extended || showExtendedNavigation)
+              if (visibleItems.length === 0) return null
+              return (
+                <div key={section.title}>
+                  <div className="text-[10px] font-semibold tracking-widest text-sidebar-foreground/40 mb-2 px-3 uppercase">
+                    {section.title}
+                  </div>
+                  <div className="space-y-0.5">
+                    {visibleItems.map((item) => {
+                      const isActive =
+                        pathname === item.href ||
+                        (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
+                      return (
+                        <NavItemComponent
+                          key={item.href}
+                          item={item}
+                          isActive={isActive}
+                        />
+                      )
+                    })}
+                  </div>
                 </div>
-                <div className="space-y-0.5">
-                  {section.items.map((item) => {
-                    const isActive =
-                      pathname === item.href ||
-                      (item.href !== '/dashboard' && pathname.startsWith(item.href + '/'))
-                    return (
-                      <NavItemComponent
-                        key={item.href}
-                        item={item}
-                        isActive={isActive}
-                      />
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
+              )
+            })}
           </div>
         </ScrollArea>
       </aside>

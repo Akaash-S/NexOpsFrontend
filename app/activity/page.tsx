@@ -155,7 +155,9 @@ function PayloadModal({ event, open, onClose }: { event: EventItem | null; open:
   )
 }
 
-function ActivityPageContent() {
+export default function ActivityStreamPage() {
+  const router = useRouter()
+  const { showExtendedNavigation } = useAppState()
   const [events, setEvents] = useState<EventItem[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
@@ -213,6 +215,32 @@ function ActivityPageContent() {
   const criticalCount = events.filter((e) => (e.severity || '').toLowerCase() === 'critical').length
   const githubEventsCount = events.filter((e) => e.source.toLowerCase().includes('github')).length
   const automationCount = events.filter((e) => e.source.toLowerCase().includes('automation') || e.processed).length
+
+  if (!showExtendedNavigation) {
+    return (
+      <PageContent>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center text-warning shadow-lg shadow-warning/5">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1 max-w-md">
+            <h2 className="text-xl font-bold text-foreground">Activity Stream Gated</h2>
+            <p className="text-sm text-muted-foreground">
+              Activity Stream is gated behind the <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded border border-border">show_extended_navigation</code> workspace flag.
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 text-xs font-medium border-primary/30 text-primary hover:bg-primary/5 mt-2"
+            onClick={() => router.push('/settings?tab=workspace')}
+          >
+            Manage Workspace Settings
+          </Button>
+        </div>
+      </PageContent>
+    )
+  }
 
   return (
     <PageContent>

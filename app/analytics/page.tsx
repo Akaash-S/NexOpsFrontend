@@ -79,7 +79,12 @@ const CHART_COLORS = {
 
 const HEALTH_COLORS = ['#10b981', '#6366f1', '#f59e0b', '#ef4444']
 
+import { Lock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
 export default function AnalyticsPage() {
+  const router = useRouter()
+  const { showExtendedNavigation } = useAppState()
   const [stats, setStats]       = useState<any>(null)
   const [activity, setActivity] = useState<any[]>([])
   const [repos, setRepos]       = useState<any[]>([])
@@ -160,6 +165,32 @@ export default function AnalyticsPage() {
       issues: r.open_issues ?? r.openIssues ?? 0,
       health: r.health_score ?? r.healthScore ?? 0,
     }))
+
+  if (!showExtendedNavigation) {
+    return (
+      <PageContent>
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-warning/10 border border-warning/20 flex items-center justify-center text-warning shadow-lg shadow-warning/5">
+            <Lock className="w-7 h-7" />
+          </div>
+          <div className="space-y-1 max-w-md">
+            <h2 className="text-xl font-bold text-foreground">Analytics Gated</h2>
+            <p className="text-sm text-muted-foreground">
+              Analytics dashboard is gated behind the <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded border border-border">show_extended_navigation</code> workspace flag.
+            </p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 text-xs font-medium border-primary/30 text-primary hover:bg-primary/5 mt-2"
+            onClick={() => router.push('/settings?tab=workspace')}
+          >
+            Manage Workspace Settings
+          </Button>
+        </div>
+      </PageContent>
+    )
+  }
 
   return (
     <PageContent>

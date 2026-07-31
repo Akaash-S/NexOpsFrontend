@@ -48,9 +48,9 @@ interface AppContextType {
   watchedServices: string[];
   setWatchedServices: (services: string[]) => void;
   
-  // Dashboard density settings
-  density: 'comfortable' | 'compact';
-  setDensity: (density: 'comfortable' | 'compact') => void;
+  // Extended Navigation feature flag
+  showExtendedNavigation: boolean;
+  setShowExtendedNavigation: (show: boolean) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -80,6 +80,25 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   // Preferences & Settings State
   const [watchedServices, setWatchedServices] = useState<string[]>([]);
   const [density, setDensity] = useState<'comfortable' | 'compact'>('comfortable');
+  const [showExtendedNavigation, setShowExtendedNavigation] = useState<boolean>(false);
+
+  // Sync workspace feature flag when user is authenticated
+  useEffect(() => {
+    async function loadWorkspaceConfig() {
+      if (!isAuthenticated) return;
+      try {
+        const { apiFetch } = await import('@/lib/api-client');
+        const ws = await apiFetch('/workspaces/current');
+        if (ws && typeof ws.show_extended_navigation === 'boolean') {
+          setShowExtendedNavigation(ws.show_extended_navigation);
+        }
+      } catch (err) {
+        // Fallback: default stays False for un-configured workspaces
+        console.warn('Workspace config fetch fallback (default False):', err);
+      }
+    }
+    loadWorkspaceConfig();
+  }, [isAuthenticated]);
 
   // Listen to Firebase Auth state
   useEffect(() => {
@@ -304,6 +323,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     setWatchedServices,
     density,
     setDensity,
+    showExtendedNavigation,
+    setShowExtendedNavigation,
     authLoading,
   };
 

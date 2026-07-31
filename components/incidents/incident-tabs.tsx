@@ -38,12 +38,18 @@ const SEVERITY_CONFIG = {
   low: { bg: 'bg-muted text-muted-foreground', text: 'text-muted-foreground' },
 }
 
+import { useAppState } from '@/lib/hooks/use-app-state'
+import { Lock } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+
 export function IncidentTabs({
   incidents,
   selectedIncident,
   onSelectIncident,
   onStatusFilterChange,
 }: IncidentTabsProps) {
+  const { showExtendedNavigation } = useAppState()
+
   return (
     <Tabs defaultValue="open">
       <TabsList>
@@ -56,9 +62,11 @@ export function IncidentTabs({
         <TabsTrigger value="resolved" onClick={() => onStatusFilterChange('resolved')}>
           Resolved
         </TabsTrigger>
-        <TabsTrigger value="postmortems" onClick={() => onStatusFilterChange('resolved')}>
-          Postmortems
-        </TabsTrigger>
+        {showExtendedNavigation && (
+          <TabsTrigger value="postmortems" onClick={() => onStatusFilterChange('resolved')}>
+            Postmortems
+          </TabsTrigger>
+        )}
       </TabsList>
 
       <TabsContent value="open" className="space-y-3 mt-6">
@@ -163,7 +171,20 @@ function IncidentCard({
 }
 
 function PostmortemsTab({ incidents }: { incidents: Incident[] }) {
+  const { showExtendedNavigation } = useAppState()
   const [editingIncident, setEditingIncident] = useState<{ id: string; title: string } | null>(null)
+
+  if (!showExtendedNavigation) {
+    return (
+      <div className="p-8 text-center border border-dashed border-warning/30 rounded-lg bg-warning/5">
+        <Lock className="w-8 h-8 text-warning mx-auto mb-2" />
+        <h4 className="font-semibold text-sm text-foreground">Postmortems Feature Gated</h4>
+        <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">
+          Postmortems are gated behind the <code className="font-mono bg-muted px-1.5 py-0.5 rounded text-xs">show_extended_navigation</code> workspace setting.
+        </p>
+      </div>
+    )
+  }
 
   const resolved = incidents.filter((i) => i.status === 'resolved')
 
