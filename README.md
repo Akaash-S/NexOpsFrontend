@@ -74,7 +74,7 @@ updated-frontend/
 │   ├── ui/                     # shadcn/ui primitives (Cards, Badges, Buttons, Inputs)
 │   ├── dashboard/              # Active incidents, recent changes & topology components
 │   ├── top-nav.tsx             # Header navigation with profile & workspace state
-│   ├── sidebar.tsx             # 7-route platform navigation sidebar
+│   ├── sidebar.tsx             # Gated 7-route platform navigation sidebar
 │   ├── layout.tsx              # PageLayout, Grid, MetricCard, and EmptyState wrappers
 │   └── score-with-reasoning.tsx# Blast radius & risk score reasoning pills
 └── lib/
@@ -82,6 +82,29 @@ updated-frontend/
     ├── graph.ts                # Service dependency graph engine
     └── utils.ts                # Tailwind class merge helper
 ```
+
+---
+
+## 🔒 Feature Flag & Option C Navigation Gating
+
+To maintain NexOps' narrow product focus as a lightweight Causal Correlation Engine ("What caused this incident, and how do we know?"), extended enterprise capabilities are gated per-tenant via the `show_extended_navigation` workspace feature flag (default: `False`).
+
+### Core Correlation Scope (Always Active):
+- **Dashboard** (`/dashboard`): Correlation Command Center & candidate cause ranking
+- **Services Catalog** (`/services`): Microservices Catalog & derived health metrics
+- **Incident Investigation** (`/incidents`): Operational incident list & triage workspace
+- **Recent Changes** (`/recent-changes`): Deployment feed, blast radius & risk scores
+- **Settings** (`/settings`): Workspace configuration & feature flag toggles
+
+### Extended Navigation Features (Gated behind `show_extended_navigation = True`):
+1. **Automation Rules** (`/automation`): Event triggers, action runners & rule engine
+2. **Cluster Operations** (`/clusters`): Infrastructure cluster management
+3. **CI/CD Pipelines** (`/cicd`): Build pipeline telemetry
+4. **Topology Map** (`/dependencies` or `/graph`): Extended dependency graph visualization
+5. **Analytics Dashboard** (`/analytics`): Velocity stats & deployment outcome charts
+6. **Activity Stream** (`/activity`): Ingested webhook audit log & event telemetry
+7. **Postmortem Triage** (`/incidents/[id]/postmortem`): Detailed postmortem editor & publisher
+
 
 ---
 
