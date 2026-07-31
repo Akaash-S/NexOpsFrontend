@@ -31,7 +31,7 @@ export default function LandingPage() {
   useEffect(() => {
     const handleScroll = () => {
       const scrollY = window.scrollY
-      const threshold = 80 // Scroll threshold in px
+      const threshold = 90 // Smooth threshold for docking
 
       if (scrollY > threshold) {
         setIsScrolled(true)
@@ -48,7 +48,7 @@ export default function LandingPage() {
           introLogoRef.current.style.top = '50%'
           introLogoRef.current.style.left = '50%'
           introLogoRef.current.style.transform = 'translate(-50%, -50%)'
-          const initialFontSize = window.innerWidth < 768 ? '48px' : '64px'
+          const initialFontSize = window.innerWidth < 768 ? '48px' : '72px'
           introLogoRef.current.style.fontSize = initialFontSize
         }
       }
@@ -78,17 +78,17 @@ export default function LandingPage() {
   }
 
   return (
-    <div className="bg-[#111319] text-[#e1e2ea] min-h-screen selection:bg-[#5d8ef1]/20 selection:text-[#aec6ff]">
+    <div className="bg-[#111319] text-[#e1e2ea] min-h-[200vh] selection:bg-[#5d8ef1]/20 selection:text-[#aec6ff]">
       {/* THE ANIMATING INTRO LOGO */}
       <div
         ref={introLogoRef}
         id="intro-logo"
-        className="font-bold text-on-surface tracking-tight transition-all duration-700 ease-out select-none"
+        className="font-extrabold text-[#e1e2ea] tracking-tight transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] select-none drop-shadow-2xl"
         style={{
           top: '50%',
           left: '50%',
           transform: 'translate(-50%, -50%)',
-          fontSize: '64px',
+          fontSize: '72px',
         }}
       >
         NexOps
@@ -98,9 +98,12 @@ export default function LandingPage() {
       <div
         id="main-content"
         className={`transition-all duration-700 ease-out ${
-          isScrolled ? 'opacity-100 translate-y-0' : 'opacity-100 translate-y-0'
+          isScrolled
+            ? 'opacity-100 translate-y-0 pointer-events-auto'
+            : 'opacity-0 translate-y-8 pointer-events-none'
         }`}
       >
+
         {/* Navigation Shell */}
         <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-6 max-w-container-max mx-auto left-0 right-0 bg-[#111319]/80 backdrop-blur-md border-b border-white/5">
           {/* Logo docking placeholder */}
