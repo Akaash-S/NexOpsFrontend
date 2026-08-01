@@ -39,11 +39,16 @@ interface IntegrationCard {
 
 function formatTimeAgo(iso: string | null): string {
   if (!iso) return 'Never'
-  // If no timezone info is present in the string, treat it as UTC
-  // (legacy naive datetimes stored by the server are always UTC)
-  const normalized = /[Zz+\-]\d*$/.test(iso.trim()) ? iso : iso + 'Z'
-  const diff = Date.now() - new Date(normalized).getTime()
-  if (diff < 0) return 'Just now'  // clock skew guard
+  // Detect whether the string already carries timezone info.
+  // Handles: trailing Z, +HH:MM, and -HH:MM suffixes.
+  // If none found, the server stored a naive UTC datetime — append Z so the
+  // browser treats it as UTC instead of local time.
+  const hasTz = /Z$|[+-]\d{2}:\d{2}$/.test(iso.trim())
+  const normalized = hasTz ? iso : iso + 'Z'
+  const ms = new Date(normalized).getTime()
+  if (isNaN(ms)) return 'Unknown'           // guard against any future bad values
+  const diff = Date.now() - ms
+  if (diff < 0) return 'Just now'           // clock skew guard
   const minutes = Math.floor(diff / 60000)
   if (minutes < 1) return 'Just now'
   if (minutes < 60) return `${minutes}m ago`
