@@ -39,6 +39,9 @@ interface TopologyNode {
   vulnerabilities: number
   activity: number
   owner?: string | null
+  has_active_incident?: boolean
+  hasActiveIncident?: boolean
+  active_incident_title?: string | null
 }
 
 interface TopologyEdge {
@@ -54,8 +57,8 @@ interface TopologyResponse {
   edges: TopologyEdge[]
 }
 
-function deriveStatus(ciStatus: string, healthScore: number): 'healthy' | 'warning' | 'critical' {
-  if (ciStatus === 'failing' || healthScore < 50) return 'critical'
+function deriveStatus(ciStatus: string, healthScore: number, hasInc?: boolean, statusStr?: string): 'healthy' | 'warning' | 'critical' {
+  if (hasInc || statusStr === 'critical' || ciStatus === 'failing' || healthScore < 50) return 'critical'
   if (healthScore < 80) return 'warning'
   return 'healthy'
 }
@@ -83,6 +86,7 @@ function layoutGraph(nodes: TopologyNode[], edges: TopologyEdge[]): { flowNodes:
 
   const flowNodes: Node[] = nodes.map((node) => {
     const pos = g.node(node.id)
+    const hasInc = Boolean(node.has_active_incident || node.hasActiveIncident)
     return {
       id: node.id,
       type: 'service',
@@ -93,9 +97,11 @@ function layoutGraph(nodes: TopologyNode[], edges: TopologyEdge[]): { flowNodes:
       data: {
         label: node.name,
         health: Math.round(node.health_score),
-        status: node.status === 'disconnected' ? 'disconnected' : deriveStatus(node.ci_status, node.health_score),
-        ciStatus: node.ci_status,
+        status: node.status === 'disconnected' ? 'disconnected' : deriveStatus(node.ci_status, node.health_score, hasInc, node.status),
+        ciStatus: hasInc ? 'failing' : node.ci_status,
         criticality: deriveCriticality(node.health_score),
+        hasActiveIncident: hasInc,
+        activeIncidentTitle: node.active_incident_title,
       },
     }
   })

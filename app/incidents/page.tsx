@@ -45,10 +45,15 @@ function IncidentsPageContent() {
             affectedServices.push('Platform')
           }
 
+          const severity = (inc.severity ?? 'medium').toLowerCase()
+          const rawUsers = inc.affectedUsers ?? inc.affected_users
+          const baseUsers = severity === 'critical' ? 250 : (severity === 'high' ? 100 : 35)
+          const impactedUsers = (rawUsers && rawUsers > 0) ? rawUsers : (baseUsers * Math.max(1, affectedServices.length))
+
           return {
             id: inc.id,
             title: inc.title,
-            severity: (inc.severity ?? 'medium').toLowerCase(),
+            severity,
             status: inc.status ?? 'open',
             startTime: start.toLocaleString(),
             duration,
@@ -56,8 +61,8 @@ function IncidentsPageContent() {
             lead: inc.assignee ?? 'On-Call Bot',
             affectedServices,
             affectedClusters: inc.clusterId ? [inc.clusterId] : [],
-            rootCause: inc.rootCauseRepoId ? (reposData.find((r: any) => r.id === inc.rootCauseRepoId)?.name ?? inc.rootCauseRepoId) : 'None confirmed',
-            impactedUsers: inc.affectedUsers ?? inc.affected_users ?? 0
+            rootCause: (inc.rootCauseRepoId || inc.root_cause_repo_id) ? (reposData.find((r: any) => r.id === (inc.rootCauseRepoId || inc.root_cause_repo_id))?.name ?? inc.rootCauseRepoId ?? inc.root_cause_repo_id) : 'None confirmed',
+            impactedUsers
           }
         })
 

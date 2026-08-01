@@ -18,6 +18,8 @@ interface ServiceNode {
   openIssues: number
   vulnerabilities: number
   activity: number
+  hasActiveIncident?: boolean
+  activeIncidentTitle?: string | null
 }
 
 interface DependencyEdge {
@@ -43,7 +45,7 @@ const tierLabels = {
 function ServiceNodeCard({ node, edges }: { node: ServiceNode; edges: DependencyEdge[] }) {
   const downstreamCount = edges.filter((e) => e.target === node.id).length
   
-  const health = node.ciStatus === 'failing' ? 'critical' : (node.healthScore < 80 ? 'warning' : 'healthy')
+  const health = (node.hasActiveIncident || node.ciStatus === 'failing' || node.healthScore < 50) ? 'critical' : (node.healthScore < 80 ? 'warning' : 'healthy')
   const cfg = healthConfig[health]
   const noisyCount = node.vulnerabilities
 
@@ -63,8 +65,18 @@ function ServiceNodeCard({ node, edges }: { node: ServiceNode; edges: Dependency
         {downstreamCount > 0 && (
           <p className="text-[10px] text-muted-foreground leading-normal">{downstreamCount} upstream dependent{downstreamCount !== 1 ? 's' : ''}</p>
         )}
-        {/* Vulnerability badge */}
-        {noisyCount > 0 && (
+        {/* Active Incident or Vulnerability badge */}
+        {node.hasActiveIncident ? (
+          <div className="pt-0.5">
+            <Badge
+              variant="outline"
+              className="text-[9px] px-1.5 py-0.5 bg-destructive/15 text-destructive border-destructive/30 flex items-center gap-0.5 w-fit font-semibold"
+            >
+              <AlertTriangle className="w-2.5 h-2.5 text-destructive" />
+              Active Incident
+            </Badge>
+          </div>
+        ) : noisyCount > 0 ? (
           <div className="pt-0.5">
             <Badge
               variant="outline"
@@ -74,7 +86,7 @@ function ServiceNodeCard({ node, edges }: { node: ServiceNode; edges: Dependency
               {noisyCount} vuln
             </Badge>
           </div>
-        )}
+        ) : null}
       </div>
     </div>
   )
@@ -104,11 +116,13 @@ export function ImpactMap() {
             name: node.name,
             tier,
             owner: node.owner || '@team-platform',
-            healthScore: node.healthScore || 100,
-            ciStatus: node.ciStatus || 'passing',
-            openIssues: node.openIssues || 0,
+            healthScore: node.health_score ?? node.healthScore ?? 100,
+            ciStatus: node.ci_status ?? node.ciStatus ?? 'passing',
+            openIssues: node.open_issues ?? node.openIssues ?? 0,
             vulnerabilities: node.vulnerabilities || 0,
-            activity: node.activity || 0
+            activity: node.activity || 0,
+            hasActiveIncident: Boolean(node.has_active_incident || node.hasActiveIncident),
+            activeIncidentTitle: node.active_incident_title ?? node.activeIncidentTitle,
           }
         })
         
@@ -134,8 +148,8 @@ export function ImpactMap() {
 
   const tiers = ['ingress', 'service', 'data'] as const
 
-  const criticalNodes = topology.nodes.filter((n) => n.ciStatus === 'failing')
-  const warningNodes = topology.nodes.filter((n) => n.ciStatus !== 'failing' && n.healthScore < 80)
+  const criticalNodes = topology.nodes.filter((n) => n.hasActiveIncident || n.ciStatus === 'failing' || n.healthScore < 50)
+  const warningNodes = topology.nodes.filter((n) => !n.hasActiveIncident && n.ciStatus !== 'failing' && n.healthScore < 80)
   const noisyServiceCount = topology.nodes.filter((n) => n.vulnerabilities > 0).length
 
   return (
@@ -204,7 +218,9 @@ export function ImpactMap() {
           return (
             <div key={n.id} className="flex items-center gap-2 text-sm">
               <div className="w-2 h-2 rounded-full bg-destructive flex-shrink-0" />
-              <span>{n.name} is failing CI — {downstreamCount} upstream services affected</span>
+              <span>
+                {n.name} {n.hasActiveIncident ? 'has an active incident' : 'is failing CI'} — {downstreamCount} upstream service{downstreamCount !== 1 ? 's' : ''} affected
+              </span>
             </div>
           )
         })}
