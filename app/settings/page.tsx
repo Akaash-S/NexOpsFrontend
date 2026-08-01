@@ -727,14 +727,14 @@ function SettingsPageContent() {
                         variant="ghost"
                         size="sm"
                         className="h-6 px-2 text-[11px] gap-1 text-primary"
-                        onClick={() => copyToClipboard('https://nexopsbackend.onrender.com/api/v1/webhooks/pagerduty', 'PagerDuty Webhook')}
+                        onClick={() => copyToClipboard('https://nexops-server.asolvitra.tech/api/v1/webhooks/pagerduty', 'PagerDuty Webhook')}
                       >
                         {copiedKey === 'PagerDuty Webhook' ? <Check className="w-3 h-3 text-success" /> : <Copy className="w-3 h-3" />}
                         {copiedKey === 'PagerDuty Webhook' ? 'Copied' : 'Copy URL'}
                       </Button>
                     </div>
                     <div className="font-mono text-[11px] text-muted-foreground break-all bg-background/60 p-1.5 rounded border border-border/30">
-                      https://nexopsbackend.onrender.com/api/v1/webhooks/pagerduty
+                      https://nexops-server.asolvitra.tech/api/v1/webhooks/pagerduty
                     </div>
                   </div>
 
