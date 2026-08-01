@@ -7,7 +7,7 @@ import { IncidentTabs } from '@/components/incidents/incident-tabs'
 import { IncidentFilters } from '@/components/incidents/incident-filters'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import Link from 'next/link'
+import { AlertTriangle, Loader2 } from 'lucide-react'
 import { formatIST } from '@/lib/utils'
 
 function IncidentsPageContent() {
