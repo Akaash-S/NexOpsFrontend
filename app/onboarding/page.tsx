@@ -21,10 +21,13 @@ interface DiscoveredNode {
   enriched?: boolean
 }
 
+import { TermsGateModal } from '@/components/terms-gate-modal'
+
 export default function OnboardingPage() {
   const router = useRouter()
   const { setOnboardingComplete, currentUser } = useAppState()
   const [step, setStep] = useState(1)
+  const [showTermsModal, setShowTermsModal] = useState(false)
   
   // Connection states
   const [githubState, setGithubState] = useState<'disconnected' | 'connecting' | 'scanning' | 'done'>('disconnected')
@@ -32,6 +35,22 @@ export default function OnboardingPage() {
   const [pagerdutyToken, setPagerdutyToken] = useState('')
   const [showPdInput, setShowPdInput] = useState(false)
   const [pdError, setPdError] = useState<string | null>(null)
+
+  // Check terms acknowledgment status on mount
+  useEffect(() => {
+    async function checkTerms() {
+      try {
+        const { apiFetch } = await import('@/lib/api-client')
+        const statusData = await apiFetch('/integrations/status') as { terms_acknowledged: boolean }
+        if (!statusData.terms_acknowledged) {
+          setShowTermsModal(true)
+        }
+      } catch (err) {
+        console.error('Failed to check terms on onboarding:', err)
+      }
+    }
+    checkTerms()
+  }, [])
   
   // Discovered list states
   const [discoveredNodes, setDiscoveredNodes] = useState<DiscoveredNode[]>([])
@@ -590,6 +609,12 @@ export default function OnboardingPage() {
           </Card>
         )}
       </div>
+
+      {/* Post-Authentication Terms of Service & Privacy Notice Gate Modal */}
+      <TermsGateModal
+        isOpen={showTermsModal}
+        onSuccess={() => setShowTermsModal(false)}
+      />
     </div>
   )
 }

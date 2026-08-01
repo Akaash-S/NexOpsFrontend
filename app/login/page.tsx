@@ -11,6 +11,8 @@ import { cn } from '@/lib/utils'
 import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
 import { auth, githubProvider, googleProvider } from '@/lib/firebase'
 
+import { TermsGateModal } from '@/components/terms-gate-modal'
+
 type AuthProvider = 'GitHub' | 'Google' | 'email' | null
 
 export default function LoginPage() {
@@ -20,22 +22,52 @@ export default function LoginPage() {
   const [activeProvider, setActiveProvider] = useState<AuthProvider>(null)
   const [transitioning, setTransitioning] = useState(false)
   const [emailError, setEmailError] = useState('')
+  const [showTermsModal, setShowTermsModal] = useState(false)
 
   const loading = activeProvider !== null
 
-  // Automatically redirect if already authenticated
+  const proceedToApp = (isComplete: boolean) => {
+    if (isComplete) {
+      router.push('/dashboard')
+    } else {
+      router.push('/onboarding')
+    }
+  }
+
+  // Automatically check terms acknowledgment after successful authentication
   useEffect(() => {
     if (isAuthenticated) {
       setTransitioning(true)
-      if (onboardingComplete) {
-        router.push('/dashboard')
-      } else {
-        router.push('/onboarding')
+
+      async function checkTermsStatus() {
+        try {
+          const { apiFetch } = await import('@/lib/api-client')
+          const statusData = await apiFetch('/integrations/status') as { terms_acknowledged: boolean }
+          if (!statusData.terms_acknowledged) {
+            setShowTermsModal(true)
+            setTransitioning(false)
+          } else {
+            proceedToApp(onboardingComplete)
+          }
+        } catch (err) {
+          console.error('Failed to check terms status:', err)
+          setShowTermsModal(true)
+          setTransitioning(false)
+        }
       }
+
+      checkTermsStatus()
     } else {
       setTransitioning(false)
+      setShowTermsModal(false)
     }
   }, [isAuthenticated, onboardingComplete, router])
+
+  const handleTermsSuccess = () => {
+    setShowTermsModal(false)
+    setTransitioning(true)
+    proceedToApp(onboardingComplete)
+  }
 
   const handleLogin = async (provider: AuthProvider) => {
     if (loading) return
@@ -229,6 +261,12 @@ export default function LoginPage() {
           <span>Real Firebase Auth integration is active.</span>
         </div>
       </div>
+
+      {/* Post-Authentication Terms of Service & Privacy Notice Gate Modal */}
+      <TermsGateModal
+        isOpen={showTermsModal}
+        onSuccess={handleTermsSuccess}
+      />
     </div>
   )
 }
