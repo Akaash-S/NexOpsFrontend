@@ -39,7 +39,11 @@ interface IntegrationCard {
 
 function formatTimeAgo(iso: string | null): string {
   if (!iso) return 'Never'
-  const diff = Date.now() - new Date(iso).getTime()
+  // If no timezone info is present in the string, treat it as UTC
+  // (legacy naive datetimes stored by the server are always UTC)
+  const normalized = /[Zz+\-]\d*$/.test(iso.trim()) ? iso : iso + 'Z'
+  const diff = Date.now() - new Date(normalized).getTime()
+  if (diff < 0) return 'Just now'  // clock skew guard
   const minutes = Math.floor(diff / 60000)
   if (minutes < 1) return 'Just now'
   if (minutes < 60) return `${minutes}m ago`
@@ -58,6 +62,8 @@ export default function IntegrationsPage() {
   const [pdToken, setPdToken] = useState('')
   const [connectingPd, setConnectingPd] = useState(false)
   const [pdError, setPdError] = useState<string | null>(null)
+  // Tick every 30s so "X minutes ago" stays live without a page reload
+  const [, setTick] = useState(0)
 
   // Terms Acknowledgment Gate Modal State
   const [showTermsGateModal, setShowTermsGateModal] = useState(false)
@@ -111,6 +117,12 @@ export default function IntegrationsPage() {
       }
     }
     loadStatus()
+  }, [])
+
+  // Live-refresh the "X minutes ago" label every 30 seconds
+  useEffect(() => {
+    const id = setInterval(() => setTick(t => t + 1), 30_000)
+    return () => clearInterval(id)
   }, [])
 
   const integrations: IntegrationCard[] = useMemo(() => {
