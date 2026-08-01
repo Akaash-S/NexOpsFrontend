@@ -211,10 +211,21 @@ export default function IntegrationsPage() {
         method: 'POST',
         body: JSON.stringify({ token: pdToken.trim() })
       })
-      const data = await apiFetch('/integrations/status') as StatusResponse
-      setStatus(data)
+      // Optimistically update UI immediately so the user sees the connected state
+      // even before the status re-fetch completes.
+      setStatus(prev => prev ? {
+        ...prev,
+        pagerduty: { ...prev.pagerduty, connected: true, config: 'API Token Connected' }
+      } : prev)
       setShowPdForm(false)
       setPdToken('')
+      // Then re-fetch authoritative status from backend in the background
+      try {
+        const data = await apiFetch('/integrations/status') as StatusResponse
+        setStatus(data)
+      } catch (statusErr) {
+        console.warn('Status re-fetch after PagerDuty connect failed (UI already updated optimistically):', statusErr)
+      }
     } catch (err: any) {
       if (err?.status === 403 || err?.message?.includes('Terms of Service')) {
         openTermsGateModal('pagerduty')
