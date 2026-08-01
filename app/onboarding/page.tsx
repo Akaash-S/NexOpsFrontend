@@ -27,6 +27,7 @@ export default function OnboardingPage() {
   const router = useRouter()
   const { setOnboardingComplete, currentUser } = useAppState()
   const [step, setStep] = useState(1)
+  const [checkingTerms, setCheckingTerms] = useState(true)
   const [showTermsModal, setShowTermsModal] = useState(false)
   
   // Connection states
@@ -44,9 +45,14 @@ export default function OnboardingPage() {
         const statusData = await apiFetch('/integrations/status') as { terms_acknowledged: boolean }
         if (!statusData.terms_acknowledged) {
           setShowTermsModal(true)
+        } else {
+          setShowTermsModal(false)
         }
       } catch (err) {
         console.error('Failed to check terms on onboarding:', err)
+        setShowTermsModal(true)
+      } finally {
+        setCheckingTerms(false)
       }
     }
     checkTerms()
@@ -266,6 +272,19 @@ export default function OnboardingPage() {
     if (step === 2) return 90
     if (step === 3) return 100
     return 10
+  }
+
+  // Full-screen loading spinner while checking workspace terms requirement
+  if (checkingTerms) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-200">
+        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
+          <span className="text-xl font-black text-primary-foreground">N</span>
+        </div>
+        <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
+        <p className="text-xs text-muted-foreground font-medium">Checking workspace requirements…</p>
+      </div>
+    )
   }
 
   return (
