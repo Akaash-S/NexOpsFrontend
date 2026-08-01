@@ -81,4 +81,4 @@ If the production `ENCRYPTION_KEY` needs to be rotated, follow this zero-downtim
 
 ## 📬 Reporting Vulnerabilities
 
-If you discover a potential security issue in NexOps, please do not create a public GitHub issue. Send a report to `security@nexops.dev` including steps to reproduce. Critical issues will be triaged within 24 hours.
+If you discover a potential security issue in NexOps, please do not create a public GitHub issue. Send a report to `akaashgithub21@gmail.com` including steps to reproduce. Critical issues will be triaged within 24 hours.

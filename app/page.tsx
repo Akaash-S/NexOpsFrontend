@@ -865,7 +865,7 @@ export default function LandingPage() {
                 Integrations
               </Link>
             </div>
-            <p>© 2026 NexOps Inc. All rights reserved.</p>
+            <p>© 2026 NexOps Platform. All rights reserved.</p>
           </div>
         </footer>
       </div>

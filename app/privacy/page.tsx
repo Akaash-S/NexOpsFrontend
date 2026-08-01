@@ -46,7 +46,7 @@ export default function PrivacyPage() {
           <section className="space-y-2">
             <h2 className="text-xl font-bold text-foreground">1. Who we are</h2>
             <p>
-              NexOps is operated by NexOps Inc. ("we", "us", "our"). This notice explains what data we collect during the pilot, why, and what your options are.
+              NexOps is operated by NexOps Platform ("we", "us", "our"). This notice explains what data we collect during the pilot, why, and what your options are.
             </p>
           </section>
 
@@ -105,14 +105,14 @@ export default function PrivacyPage() {
           <section className="space-y-2 border-t border-border/40 pt-4">
             <h2 className="text-xl font-bold text-foreground">8. Contact</h2>
             <p>
-              Questions about your data: <a href="mailto:privacy@nexops.dev" className="text-primary hover:underline">privacy@nexops.dev</a>.
+              Questions about your data: <a href="mailto:akaashgithub21@gmail.com" className="text-primary hover:underline">akaashgithub21@gmail.com</a>.
             </p>
           </section>
         </div>
       </main>
 
       <footer className="py-8 px-6 border-t border-border/40 bg-card/30 text-center text-xs text-muted-foreground flex flex-col sm:flex-row items-center justify-between max-w-4xl mx-auto w-full gap-4">
-        <p>© 2026 NexOps Inc. All rights reserved.</p>
+        <p>© 2026 NexOps Platform. All rights reserved.</p>
         <div className="flex items-center gap-6">
           <Link href="/terms" prefetch={false} className="hover:text-foreground transition-colors">Terms of Service</Link>
           <Link href="/privacy" prefetch={false} className="font-semibold text-foreground hover:text-primary transition-colors">Privacy Notice</Link>
