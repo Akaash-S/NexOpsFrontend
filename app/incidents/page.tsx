@@ -8,7 +8,7 @@ import { IncidentFilters } from '@/components/incidents/incident-filters'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { AlertTriangle, Loader2 } from 'lucide-react'
+import { formatIST } from '@/lib/utils'
 
 function IncidentsPageContent() {
   const router = useRouter()
@@ -55,7 +55,7 @@ function IncidentsPageContent() {
             title: inc.title,
             severity,
             status: inc.status ?? 'open',
-            startTime: start.toLocaleString(),
+            startTime: formatIST(start),
             duration,
             durationMins,
             lead: inc.assignee ?? 'On-Call Bot',

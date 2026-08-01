@@ -23,7 +23,7 @@ import {
   BellOff,
   Loader2,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatIST, formatISTShort } from '@/lib/utils'
 import { CandidateCause } from '@/lib/types'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
@@ -214,7 +214,7 @@ export default function IncidentInvestigationPage() {
                 const tsStr = e.timestamp ?? e.createdAt ?? e.created_at
                 const dateObj = tsStr ? new Date(tsStr) : null
                 const validTime = dateObj && !isNaN(dateObj.getTime())
-                  ? dateObj.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+                  ? formatISTShort(dateObj)
                   : 'Recent'
                 return {
                   time: validTime,
@@ -231,9 +231,9 @@ export default function IncidentInvestigationPage() {
 
         if (timeline.length === 0) {
           timeline = [
-            { time: start.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
-            { time: new Date(start.getTime() + 180000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
-            { time: new Date(start.getTime() + 480000).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }), event: `On-Call engineer acknowledged and began investigation` }
+            { time: formatISTShort(start), event: 'Incident detected by monitoring system' },
+            { time: formatISTShort(new Date(start.getTime() + 180000)), event: 'Severity escalated and alerts grouped' },
+            { time: formatISTShort(new Date(start.getTime() + 480000)), event: `On-Call engineer acknowledged and began investigation` }
           ]
         }
 
@@ -250,7 +250,7 @@ export default function IncidentInvestigationPage() {
           duration,
           impactedUsers: incidentData.affected_users ?? incidentData.affectedUsers ?? 0,
           lead: incidentData.assignee || 'On-Call Bot',
-          startTime: start.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
+          startTime: formatIST(start),
           relatedAlerts: incidentData.relatedAlerts || 3,
           timeline,
           candidateCauses: mappedCauses,

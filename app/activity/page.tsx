@@ -39,7 +39,7 @@ import {
   Loader2,
   ExternalLink,
 } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, formatIST } from '@/lib/utils'
 import { apiFetch } from '@/lib/api-client'
 import { useRouter } from 'next/navigation'
 import { Lock } from 'lucide-react'
@@ -361,7 +361,7 @@ function ActivityPageContent() {
       ) : (
         <div className="space-y-3">
           {filteredEvents.map((evt) => {
-            const timeStr = evt.timestamp ? new Date(evt.timestamp).toLocaleString() : 'Just now'
+            const timeStr = evt.timestamp ? formatIST(evt.timestamp) : 'Just now'
             return (
               <Card
                 key={evt.id}

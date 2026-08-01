@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select'
 import { Package, Settings, AlertTriangle, CheckCircle, AlertCircle, Flame, ChevronDown, ChevronUp, Search, GitCommitHorizontal, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, formatIST } from '@/lib/utils'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
 const typeConfig = {
@@ -302,7 +302,7 @@ function RecentChangesPageContent() {
         serviceName,
         service: dep.repoId,
         message: dep.changelog || 'No deployment notes.',
-        time: dep.deployedAt ? new Date(dep.deployedAt).toLocaleString() : 'Just now',
+        time: dep.deployedAt ? formatIST(dep.deployedAt) : 'Just now',
         author: dep.deployedBy || 'system',
         incidents: isFailing ? 1 : 0,
         type: 'deployment',

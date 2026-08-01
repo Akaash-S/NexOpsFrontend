@@ -9,6 +9,7 @@ import { ServiceFilters } from '@/components/services/service-filters'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Network, Loader2 } from 'lucide-react'
+import { formatISTShort } from '@/lib/utils'
 
 function ServicesPageContent() {
   const searchParams = useSearchParams()
@@ -66,9 +67,9 @@ function ServicesPageContent() {
             const sortedDeploys = [...repoDeploys].sort((a: any, b: any) => 
               new Date(b.deployed_at).getTime() - new Date(a.deployed_at).getTime()
             )
-            lastDeployedStr = new Date(sortedDeploys[0].deployed_at).toLocaleDateString()
+            lastDeployedStr = formatISTShort(sortedDeploys[0].deployed_at)
           } else if (repo.lastCommitAt) {
-            lastDeployedStr = new Date(repo.lastCommitAt).toLocaleDateString()
+            lastDeployedStr = formatISTShort(repo.lastCommitAt)
           }
 
           const failedDeploys = repoDeploys.filter((d: any) => d.status === 'failed' || d.status === 'rolled_back').length
