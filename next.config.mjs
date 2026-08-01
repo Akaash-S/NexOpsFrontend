@@ -25,13 +25,15 @@ const nextConfig = {
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           // Enforce HTTPS for 1 year (only safe once fully on HTTPS)
           { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
-          // Content Security Policy — restricts script, style, image, and connect sources
+          // Cross-Origin-Opener-Policy — allow popups for Google/GitHub OAuth authentication
+          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin-allow-popups' },
+          // Content Security Policy — restricts script, style, image, connect, and frame sources
           {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
-              // Scripts: self + Google APIs (Firebase Auth)
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com",
+              // Scripts: self + Google APIs (Firebase Auth) + gstatic
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://apis.google.com https://www.gstatic.com https://*.firebaseapp.com",
               // Styles: self + inline (Tailwind generates inline styles)
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
               // Fonts
@@ -39,9 +41,9 @@ const nextConfig = {
               // Images: self + data URIs + Google avatars + ui-avatars CDN
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://ui-avatars.com",
               // API connections: self + backend Render URL + Firebase + Google APIs
-              "connect-src 'self' http://localhost:8000 ws://localhost:8000 http://127.0.0.1:8000 ws://127.0.0.1:8000 https://nexopsbackend.onrender.com https://*.googleapis.com https://*.firebaseio.com wss://nexopsbackend.onrender.com",
-              // Frames: Google auth popup
-              "frame-src https://accounts.google.com",
+              "connect-src 'self' http://localhost:8000 ws://localhost:8000 http://127.0.0.1:8000 ws://127.0.0.1:8000 https://nexopsbackend.onrender.com https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com wss://nexopsbackend.onrender.com",
+              // Frames: Google accounts + Firebase auth handler popup/iframe
+              "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://gothamcrimemanagement.firebaseapp.com",
               // No plugins
               "object-src 'none'",
               // Base URI restricted to self
