@@ -101,7 +101,10 @@ function ServicesPageContent() {
         )
 
         // Health & Status Calculation
-        let health = 100
+        // Source of truth: actual DB health_score (backend sends snake_case since by_alias is not set globally)
+        const storedHealth = Math.round(repo.health_score ?? repo.healthScore ?? 100)
+
+        let health = storedHealth
         let status: 'healthy' | 'warning' | 'critical' | 'disconnected' = 'healthy'
 
         if (repo.status === 'disconnected') {
@@ -109,19 +112,17 @@ function ServicesPageContent() {
           health = 0
         } else if (directActiveIncident) {
           status = 'critical'
-          health = directActiveIncident.severity === 'critical' || directActiveIncident.severity === 'error' ? 25 : 35
+          health = Math.min(storedHealth, directActiveIncident.severity === 'critical' || directActiveIncident.severity === 'error' ? 25 : 35)
         } else if (candidateActiveIncident) {
           status = 'warning'
-          health = 55
+          health = Math.min(storedHealth, 55)
         } else if (upstreamActiveIncident) {
           status = 'warning'
-          health = 68
-        } else if (cfr > 30 || failedDeploys > 0) {
-          status = 'warning'
-          health = Math.max(70, Math.round(90 - cfr * 0.3))
+          health = Math.min(storedHealth, 68)
         } else {
-          status = (repo.status === 'failing' || repo.ciStatus === 'failing') ? 'warning' : 'healthy'
-          health = status === 'warning' ? 75 : Math.max(90, Math.round(100 - cfr * 0.2))
+          // No active incident — use stored health as-is and derive status from it
+          status = storedHealth >= 80 ? 'healthy' : storedHealth >= 50 ? 'warning' : 'critical'
+          health = storedHealth
         }
 
         const mttrDisplay = incidents30dCount > 0 ? `${Math.min(incidents30dCount * 12 + 15, 60)}m` : 'N/A'
