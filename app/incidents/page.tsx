@@ -9,7 +9,7 @@ import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { AlertTriangle, Loader2 } from 'lucide-react'
-import { formatIST } from '@/lib/utils'
+import { formatIST, parseUTCDate } from '@/lib/utils'
 
 function IncidentsPageContent() {
   const router = useRouter()
@@ -35,8 +35,8 @@ function IncidentsPageContent() {
         ])
         
         const mapped = incidentsData.map((inc: any) => {
-          const start = new Date(inc.startedAt ?? inc.started_at ?? inc.created_at ?? Date.now())
-          const end = (inc.resolvedAt || inc.resolved_at) ? new Date(inc.resolvedAt ?? inc.resolved_at) : new Date()
+          const start = parseUTCDate(inc.startedAt ?? inc.started_at ?? inc.created_at) ?? new Date()
+          const end = (inc.resolvedAt || inc.resolved_at) ? (parseUTCDate(inc.resolvedAt ?? inc.resolved_at) ?? new Date()) : new Date()
           const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
           const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
           

@@ -23,7 +23,7 @@ import {
   BellOff,
   Loader2,
 } from 'lucide-react'
-import { cn, formatIST, formatISTShort } from '@/lib/utils'
+import { cn, formatIST, formatISTShort, parseUTCDate } from '@/lib/utils'
 import { CandidateCause } from '@/lib/types'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
@@ -227,7 +227,7 @@ export default function IncidentInvestigationPage() {
           console.error("Timeline load failed, using fallbacks:", timelineErr)
         }
 
-        const start = new Date(incidentData.startedAt ?? incidentData.started_at ?? incidentData.created_at ?? Date.now())
+        const start = parseUTCDate(incidentData.startedAt ?? incidentData.started_at ?? incidentData.created_at) ?? new Date()
 
         if (timeline.length === 0) {
           timeline = [
@@ -287,8 +287,8 @@ export default function IncidentInvestigationPage() {
           confirmed: c.confirmed
         }))
 
-        const start = new Date(incidentData.startedAt || incidentData.started_at)
-        const end = incidentData.resolvedAt ? new Date(incidentData.resolvedAt) : new Date()
+        const start = parseUTCDate(incidentData.startedAt || incidentData.started_at || incidentData.created_at) ?? new Date()
+        const end = incidentData.resolvedAt ? (parseUTCDate(incidentData.resolvedAt) ?? new Date()) : new Date()
         const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
         const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
 
@@ -296,9 +296,9 @@ export default function IncidentInvestigationPage() {
         let timeline = incident?.timeline || []
         if (timeline.length === 0) {
           timeline = [
-            { time: start.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Incident detected by monitoring system' },
-            { time: new Date(start.getTime() + 180000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: 'Severity escalated and alerts grouped' },
-            { time: new Date(start.getTime() + 480000).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), event: `On-Call engineer acknowledged and began investigation` }
+            { time: formatISTShort(start), event: 'Incident detected by monitoring system' },
+            { time: formatISTShort(new Date(start.getTime() + 180000)), event: 'Severity escalated and alerts grouped' },
+            { time: formatISTShort(new Date(start.getTime() + 480000)), event: `On-Call engineer acknowledged and began investigation` }
           ]
         }
 
@@ -311,7 +311,7 @@ export default function IncidentInvestigationPage() {
           duration,
           impactedUsers: incidentData.affectedUsers || incidentData.affected_users || 1200,
           lead: incidentData.assignee || 'On-Call Bot',
-          startTime: start.toLocaleString(),
+          startTime: formatIST(start),
           relatedAlerts: incidentData.relatedAlerts || 3,
           timeline,
           candidateCauses: mappedCauses,
