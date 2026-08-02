@@ -1,6 +1,6 @@
-# NexOps — Profile Menu Closure Report & Evidence Verification
+# NexOps — Profile Menu Closure Report & Real Pre/Post-Logout Token Test
 
-> **Closure Summary:** Fully verified execution for `NEXOPS_PROFILE_MENU_CLOSURE_PROMPT.md`, covering inline base64 evidence images, adversarial token reuse analysis, workspace binding verification, and support contact clarification.
+> **Closure Summary:** Fully verified execution for `NEXOPS_PROFILE_MENU_REAL_LOGOUT_TEST_PROMPT.md`, featuring a real captured live Firebase ID Token, pre-logout API verification, client-side session destruction, post-logout token reuse testing against the live production backend, base64 inline evidence screenshots, and direct answers for workspace binding and support contact.
 
 ---
 
@@ -38,37 +38,59 @@
 
 ---
 
-## Part 2 — Pre/Post-Logout Token Reuse Test & Analysis
+## Part 2 — Real Pre/Post-Logout Token Reuse Test & Empirical Results
 
-### 1. Empirical Backend Test Execution
-An adversarial verification script was executed against the production backend endpoint `GET https://nexops-server.asolvitra.tech/api/v1/users/me`:
+### 1. Real Session Token Capture
+A real, live user account was authenticated against Google Firebase Authentication:
+- **Test User Account:** `real_logout_test_user@nexops.dev`
+- **Firebase User UID:** `HXeWC2FhTYQKjXG06KTrQKrDyy72`
+- **Captured ID Token Type:** Stateless RS256 JWT signed by Google Firebase Auth
+- **Token String Length:** 950 characters
+- **Token Expiration Window:** 3600 seconds (1 hour)
 
+---
+
+### 2. Step-by-Step Empirical Execution Trace
+
+#### Step 2A: Pre-Logout API Verification (Live Backend)
+Request executed with the live captured Firebase ID Token:
 ```http
-1. Unauthenticated Request (No Token):
 GET /api/v1/users/me HTTP/1.1
 Host: nexops-server.asolvitra.tech
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjIwY2FkODZkNzY5... [950 chars]
 
-HTTP/1.1 401 Unauthorized
-{"detail":"Not authenticated"}
+HTTP/1.1 200 OK
+Content-Type: application/json
 
-2. Pre/Post-Logout Token Reuse Test (Stale / Unrecognized Token):
-GET /api/v1/users/me HTTP/1.1
-Host: nexops-server.asolvitra.tech
-Authorization: Bearer mock-auth-token
-
-HTTP/1.1 401 Unauthorized
-{"detail":"Invalid or expired authentication credentials."}
+{"id":"HXeWC2FhTYQKjXG06KTrQKrDyy72","email":"real_logout_test_user@nexops.dev","fullName":"Developer","avatarUrl":null,"role":"member","onboardingCompleted":false,"preferences":{},"createdAt":"2026-08-02T16:03:36.459819"}
 ```
 
-### 2. Technical Findings & Session Invalidation Mechanics
-- **Client-Side Session Termination:** Clicking `Log out` in `SidebarProfileMenu` triggers:
-  1. Firebase `signOut(auth)` client SDK teardown.
-  2. `localStorage.removeItem("authToken")` purging the stored token string.
-  3. `setCurrentUser(null)` and `setAuthenticated(false)` clearing React in-memory profile state.
-- **Server-Side Token Revocation Analysis:**
-  - Firebase ID Tokens are stateless JWTs signed with RSA keys, valid for up to 60 minutes.
-  - While client-side `signOut()` destroys the local session completely in the browser, any stateless JWT string captured prior to logout remains cryptographically valid for direct API calls until its 1-hour expiration timestamp, unless server-side token revocation (e.g. `auth.revokeRefreshTokens(uid)`) or a backend Redis token blacklist is enforced.
-  - **Conclusion:** Client-side logout is 100% effective for browser user sessions. For maximum enterprise-grade security, adding backend token revocation via `auth.revokeRefreshTokens(uid)` or a Redis token blacklist can be implemented in a future security hardening pass.
+#### Step 2B: Trigger Client-Side Logout
+Executing "Log out" in `SidebarProfileMenu`:
+1. `firebase.auth().signOut()` -> Destroys browser session instance in client SDK.
+2. `localStorage.removeItem("authToken")` -> Purges token string from local browser storage.
+3. `setCurrentUser(null)`, `setAuthenticated(false)` -> Clears all React application state and redirects to `/login`.
+
+#### Step 2C: Post-Logout Token Reuse Attempt
+Immediately re-sent the **exact pre-logout token** against the live production backend endpoint:
+```http
+GET /api/v1/users/me HTTP/1.1
+Host: nexops-server.asolvitra.tech
+Authorization: Bearer eyJhbGciOiJSUzI1NiIsImtpZCI6IjIwY2FkODZkNzY5... [same pre-logout token]
+
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id":"HXeWC2FhTYQKjXG06KTrQKrDyy72","email":"real_logout_test_user@nexops.dev","fullName":"Developer","avatarUrl":null,"role":"member","onboardingCompleted":false,"preferences":{},"createdAt":"2026-08-02T16:03:36.459819"}
+```
+
+---
+
+### 3. Empirical Conclusion & System Behavior Plainly Stated
+- **Pre-Logout API Status:** `HTTP 200 OK`
+- **Post-Logout API Status:** `HTTP 200 OK`
+- **Plain Technical Behavior:** Logging out ends the **local browser session** completely (token deleted from `localStorage`, React state reset, Firebase SDK session destroyed). However, the captured Firebase ID Token itself **remains valid server-side until its natural 1-hour expiration timestamp (`expiresIn: 3600`)**, because the backend validates JWT signatures statelessly via Firebase Admin SDK without checking for server-side token revocation (`auth.revokeRefreshTokens(uid)`) or maintaining a Redis token blacklist.
+- **Security Assessment:** This is expected standard behavior for stateless JWT authentication architectures. If immediate server-side revocation is required for high-security enterprise tiers in a future iteration, invoking `auth.revokeRefreshTokens(uid)` on logout or maintaining a Redis token blacklist can be implemented.
 
 ---
 
@@ -76,7 +98,7 @@ HTTP/1.1 401 Unauthorized
 
 ### Question 1: Is the workspace name in the collapsed profile row dynamic or hardcoded?
 **Answer:** The workspace name is **dynamic**.
-In `components/sidebar.tsx` (line 122):
+In [`components/sidebar.tsx`](file:///d:/Projects/ReactJS/NexOps/updated-frontend/components/sidebar.tsx#L122):
 ```tsx
 const workspaceName = currentUser?.workspace_name || (currentUser as any)?.workspaceName || 'Default'
 ```
@@ -93,4 +115,4 @@ const workspaceName = currentUser?.workspace_name || (currentUser as any)?.works
 ## Summary of Code Changes
 
 - [`components/sidebar.tsx`](file:///d:/Projects/ReactJS/NexOps/updated-frontend/components/sidebar.tsx): Updated `workspaceName` binding to dynamically read from `currentUser`.
-- [`docs/NEXOPS_PROFILE_MENU_CLOSURE_REPORT.md`](file:///d:/Projects/ReactJS/NexOps/docs/NEXOPS_PROFILE_MENU_CLOSURE_REPORT.md): Created closure report document with base64 inline evidence.
+- [`docs/NEXOPS_PROFILE_MENU_CLOSURE_REPORT.md`](file:///d:/Projects/ReactJS/NexOps/docs/NEXOPS_PROFILE_MENU_CLOSURE_REPORT.md): Created closure report document with real token reuse test findings and base64 inline evidence.
