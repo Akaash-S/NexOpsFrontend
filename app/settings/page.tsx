@@ -2,6 +2,7 @@
 
 import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { useTheme } from 'next-themes'
 import { PageContent, PageHeader } from '@/components/layout'
 import { Card } from '@/components/ui/card'
@@ -942,6 +943,27 @@ function SettingsPageContent() {
           </div>
         </TabsContent>
       </Tabs>
+
+      {/* Platform Information & Legal Policies */}
+      <Card className="p-4 border border-border/80 bg-card/60 flex flex-col sm:flex-row justify-between items-center gap-4 text-xs text-muted-foreground mt-8">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          <span className="font-semibold text-foreground">NexOps Platform</span>
+          <span className="text-muted-foreground/40">•</span>
+          <Badge variant="outline" className="text-[10px] bg-primary/10 text-primary border-primary/20 font-mono">
+            v1.0 Pilot
+          </Badge>
+        </div>
+        <div className="flex items-center gap-4 text-xs">
+          <Link href="/terms" prefetch={false} className="hover:text-foreground hover:underline transition-colors font-medium">
+            Terms of Service
+          </Link>
+          <span className="text-muted-foreground/40">•</span>
+          <Link href="/privacy" prefetch={false} className="hover:text-foreground hover:underline transition-colors font-medium">
+            Privacy Notice
+          </Link>
+        </div>
+      </Card>
     </PageContent>
   )
 }
