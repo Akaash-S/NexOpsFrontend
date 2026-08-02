@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Menu, Search, Bell, Settings, User, Command, ChevronDown, Network, LogOut } from 'lucide-react'
+import { Menu, Search, Bell, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Input } from '@/components/ui/input'
 import { Sidebar } from './sidebar'
 import { CommandPalette } from './command-palette'
 import { useAppState } from '@/lib/hooks/use-app-state'
@@ -24,11 +23,9 @@ export function TopNav() {
   const {
     setCommandPaletteOpen,
     getUnreadCount,
-    setAuthenticated,
     notifications,
     markNotificationAsRead,
     markAllAsRead,
-    currentUser
   } = useAppState()
   const [sidebarOpen, setSidebarOpen] = useState(false)
 
@@ -185,43 +182,6 @@ export function TopNav() {
                     ))
                   )}
                 </div>
-              </DropdownMenuContent>
-            </DropdownMenu>
-            {/* User Profile Menu */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="overflow-hidden rounded-full border border-border/40 w-8 h-8 hover:border-primary/40 transition-colors">
-                  <img
-                    src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`}
-                    alt={currentUser?.name || 'User Profile'}
-                    className="w-full h-full object-cover"
-                  />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 p-2 space-y-1">
-                <div className="flex items-center gap-2.5 px-2 py-2">
-                  <div className="w-8 h-8 rounded-full overflow-hidden border border-border/60 flex-shrink-0">
-                    <img
-                      src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`}
-                      alt={currentUser?.name || 'User Profile'}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="overflow-hidden">
-                    <p className="text-xs font-bold text-foreground truncate">{currentUser?.name || 'Matt Murdock'}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{currentUser?.email || 'mattpersonal321@gmail.com'}</p>
-                  </div>
-                </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => {
-                    setAuthenticated(false)
-                    router.push('/')
-                  }}
-                  className="text-xs gap-2 cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                >
-                  <LogOut className="w-3.5 h-3.5" /> Sign Out
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
