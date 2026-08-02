@@ -26,6 +26,7 @@ interface Service {
   deploymentFrequency: string
   mttr: string
   incidents30d: number
+  activeIncident?: any
 }
 
 interface ServiceDetailsDrawerProps {
@@ -133,11 +134,26 @@ export function ServiceDetailsDrawer({ service, onClose }: ServiceDetailsDrawerP
 
         {/* Content */}
         <div className="p-4 space-y-6">
+          {/* Active Incident Banner */}
+          {service.activeIncident && (
+            <Card className="p-4 border-destructive/50 bg-destructive/10 text-foreground space-y-2">
+              <div className="flex items-center gap-2 text-destructive font-semibold">
+                <AlertCircle className="w-5 h-5 animate-pulse" />
+                <span>Active Incident: {service.activeIncident.title || 'Ongoing Incident Detected'}</span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Status: <span className="capitalize font-medium text-foreground">{service.activeIncident.status}</span> | Severity: <span className="uppercase font-medium text-destructive">{service.activeIncident.severity}</span>
+              </p>
+            </Card>
+          )}
+
           {/* Key Metrics */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <Card className="p-3">
               <p className="text-xs text-muted-foreground">Health Score</p>
-              <p className="text-2xl font-bold text-success mt-1">{service.health}%</p>
+              <p className={`text-2xl font-bold mt-1 ${service.health < 50 ? 'text-destructive' : service.health < 80 ? 'text-warning' : 'text-success'}`}>
+                {service.health}%
+              </p>
             </Card>
             <Card className="p-3">
               <p className="text-xs text-muted-foreground">CFR</p>

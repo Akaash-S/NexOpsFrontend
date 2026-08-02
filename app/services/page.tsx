@@ -27,83 +27,154 @@ function ServicesPageContent() {
     }
   }, [searchParams])
 
+  async function loadServices() {
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      const [repos, topology, deployments, incidents] = await Promise.all([
+        apiFetch('/repos'),
+        apiFetch('/dependencies/topology'),
+        apiFetch('/deployments'),
+        apiFetch('/incidents')
+      ]) as [any[], any, any[], any[]]
+
+      const activeIncidents = (incidents || []).filter((inc: any) => inc.status !== 'resolved')
+      const nowMs = Date.now()
+      const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000
+      
+      const mapped = repos.map((repo: any) => {
+        // Find dependencies (upstream) and dependents (downstream)
+        const repoDepEdges = (topology?.edges || []).filter((e: any) => e.source === repo.id)
+        const repoDeps = repoDepEdges.map((e: any) => {
+          const targetNode = topology?.nodes?.find((n: any) => n.id === e.target)
+          return targetNode?.name || e.target
+        })
+        const repoDepIds = repoDepEdges.map((e: any) => e.target)
+
+        const repoDependentEdges = (topology?.edges || []).filter((e: any) => e.target === repo.id)
+        const repoDependents = repoDependentEdges.map((e: any) => {
+          const sourceNode = topology?.nodes?.find((n: any) => n.id === e.source)
+          return sourceNode?.name || e.source
+        })
+
+        // Filter deployments for this repo
+        const repoDeploys = (deployments || []).filter((d: any) => d.repo_id === repo.id)
+        const deploymentsCount = repoDeploys.length
+        
+        let lastDeployedStr = 'N/A'
+        if (repoDeploys.length > 0) {
+          const sortedDeploys = [...repoDeploys].sort((a: any, b: any) => 
+            new Date(b.deployed_at || b.created_at).getTime() - new Date(a.deployed_at || a.created_at).getTime()
+          )
+          lastDeployedStr = formatISTShort(sortedDeploys[0].deployed_at || sortedDeploys[0].created_at)
+        } else if (repo.lastCommitAt) {
+          lastDeployedStr = formatISTShort(repo.lastCommitAt)
+        }
+
+        const failedDeploys = repoDeploys.filter((d: any) => d.status === 'failed' || d.status === 'rolled_back' || d.status === 'failure' || d.status === 'error').length
+        const cfr = deploymentsCount > 0 ? Math.round((failedDeploys / deploymentsCount) * 100) : 0
+
+        // Calculate Real PagerDuty/NexOps Incidents for this repo
+        const repoIncidents = (incidents || []).filter((inc: any) => {
+          const isDirect = inc.root_cause_repo_id === repo.id || inc.repo_id === repo.id
+          const causes = inc.candidateCauses || inc.candidate_causes || []
+          const isCandidate = causes.some((c: any) => c.repo_id === repo.id)
+          return isDirect || isCandidate
+        })
+
+        const incidents30dCount = repoIncidents.filter((inc: any) => {
+          const createdTime = new Date(inc.created_at).getTime()
+          return (nowMs - createdTime) <= thirtyDaysMs
+        }).length
+
+        // Active Incidents Impact
+        const directActiveIncident = activeIncidents.find((inc: any) => 
+          inc.root_cause_repo_id === repo.id || inc.repo_id === repo.id
+        )
+
+        const candidateActiveIncident = activeIncidents.find((inc: any) => {
+          const causes = inc.candidateCauses || inc.candidate_causes || []
+          return causes.some((c: any) => c.repo_id === repo.id && c.score >= 40)
+        })
+
+        const upstreamActiveIncident = activeIncidents.find((inc: any) => 
+          repoDepIds.includes(inc.root_cause_repo_id) || repoDepIds.includes(inc.repo_id)
+        )
+
+        // Health & Status Calculation
+        let health = 100
+        let status: 'healthy' | 'warning' | 'critical' | 'disconnected' = 'healthy'
+
+        if (repo.status === 'disconnected') {
+          status = 'disconnected'
+          health = 0
+        } else if (directActiveIncident) {
+          status = 'critical'
+          health = directActiveIncident.severity === 'critical' || directActiveIncident.severity === 'error' ? 25 : 35
+        } else if (candidateActiveIncident) {
+          status = 'warning'
+          health = 55
+        } else if (upstreamActiveIncident) {
+          status = 'warning'
+          health = 68
+        } else if (cfr > 30 || failedDeploys > 0) {
+          status = 'warning'
+          health = Math.max(70, Math.round(90 - cfr * 0.3))
+        } else {
+          status = (repo.status === 'failing' || repo.ciStatus === 'failing') ? 'warning' : 'healthy'
+          health = status === 'warning' ? 75 : Math.max(90, Math.round(100 - cfr * 0.2))
+        }
+
+        const mttrDisplay = incidents30dCount > 0 ? `${Math.min(incidents30dCount * 12 + 15, 60)}m` : 'N/A'
+
+        return {
+          id: repo.id,
+          name: repo.name,
+          team: repo.owner || '@team-platform',
+          health: health,
+          status: status,
+          deployments: deploymentsCount,
+          rawDeployments: repoDeploys,
+          dependencies: repoDeps,
+          dependents: repoDependents,
+          lastDeployed: lastDeployedStr,
+          owner: repo.owner || '@team-platform',
+          criticality: repo.name.includes('gateway') || repo.name.includes('auth') || repo.name.includes('payment') || repo.name.includes('protype') ? 'critical' : 'medium',
+          changeFailureRate: cfr,
+          deploymentFrequency: deploymentsCount > 10 ? 'multiple-daily' : (deploymentsCount > 3 ? 'daily' : (deploymentsCount > 0 ? 'weekly' : 'none')),
+          mttr: mttrDisplay,
+          incidents30d: incidents30dCount,
+          activeIncident: directActiveIncident || candidateActiveIncident || upstreamActiveIncident || null
+        }
+      })
+      setServices(mapped)
+    } catch (err) {
+      console.error("Failed to load services:", err)
+    } finally {
+      setLoading(false)
+    }
+  }
+
   useEffect(() => {
     if (isEmpty) {
       setLoading(false)
       return
     }
 
-    async function loadServices() {
-      try {
-        const { apiFetch } = await import('@/lib/api-client')
-        const [repos, topology, deployments] = await Promise.all([
-          apiFetch('/repos'),
-          apiFetch('/dependencies/topology'),
-          apiFetch('/deployments')
-        ]) as [any[], any, any[]]
-        
-        const mapped = repos.map((repo: any) => {
-          // Find dependencies (upstream) and dependents (downstream)
-          const repoDeps = (topology.edges || [])
-            .filter((e: any) => e.source === repo.id)
-            .map((e: any) => {
-              const targetNode = topology.nodes?.find((n: any) => n.id === e.target)
-              return targetNode?.name || e.target
-            })
+    loadServices()
 
-          const repoDependents = (topology.edges || [])
-            .filter((e: any) => e.target === repo.id)
-            .map((e: any) => {
-              const sourceNode = topology.nodes?.find((n: any) => n.id === e.source)
-              return sourceNode?.name || e.source
-            })
-
-          // Filter deployments for this repo
-          const repoDeploys = (deployments || []).filter((d: any) => d.repo_id === repo.id)
-          const deploymentsCount = repoDeploys.length
-          
-          let lastDeployedStr = 'N/A'
-          if (repoDeploys.length > 0) {
-            const sortedDeploys = [...repoDeploys].sort((a: any, b: any) => 
-              new Date(b.deployed_at).getTime() - new Date(a.deployed_at).getTime()
-            )
-            lastDeployedStr = formatISTShort(sortedDeploys[0].deployed_at)
-          } else if (repo.lastCommitAt) {
-            lastDeployedStr = formatISTShort(repo.lastCommitAt)
-          }
-
-          const failedDeploys = repoDeploys.filter((d: any) => d.status === 'failed' || d.status === 'rolled_back').length
-          const cfr = deploymentsCount > 0 ? Math.round((failedDeploys / deploymentsCount) * 100) : 0
-          const mttrDisplay = repo.issueCount > 0 ? `${Math.min(repo.issueCount * 12, 60)}m` : 'N/A'
-
-          return {
-            id: repo.id,
-            name: repo.name,
-            team: repo.owner || '@team-platform',
-            health: Math.round(repo.healthScore || 100),
-            status: repo.status === 'disconnected' ? 'disconnected' : ((repo.status === 'passing' || repo.ciStatus === 'passing' || repo.status === 'success') ? 'healthy' : (repo.status === 'failing' || repo.ciStatus === 'failing' ? 'critical' : 'warning')),
-            deployments: deploymentsCount,
-            rawDeployments: repoDeploys,
-            dependencies: repoDeps,
-            dependents: repoDependents,
-            lastDeployed: lastDeployedStr,
-            owner: repo.owner || '@team-platform',
-            criticality: repo.name.includes('gateway') || repo.name.includes('auth') || repo.name.includes('payment') ? 'critical' : 'medium',
-            changeFailureRate: cfr,
-            deploymentFrequency: deploymentsCount > 10 ? 'multiple-daily' : (deploymentsCount > 3 ? 'daily' : (deploymentsCount > 0 ? 'weekly' : 'none')),
-            mttr: mttrDisplay,
-            incidents30d: repo.issueCount || 0
-          }
-        })
-        setServices(mapped)
-      } catch (err) {
-        console.error("Failed to load services:", err)
-      } finally {
-        setLoading(false)
-      }
+    const handleRefresh = () => {
+      loadServices()
     }
 
-    loadServices()
+    window.addEventListener('nexops:incident.created', handleRefresh)
+    window.addEventListener('nexops:incident.updated', handleRefresh)
+    window.addEventListener('nexops:incident.resolved', handleRefresh)
+
+    return () => {
+      window.removeEventListener('nexops:incident.created', handleRefresh)
+      window.removeEventListener('nexops:incident.updated', handleRefresh)
+      window.removeEventListener('nexops:incident.resolved', handleRefresh)
+    }
   }, [isEmpty])
 
   const [filters, setFilters] = useState({
