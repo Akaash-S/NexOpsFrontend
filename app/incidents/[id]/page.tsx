@@ -237,7 +237,8 @@ export default function IncidentInvestigationPage() {
           ]
         }
 
-        const end = incidentData.resolvedAt ? new Date(incidentData.resolvedAt) : new Date()
+        const rawResolvedAt = incidentData.resolvedAt ?? incidentData.resolved_at
+        const end = rawResolvedAt ? (parseUTCDate(rawResolvedAt) ?? new Date()) : new Date()
         const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
         const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
 
@@ -288,7 +289,8 @@ export default function IncidentInvestigationPage() {
         }))
 
         const start = parseUTCDate(incidentData.startedAt || incidentData.started_at || incidentData.created_at) ?? new Date()
-        const end = incidentData.resolvedAt ? (parseUTCDate(incidentData.resolvedAt) ?? new Date()) : new Date()
+        const rawResolvedAt = incidentData.resolvedAt ?? incidentData.resolved_at
+        const end = rawResolvedAt ? (parseUTCDate(rawResolvedAt) ?? new Date()) : new Date()
         const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
         const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
 
