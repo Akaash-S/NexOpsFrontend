@@ -16,7 +16,7 @@ interface AppContextType {
   // Command palette
   commandPaletteOpen: boolean;
   setCommandPaletteOpen: (open: boolean) => void;
-  
+
   // Notifications
   notifications: Notification[];
   addNotification: (notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => void;
@@ -24,11 +24,11 @@ interface AppContextType {
   markAllAsRead: () => void;
   clearNotifications: () => void;
   getUnreadCount: () => number;
-  
+
   // User state
-  currentUser: { name: string; email: string; avatar?: string; id?: string; workspace_id?: string; preferences?: any } | null;
-  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string; workspace_id?: string; preferences?: any } | null) => void;
-  
+  currentUser: { name: string; email: string; avatar?: string; id?: string; workspace_id?: string; workspace_name?: string; preferences?: any } | null;
+  setCurrentUser: (user: { name: string; email: string; avatar?: string; id?: string; workspace_id?: string; workspace_name?: string; preferences?: any } | null) => void;
+
   // Sidebar state
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
@@ -47,7 +47,7 @@ interface AppContextType {
   // Watched services settings
   watchedServices: string[];
   setWatchedServices: (services: string[]) => void;
-  
+
   // UI density
   density: 'comfortable' | 'compact';
   setDensity: (density: 'comfortable' | 'compact') => void;
@@ -106,8 +106,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   // Listen to Firebase Auth state
   useEffect(() => {
-    let unsubscribe = () => {};
-    
+    let unsubscribe = () => { };
+
     async function initAuth() {
       // Check for dev/test token in localStorage
       if (typeof window !== 'undefined') {
@@ -129,13 +129,13 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       try {
         const { onAuthStateChanged } = await import('firebase/auth');
         const { auth } = await import('@/lib/firebase');
-        
+
         unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
           if (fbUser) {
             try {
               const token = await fbUser.getIdToken();
               localStorage.setItem("authToken", token);
-              
+
               // Fetch user profile from backend to verify onboarding status
               const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"
               const res = await fetch(`${baseUrl}/users/me`, {
@@ -143,7 +143,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                   "Authorization": `Bearer ${token}`
                 }
               });
-              
+
               if (res.ok) {
                 const dbUser = await res.json();
                 setCurrentUser({
@@ -196,7 +196,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         setAuthLoading(false);
       }
     }
-    
+
     initAuth();
     return () => unsubscribe();
   }, []);
@@ -204,7 +204,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   // Sync feedback confirmation states on startup or when user is authenticated
   useEffect(() => {
     if (!isAuthenticated) return;
-    
+
     async function fetchIncidentFeedback() {
       try {
         const { apiFetch } = await import('@/lib/api-client');
@@ -222,7 +222,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         console.error("Failed to load initial feedback states", err);
       }
     }
-    
+
     fetchIncidentFeedback();
   }, [isAuthenticated]);
 
@@ -261,7 +261,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
           confirmed: value
         })
       });
-      
+
       // Add notification for confirmation changes
       addNotification({
         title: value === true ? 'Causal Candidate Confirmed' : value === false ? 'Candidate Cause Ruled Out' : 'Cause Reset',
