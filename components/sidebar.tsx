@@ -119,7 +119,7 @@ function SidebarProfileMenu({ onCloseMobile }: { onCloseMobile: () => void }) {
 
   const userName = currentUser?.name || 'Matt'
   const userEmail = currentUser?.email || 'mattpersonal321@gmail.com'
-  const workspaceName = 'Default'
+  const workspaceName = currentUser?.workspace_name || (currentUser as any)?.workspaceName || 'Default'
 
   const initials =
     userName
