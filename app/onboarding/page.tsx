@@ -30,7 +30,7 @@ export default function OnboardingPage() {
   const [step, setStep] = useState(1)
   const [checkingTerms, setCheckingTerms] = useState(true)
   const [showTermsModal, setShowTermsModal] = useState(false)
-  
+
   // Connection states
   const [githubState, setGithubState] = useState<'disconnected' | 'connecting' | 'scanning' | 'done'>('disconnected')
   const [pagerdutyState, setPagerdutyState] = useState<'disconnected' | 'connecting' | 'scanning' | 'done'>('disconnected')
@@ -58,11 +58,11 @@ export default function OnboardingPage() {
     }
     checkTerms()
   }, [])
-  
+
   // Discovered list states
   const [discoveredNodes, setDiscoveredNodes] = useState<DiscoveredNode[]>([])
   const [pagerdutyEnrichedDone, setPagerdutyEnrichedDone] = useState(false)
-  
+
   // Topology state for previewing graph in Step 2
   const [topology, setTopology] = useState<{ nodes: any[]; edges: any[] }>({ nodes: [], edges: [] })
 
@@ -75,10 +75,10 @@ export default function OnboardingPage() {
     const searchParams = new URLSearchParams(window.location.search)
     if (searchParams.get('success') === 'github_connected') {
       setGithubState('scanning')
-      
+
       // Clean query params
       window.history.replaceState({}, document.title, window.location.pathname)
-      
+
       async function triggerSync() {
         try {
           const { apiFetch } = await import('@/lib/api-client')
@@ -91,10 +91,10 @@ export default function OnboardingPage() {
               workspaceId: 'default-workspace'
             })
           })
-          
+
           // Fetch synced repositories from the database
           const repos = await apiFetch('/repos')
-          
+
           if (repos && repos.length > 0) {
             setDiscoveredNodes(repos.map((r: any, idx: number) => {
               const nameLower = r.name.toLowerCase()
@@ -116,7 +116,7 @@ export default function OnboardingPage() {
               }
             }))
           }
-          
+
           setGithubState('done')
         } catch (err) {
           console.error("Failed to sync GitHub repositories:", err)
@@ -124,7 +124,7 @@ export default function OnboardingPage() {
           alert("Failed to synchronize repositories from GitHub. Please try connecting again.")
         }
       }
-      
+
       triggerSync()
     }
   }, [])
@@ -160,7 +160,7 @@ export default function OnboardingPage() {
       return
     }
     setGithubState('connecting')
-    
+
     try {
       const { apiFetch } = await import('@/lib/api-client')
       const { url } = await apiFetch('/integrations/github/oauth-url')
@@ -185,16 +185,16 @@ export default function OnboardingPage() {
     setPdError(null)
     setPagerdutyState('connecting')
     setShowPdInput(false)
-    
+
     try {
       const { apiFetch } = await import('@/lib/api-client')
       await apiFetch('/integrations/pagerduty/connect', {
         method: 'POST',
         body: JSON.stringify({ token: pagerdutyToken.trim() })
       })
-      
+
       setPagerdutyState('scanning')
-      
+
       // Staggered enrichment of nodes (150ms per node)
       let i = 0
       if (pagerdutyIntervalRef.current) clearInterval(pagerdutyIntervalRef.current)
@@ -279,7 +279,7 @@ export default function OnboardingPage() {
   if (checkingTerms) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-200">
-        <NexOpsLogo size="xl" className="h-20" />
+        <NexOpsLogo size="xl" />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground font-medium">Checking workspace requirements…</p>
       </div>
@@ -294,15 +294,15 @@ export default function OnboardingPage() {
 
       {/* Main Container */}
       <div className="w-full max-w-[550px] space-y-6 z-10">
-        
+
         {/* Progress indicator */}
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
           <span>Onboarding Progress</span>
           <span>Step {step} of 3</span>
         </div>
         <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden">
-          <div 
-            className="h-full bg-primary transition-all duration-500 rounded-full" 
+          <div
+            className="h-full bg-primary transition-all duration-500 rounded-full"
             style={{ width: `${getDynamicProgress()}%` }}
           />
         </div>
@@ -345,9 +345,9 @@ export default function OnboardingPage() {
                     Scanning…
                   </Button>
                 ) : (
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
+                  <Button
+                    size="sm"
+                    variant="outline"
                     className="h-8 px-4 font-semibold"
                     onClick={handleConnectGithub}
                   >
@@ -384,9 +384,9 @@ export default function OnboardingPage() {
                       Scanning…
                     </Badge>
                   ) : (
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-8 px-4 font-semibold"
                       onClick={handleConnectPagerDuty}
                       disabled={githubState !== 'done'}
@@ -400,9 +400,9 @@ export default function OnboardingPage() {
                   <div className="space-y-3 pt-2 border-t border-border/30 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="text-xs text-muted-foreground">
                       Enter your PagerDuty REST API Key. You can generate one in PagerDuty under{" "}
-                      <a 
-                        href="https://support.pagerduty.com/main/docs/api-access-keys" 
-                        target="_blank" 
+                      <a
+                        href="https://support.pagerduty.com/main/docs/api-access-keys"
+                        target="_blank"
                         rel="noreferrer"
                         className="text-primary hover:underline inline-flex items-center gap-0.5"
                       >
@@ -477,8 +477,8 @@ export default function OnboardingPage() {
                   <div className="divide-y divide-border/30">
                     {discoveredNodes.map((node) => {
                       return (
-                        <div 
-                          key={node.id} 
+                        <div
+                          key={node.id}
                           className="p-3 text-xs flex items-center justify-between animate-in fade-in slide-in-from-bottom-2 duration-300 bg-card/30"
                         >
                           <div className="flex items-center gap-2">
@@ -489,7 +489,7 @@ export default function OnboardingPage() {
                             <span className="font-semibold text-foreground">{node.name}</span>
                             <span className="text-[10px] text-muted-foreground font-mono">({node.tier})</span>
                           </div>
-                          
+
                           <div className="flex items-center gap-3">
                             <span className="text-[10px] text-muted-foreground hidden sm:inline-block">
                               {node.owner}

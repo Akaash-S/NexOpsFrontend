@@ -25,7 +25,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   const isPreApp = ['/', '/login', '/onboarding', '/terms', '/privacy'].includes(pathname)
   const isStandalonePublic = ['/terms', '/privacy'].includes(pathname)
-  
+
   // Synchronous check to see if a redirect is pending
   const isRedirecting = !authLoading && (
     (!isAuthenticated && (!isPreApp || pathname === '/onboarding')) ||
@@ -60,7 +60,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           }
         }
       }
-      
+
       setCheckingAuth(false)
     }
 
@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (isRedirecting || checkingAuth) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4">
-        <NexOpsLogo size="xl" className="h-20" />
+        <NexOpsLogo size="xl" />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground">Redirecting...</p>
       </div>
