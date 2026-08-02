@@ -16,13 +16,14 @@ import { Input } from '@/components/ui/input'
 import { Sidebar } from './sidebar'
 import { CommandPalette } from './command-palette'
 import { useAppState } from '@/lib/hooks/use-app-state'
+import { NexOpsLogo } from '@/components/ui/nexops-logo'
 import { cn } from '@/lib/utils'
 
 export function TopNav() {
   const router = useRouter()
-  const { 
-    setCommandPaletteOpen, 
-    getUnreadCount, 
+  const {
+    setCommandPaletteOpen,
+    getUnreadCount,
     setAuthenticated,
     notifications,
     markNotificationAsRead,
@@ -30,7 +31,7 @@ export function TopNav() {
     currentUser
   } = useAppState()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-  
+
   const unreadCount = getUnreadCount()
 
   return (
@@ -51,10 +52,7 @@ export function TopNav() {
 
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2 whitespace-nowrap" prefetch={false}>
-              <div className="w-6 h-6 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-xs font-bold text-primary-foreground">N</span>
-              </div>
-              <span className="hidden sm:inline text-sm font-semibold">NexOps</span>
+              <NexOpsLogo size="md" className="h-8" />
             </Link>
 
             {/* Workspace Switcher */}
@@ -116,7 +114,7 @@ export function TopNav() {
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border/60 bg-muted/20">
                   <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Notifications</span>
                   {unreadCount > 0 && (
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.preventDefault()
                         markAllAsRead()
@@ -191,9 +189,9 @@ export function TopNav() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="overflow-hidden rounded-full border border-border/40 w-8 h-8 hover:border-primary/40 transition-colors">
-                  <img 
-                    src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`} 
-                    alt={currentUser?.name || 'User Profile'} 
+                  <img
+                    src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`}
+                    alt={currentUser?.name || 'User Profile'}
                     className="w-full h-full object-cover"
                   />
                 </Button>
@@ -201,9 +199,9 @@ export function TopNav() {
               <DropdownMenuContent align="end" className="w-56 p-2 space-y-1">
                 <div className="flex items-center gap-2.5 px-2 py-2">
                   <div className="w-8 h-8 rounded-full overflow-hidden border border-border/60 flex-shrink-0">
-                    <img 
-                      src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`} 
-                      alt={currentUser?.name || 'User Profile'} 
+                    <img
+                      src={currentUser?.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser?.name || 'Matt Murdock')}&background=0D8ABC&color=fff&bold=true`}
+                      alt={currentUser?.name || 'User Profile'}
                       className="w-full h-full object-cover"
                     />
                   </div>
@@ -213,7 +211,7 @@ export function TopNav() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem 
+                <DropdownMenuItem
                   onClick={() => {
                     setAuthenticated(false)
                     router.push('/')
@@ -230,7 +228,7 @@ export function TopNav() {
 
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
+
       {/* Command Palette */}
       <CommandPalette />
     </>

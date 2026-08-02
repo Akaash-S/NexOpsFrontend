@@ -7,6 +7,8 @@ export const metadata = {
   description: 'NexOps Privacy Notice detailing data collection, usage, retention, and choices during the pilot.',
 }
 
+import { NexOpsLogo } from '@/components/ui/nexops-logo'
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col justify-between">
@@ -14,10 +16,7 @@ export default function PrivacyPage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" prefetch={false} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center font-black text-primary-foreground">
-                N
-              </div>
-              <span className="font-extrabold text-lg tracking-tight">NexOps</span>
+              <NexOpsLogo size="md" className="h-8" />
             </Link>
             <span className="text-muted-foreground text-sm font-medium">/ Privacy Notice</span>
           </div>

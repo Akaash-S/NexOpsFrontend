@@ -12,6 +12,7 @@ import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPass
 import { auth, githubProvider, googleProvider } from '@/lib/firebase'
 
 import { TermsGateModal } from '@/components/terms-gate-modal'
+import { NexOpsLogo } from '@/components/ui/nexops-logo'
 
 type AuthProvider = 'GitHub' | 'Google' | 'email' | null
 
@@ -126,9 +127,7 @@ export default function LoginPage() {
   if (transitioning) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-300">
-        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-          <span className="text-xl font-black text-primary-foreground">N</span>
-        </div>
+        <NexOpsLogo size="xl" className="h-12" />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground">Setting up your workspace…</p>
       </div>
@@ -147,9 +146,7 @@ export default function LoginPage() {
       )}>
         {/* Brand Logo & Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-            <span className="text-xl font-black text-primary-foreground">N</span>
-          </div>
+          <NexOpsLogo size="xl" className="h-12" />
           <h1 className="text-2xl font-bold tracking-tight mt-4">Welcome to NexOps</h1>
           <p className="text-sm text-muted-foreground max-w-sm">
             Sign in to start correlating alerts, changes, and service graphs in real time.

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAppState } from '@/lib/hooks/use-app-state'
+import { NexOpsLogo } from '@/components/ui/nexops-logo'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -160,10 +161,7 @@ export default function LandingPage() {
           id="logo-target"
           className="font-extrabold text-2xl tracking-tight text-transparent select-none flex items-center gap-2"
         >
-          <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center font-black text-white text-base shadow-lg shadow-blue-600/30">
-            N
-          </div>
-          <span className="text-white">NexOps</span>
+          <NexOpsLogo size="lg" className="h-9" />
         </div>
 
         <div className="flex gap-6 md:gap-8 items-center">
@@ -844,10 +842,7 @@ export default function LandingPage() {
         {/* FOOTER */}
         <footer className="max-w-container-max mx-auto px-6 md:px-12 py-12 border-t border-zinc-800/80 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-zinc-400">
           <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center font-bold text-white text-xs shadow-lg shadow-blue-600/30">
-              N
-            </div>
-            <span className="font-bold text-lg text-white tracking-tight">NexOps</span>
+            <NexOpsLogo size="md" className="h-8" />
           </div>
 
           <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center">

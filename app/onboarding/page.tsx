@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Github, Play, ArrowRight, ShieldCheck, CheckCircle2, Network, AlertTriangle, Loader2, BellOff, AlertCircle, ExternalLink } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { NexOpsLogo } from '@/components/ui/nexops-logo'
 
 interface DiscoveredNode {
   id: string
@@ -278,9 +279,7 @@ export default function OnboardingPage() {
   if (checkingTerms) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-200">
-        <div className="w-12 h-12 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-          <span className="text-xl font-black text-primary-foreground">N</span>
-        </div>
+        <NexOpsLogo size="xl" className="h-12" />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground font-medium">Checking workspace requirements…</p>
       </div>
