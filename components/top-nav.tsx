@@ -52,7 +52,7 @@ export function TopNav() {
 
             {/* Logo */}
             <Link href="/dashboard" className="flex items-center gap-2 whitespace-nowrap" prefetch={false}>
-              <NexOpsLogo size="md" className="h-8" />
+              <NexOpsLogo size="md" className="h-10 my-auto max-h-11" />
             </Link>
 
             {/* Workspace Switcher */}

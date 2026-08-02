@@ -16,7 +16,7 @@ export default function PrivacyPage() {
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link href="/" prefetch={false} className="flex items-center gap-2">
-              <NexOpsLogo size="md" className="h-8" />
+              <NexOpsLogo size="md" className="h-10" />
             </Link>
             <span className="text-muted-foreground text-sm font-medium">/ Privacy Notice</span>
           </div>

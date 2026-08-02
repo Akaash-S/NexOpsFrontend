@@ -127,7 +127,7 @@ export default function LoginPage() {
   if (transitioning) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-300">
-        <NexOpsLogo size="xl" className="h-12" />
+        <NexOpsLogo size="xl" className="h-20" />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground">Setting up your workspace…</p>
       </div>
@@ -146,7 +146,7 @@ export default function LoginPage() {
       )}>
         {/* Brand Logo & Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <NexOpsLogo size="xl" className="h-12" />
+          <NexOpsLogo size="xl" className="h-20" />
           <h1 className="text-2xl font-bold tracking-tight mt-4">Welcome to NexOps</h1>
           <p className="text-sm text-muted-foreground max-w-sm">
             Sign in to start correlating alerts, changes, and service graphs in real time.

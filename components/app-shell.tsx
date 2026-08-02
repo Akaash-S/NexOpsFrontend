@@ -72,7 +72,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (isRedirecting || checkingAuth) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4">
-        <NexOpsLogo size="xl" className="h-12" />
+        <NexOpsLogo size="xl" className="h-20" />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground">Redirecting...</p>
       </div>

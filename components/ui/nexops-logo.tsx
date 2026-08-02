@@ -17,14 +17,14 @@ export function NexOpsLogo({
   alt = 'NexOps',
 }: NexOpsLogoProps) {
   const sizeMap = {
-    xs: 'h-5',
-    sm: 'h-6',
-    md: 'h-8',
-    lg: 'h-10',
-    xl: 'h-12',
+    xs: 'h-6',
+    sm: 'h-8',
+    md: 'h-10',
+    lg: 'h-14',
+    xl: 'h-20',
   }
 
-  const hClass = sizeMap[size] || 'h-8'
+  const hClass = sizeMap[size] || 'h-10'
 
   return (
     <div className={cn("inline-flex items-center select-none", className)}>
