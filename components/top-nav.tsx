@@ -59,15 +59,17 @@ export function TopNav() {
             <div className="hidden sm:block">
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="gap-2">
-                    <span className="text-sm">Engineering</span>
-                    <ChevronDown className="w-4 h-4" />
+                  <Button variant="ghost" size="sm" className="gap-2 text-muted-foreground hover:text-foreground">
+                    <span className="text-sm font-medium">Default</span>
+                    <ChevronDown className="w-4 h-4 opacity-60" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start">
-                  <DropdownMenuItem>Engineering</DropdownMenuItem>
-                  <DropdownMenuItem>Platform</DropdownMenuItem>
-                  <DropdownMenuItem>Infrastructure</DropdownMenuItem>
+                <DropdownMenuContent align="start" className="w-48 p-2">
+                  <DropdownMenuItem className="font-semibold text-xs">Default</DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <div className="px-2 py-3 text-center text-xs text-muted-foreground select-none">
+                    No other workspaces
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
