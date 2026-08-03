@@ -91,11 +91,9 @@ export default function LandingPage() {
 
       // 2. Desktop Hero Scroll-Pinned Timeline
       if (heroPinRef.current && window.innerWidth >= 768) {
-        const pathLength = traceLineRef.current ? traceLineRef.current.getTotalLength() : 400
         if (traceLineRef.current) {
           gsap.set(traceLineRef.current, {
-            strokeDasharray: pathLength,
-            strokeDashoffset: pathLength,
+            height: '0%',
           })
         }
 
