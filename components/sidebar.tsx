@@ -192,10 +192,10 @@ function SidebarProfileMenu({ onCloseMobile }: { onCloseMobile: () => void }) {
           </DropdownMenuTrigger>
 
           <DropdownMenuContent
-            side="right"
-            align="end"
+            side="top"
+            align="center"
             sideOffset={8}
-            className="w-64 p-1.5 bg-sidebar border border-sidebar-border shadow-xl z-[60]"
+            className="w-[calc(100%-1rem)] sm:w-60 p-1.5 bg-sidebar border border-sidebar-border shadow-xl z-[60]"
           >
             {/* Real authenticated user email header */}
             <div className="px-3 py-2 border-b border-sidebar-border/60 mb-1">
