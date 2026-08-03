@@ -156,12 +156,11 @@ export default function LandingPage() {
         tl.to([label0Ref.current, label2Ref.current], { opacity: 0.25, ease: 'none' }, 0.75)
           .to(
             [node0Ref.current, node2Ref.current],
-            { opacity: 0.25, backgroundColor: '#52525b', ease: 'none' },
+            { opacity: 0.25, borderColor: '#52525b', ease: 'none' },
             0.75
           )
-          .to(node1Ref.current, { scale: 1.3, backgroundColor: '#22c55e', ease: 'none' }, 0.75)
+          .to(node1Ref.current, { scale: 1.2, borderColor: '#22c55e', ease: 'none' }, 0.75)
           .to(traceLineRef.current, { backgroundColor: '#22c55e', ease: 'none' }, 0.75)
-          .to(alertDotRef.current, { backgroundColor: '#22c55e', ease: 'none' }, 0.75)
           .fromTo(
             checkmark1Ref.current,
             { scale: 0.8, opacity: 0 },
@@ -270,22 +269,29 @@ export default function LandingPage() {
           </span>
         </div>
 
-        {/* CENTRAL TRACE DIAGRAM & CANDIDATE NODES (Enterprise Glassmorphic Spine Cards) */}
+        {/* CENTRAL TRACE DIAGRAM & CANDIDATE NODES (Pixel-Perfect Centered Spine Layout) */}
         <div className="my-auto py-6 relative flex flex-col md:flex-row items-start justify-between gap-8 md:gap-16">
-          {/* Left Spine Timeline Diagram */}
-          <div className="relative w-full md:w-1/2 min-h-[380px] pl-8 md:pl-10 border-l-2 border-zinc-800/80 space-y-6">
+          {/* Left Spine Timeline Container */}
+          <div className="relative w-full md:w-[54%] space-y-6">
+            {/* Background Line Segment (Perfectly Centered at x=20px) */}
+            <div className="absolute left-5 top-4 bottom-4 w-0.5 bg-zinc-800/80 -translate-x-1/2" />
+
             {/* Active Animating Trace Line Overlay */}
             <div
               ref={traceLineRef as any}
-              className="absolute left-[-2px] top-0 w-0.5 bg-amber-500 h-0 transition-colors duration-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]"
+              className="absolute left-5 top-4 w-0.5 bg-amber-500 -translate-x-1/2 transition-colors duration-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]"
+              style={{ height: '0%', maxHeight: 'calc(100% - 32px)' }}
             />
 
-            {/* Alert Top Node Item */}
-            <div className="relative pl-2">
-              <div className="absolute -left-[41px] md:-left-[49px] top-1 w-6 h-6 rounded-full bg-amber-950/80 border-2 border-amber-500 flex items-center justify-center shadow-lg shadow-amber-950/60">
-                <AlertTriangle className="w-3 h-3 text-amber-400" />
+            {/* Item 0: Alert Top Node */}
+            <div className="relative flex items-center gap-4">
+              <div className="relative z-10 w-10 flex-none flex justify-center">
+                <div className="w-7 h-7 rounded-full bg-[#0c0d12] border-2 border-amber-500 flex items-center justify-center shadow-lg shadow-amber-950/80">
+                  <AlertTriangle ref={alertDotRef as any} className="w-3.5 h-3.5 text-amber-400" />
+                </div>
               </div>
-              <div className="p-3.5 rounded-xl bg-[#0d0e14]/90 border border-amber-900/40 space-y-1">
+
+              <div className="flex-1 p-3.5 rounded-xl bg-[#0d0e14]/90 border border-amber-900/40 space-y-1 shadow-lg">
                 <div className="flex items-center justify-between">
                   <span className="font-mono text-[11px] font-bold text-amber-400 uppercase tracking-widest">
                     07:42:11 UTC · ALERT INGESTED
@@ -300,19 +306,22 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Candidate Node 0 Card */}
+            {/* Item 1: Candidate Node 0 */}
             <div
               ref={label0Ref}
-              className="relative pl-2 transition-all duration-300"
+              className="relative flex items-center gap-4 transition-all duration-300"
               style={{ opacity: reducedMotion ? 0.25 : 0 }}
             >
-              <div
-                ref={node0Ref as any}
-                className="absolute -left-[41px] md:-left-[49px] top-3 w-5 h-5 rounded-full bg-zinc-900 border-2 border-amber-500/80 flex items-center justify-center"
-              >
-                <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
+              <div className="relative z-10 w-10 flex-none flex justify-center">
+                <div
+                  ref={node0Ref as any}
+                  className="w-6 h-6 rounded-full bg-[#0c0d12] border-2 border-amber-500/80 flex items-center justify-center shadow-md"
+                >
+                  <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
+                </div>
               </div>
-              <div className="p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
+
+              <div className="flex-1 p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
                 <div className="font-mono text-xs font-bold text-zinc-200">
                   07:42:11 · deploy to payments-api
                 </div>
@@ -322,19 +331,22 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Candidate Node 1 Card (Middle - Confirmed Cause) */}
+            {/* Item 2: Candidate Node 1 (Middle - Confirmed Cause) */}
             <div
               ref={label1Ref}
-              className="relative pl-2 transition-all duration-300"
+              className="relative flex items-center gap-4 transition-all duration-300"
               style={{ opacity: reducedMotion ? 1 : 0 }}
             >
-              <div
-                ref={node1Ref as any}
-                className="absolute -left-[41px] md:-left-[49px] top-3 w-5 h-5 rounded-full bg-zinc-900 border-2 border-amber-500 flex items-center justify-center transition-colors duration-500"
-              >
-                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              <div className="relative z-10 w-10 flex-none flex justify-center">
+                <div
+                  ref={node1Ref as any}
+                  className="w-6 h-6 rounded-full bg-[#0c0d12] border-2 border-amber-500 flex items-center justify-center transition-colors duration-500 shadow-md"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+                </div>
               </div>
-              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/30 via-[#0d0e14] to-[#0d0e14] border border-emerald-800/60 space-y-2 shadow-xl shadow-emerald-950/30">
+
+              <div className="flex-1 p-4 rounded-xl bg-gradient-to-r from-emerald-950/30 via-[#0d0e14] to-[#0d0e14] border border-emerald-800/60 space-y-2 shadow-xl shadow-emerald-950/30">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="font-mono text-xs font-bold text-white">
                     07:31:04 · config change · user-service
@@ -353,19 +365,22 @@ export default function LandingPage() {
               </div>
             </div>
 
-            {/* Candidate Node 2 Card */}
+            {/* Item 3: Candidate Node 2 */}
             <div
               ref={label2Ref}
-              className="relative pl-2 transition-all duration-300"
+              className="relative flex items-center gap-4 transition-all duration-300"
               style={{ opacity: reducedMotion ? 0.25 : 0 }}
             >
-              <div
-                ref={node2Ref as any}
-                className="absolute -left-[41px] md:-left-[49px] top-3 w-5 h-5 rounded-full bg-zinc-900 border-2 border-amber-500/80 flex items-center justify-center"
-              >
-                <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
+              <div className="relative z-10 w-10 flex-none flex justify-center">
+                <div
+                  ref={node2Ref as any}
+                  className="w-6 h-6 rounded-full bg-[#0c0d12] border-2 border-amber-500/80 flex items-center justify-center shadow-md"
+                >
+                  <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
+                </div>
               </div>
-              <div className="p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
+
+              <div className="flex-1 p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
                 <div className="font-mono text-xs font-bold text-zinc-200">
                   06:58:47 · deploy to auth-service
                 </div>
