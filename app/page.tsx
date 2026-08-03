@@ -8,85 +8,24 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { NexOpsLogo } from '@/components/ui/nexops-logo'
 import { Badge } from '@/components/ui/badge'
-import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
-  ShieldCheck,
-  Zap,
-  Lock,
-  Cpu,
-  Database,
-  Activity,
-  AlertTriangle,
-  GitCommitHorizontal,
-  Layers,
   ArrowRight,
   CheckCircle2,
   XCircle,
   HelpCircle,
   ChevronDown,
   Terminal,
-  Server,
-  RefreshCw,
   ExternalLink,
-  GitBranch,
-  Search,
   Check,
+  Zap,
+  ShieldCheck,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 if (typeof window !== 'undefined') {
   gsap.registerPlugin(ScrollTrigger)
 }
-
-// Sandbox Scenarios Data
-const SANDBOX_SCENARIOS = [
-  {
-    id: 'db-pool',
-    title: 'Scenario 1: Database Pool Exhausted',
-    service: 'payment-service',
-    score: '86.2%',
-    matchVariant: 'success' as const,
-    causeTitle: 'Deploy #492: Active DB Pool max_connections updated (100 -> 20)',
-    repo: 'checkout-v3',
-    commit: 'a1b2c3d4',
-    reasoning: [
-      { label: 'Traffic spike on checkout-v3', delta: '+35.0', desc: 'Direct upstream dependency match' },
-      { label: 'Active pool config change #492', delta: '+25.0', desc: 'Deploys deployed 8 mins prior' },
-      { label: 'Upstream dependency latency', delta: '+11.2', desc: 'Downstream database latency correlate' },
-    ],
-  },
-  {
-    id: 'redis-evict',
-    title: 'Scenario 2: Redis Memory Spike & Cache Eviction',
-    service: 'auth-cluster',
-    score: '91.5%',
-    matchVariant: 'success' as const,
-    causeTitle: 'Deploy #8192: Session TTL expiry config disabled in auth-sidecar',
-    repo: 'auth-service',
-    commit: 'f9e8d7c6',
-    reasoning: [
-      { label: 'Session key proliferation', delta: '+40.0', desc: 'Same repository and service owner' },
-      { label: 'Deploy time within 4 mins of alert', delta: '+30.0', desc: 'High temporal proximity' },
-      { label: 'Past confirmed cause match', delta: '+21.5', desc: 'Recalibrated historical feedback weight' },
-    ],
-  },
-  {
-    id: 'kafka-lag',
-    title: 'Scenario 3: Kafka Consumer Lag & Queue Backpressure',
-    service: 'order-processor',
-    score: '78.4%',
-    matchVariant: 'warning' as const,
-    causeTitle: 'Deploy #3011: Synchronous RPC call added inside consumer loop',
-    repo: 'order-pipeline',
-    commit: 'b4v5c6x7',
-    reasoning: [
-      { label: 'Consumer partition rebalance', delta: '+32.0', desc: 'Upstream queue producer trigger' },
-      { label: 'Deployed 15 mins prior', delta: '+22.0', desc: 'Temporal window correlation' },
-      { label: 'CODEOWNERS owner match', delta: '+24.4', desc: 'Matched team ownership' },
-    ],
-  },
-]
 
 export default function LandingPage() {
   const router = useRouter()
@@ -99,971 +38,551 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, router])
 
-  // Sandbox state
-  const [activeScenarioId, setActiveScenarioId] = useState('db-pool')
-  const [sandboxFeedback, setSandboxFeedback] = useState<'confirmed' | 'rejected' | null>(null)
-  const [learningProgress, setLearningProgress] = useState(85.4)
+  const [reducedMotion, setReducedMotion] = useState(false)
+  const [isMobile, setIsMobile] = useState(false)
 
-  // FAQ state
-  const [openFaq, setOpenFaq] = useState<number | null>(0)
+  const heroPinRef = useRef<HTMLDivElement>(null)
+  const traceSvgRef = useRef<SVGSVGElement>(null)
+  const traceLineRef = useRef<SVGPathElement>(null)
+  const alertDotRef = useRef<SVGCircleElement>(null)
 
-  // Scroll docking logic
-  const [isScrolled, setIsScrolled] = useState(false)
-  const introLogoRef = useRef<HTMLDivElement>(null)
-  const logoTargetRef = useRef<HTMLDivElement>(null)
-  const mainContentRef = useRef<HTMLDivElement>(null)
+  const node0Ref = useRef<SVGCircleElement>(null)
+  const node1Ref = useRef<SVGCircleElement>(null)
+  const node2Ref = useRef<SVGCircleElement>(null)
 
-  // GSAP Trace Sequence Refs
-  const traceSectionRef = useRef<HTMLDivElement>(null)
-  const traceLineRef = useRef<HTMLDivElement>(null)
-  const step1Ref = useRef<HTMLDivElement>(null)
-  const step2Ref = useRef<HTMLDivElement>(null)
-  const step3Ref = useRef<HTMLDivElement>(null)
-  const step4Ref = useRef<HTMLDivElement>(null)
+  const label0Ref = useRef<HTMLDivElement>(null)
+  const label1Ref = useRef<HTMLDivElement>(null)
+  const label2Ref = useRef<HTMLDivElement>(null)
+  const checkmark1Ref = useRef<HTMLDivElement>(null)
 
-  // GSAP Counter Refs
-  const latencyNumRef = useRef<HTMLSpanElement>(null)
-  const codePrivacyNumRef = useRef<HTMLSpanElement>(null)
-  const logicNumRef = useRef<HTMLSpanElement>(null)
+  const eyebrowRef = useRef<HTMLDivElement>(null)
+  const headlineRef = useRef<HTMLHeadingElement>(null)
+  const subheadRef = useRef<HTMLParagraphElement>(null)
+  const ctaRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const scrollY = window.scrollY
-      const isMobile = window.innerWidth < 768
-      const threshold = isMobile ? 40 : 80
-
-      if (scrollY > threshold) {
-        setIsScrolled(true)
-        if (logoTargetRef.current && introLogoRef.current) {
-          const rect = logoTargetRef.current.getBoundingClientRect()
-          introLogoRef.current.style.top = `${rect.top}px`
-          introLogoRef.current.style.left = `${rect.left}px`
-          introLogoRef.current.style.transform = 'translate(0, 0)'
-          introLogoRef.current.style.fontSize = '24px'
-        }
-      } else {
-        setIsScrolled(false)
-        if (introLogoRef.current) {
-          introLogoRef.current.style.top = '50%'
-          introLogoRef.current.style.left = '50%'
-          introLogoRef.current.style.transform = 'translate(-50%, -50%)'
-          const initialFontSize = isMobile ? '44px' : '68px'
-          introLogoRef.current.style.fontSize = initialFontSize
-        }
-      }
-    }
-
-    handleScroll()
-    window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('resize', handleScroll)
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('resize', handleScroll)
-    }
-  }, [])
-
-  // GSAP Animations Context
   useEffect(() => {
     if (typeof window === 'undefined') return
 
+    // Detect media preferences
+    const mediaQueryMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
+    setReducedMotion(mediaQueryMotion.matches)
+
+    const checkMobile = () => setIsMobile(window.innerWidth < 768)
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+
+    if (mediaQueryMotion.matches) {
+      return () => window.removeEventListener('resize', checkMobile)
+    }
+
     const ctx = gsap.context(() => {
-      // 1. Hero Text Reveal
-      gsap.from('.gsap-hero-reveal', {
-        y: 30,
-        opacity: 0,
-        duration: 0.8,
-        stagger: 0.15,
-        ease: 'power3.out',
-        delay: 0.2,
-      })
+      // 1. Alert Dot Infinite Pulse (Runs continuously, independent of scroll scrub)
+      if (alertDotRef.current) {
+        gsap.to(alertDotRef.current, {
+          scale: 1.18,
+          opacity: 0.6,
+          duration: 1.6,
+          ease: 'sine.inOut',
+          repeat: -1,
+          yoyo: true,
+          transformOrigin: 'center center',
+        })
+      }
 
-      // 2. Feature Cards Stagger Reveal
-      gsap.from('.gsap-card-reveal', {
-        scrollTrigger: {
-          trigger: '.gsap-cards-grid',
-          start: 'top 80%',
-        },
-        y: 40,
-        opacity: 0,
-        duration: 0.6,
-        stagger: 0.12,
-        ease: 'power2.out',
-      })
+      // 2. Desktop Hero Scroll-Pinned Timeline
+      if (heroPinRef.current && window.innerWidth >= 768) {
+        const pathLength = traceLineRef.current ? traceLineRef.current.getTotalLength() : 400
+        if (traceLineRef.current) {
+          gsap.set(traceLineRef.current, {
+            strokeDasharray: pathLength,
+            strokeDashoffset: pathLength,
+          })
+        }
 
-      // 3. Incident Trace Pinned Sequence
-      if (traceSectionRef.current) {
         const tl = gsap.timeline({
           scrollTrigger: {
-            trigger: traceSectionRef.current,
-            start: 'top 20%',
-            end: '+=1200',
+            trigger: heroPinRef.current,
+            start: 'top top',
+            end: () => '+=' + window.innerHeight * 2.5,
             pin: true,
-            scrub: 0.8,
+            scrub: true,
+            anticipatePin: 1,
           },
         })
 
-        // Step 1 -> 2: Alert Fired to Commit Correlated
-        tl.to(traceLineRef.current, { height: '33%', duration: 1 })
-          .to(step1Ref.current, { opacity: 0.5, scale: 0.96, duration: 0.5 }, '<')
-          .fromTo(step2Ref.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1 })
+        // Progress 0.00 -> 0.08: Draw line towards Node 0
+        tl.to(
+          traceLineRef.current,
+          {
+            strokeDashoffset: pathLength * 0.65,
+            ease: 'none',
+          },
+          0.00
+        )
 
-        // Step 2 -> 3: Commit Correlated to Graph Traversal
-        tl.to(traceLineRef.current, { height: '66%', duration: 1 })
-          .to(step2Ref.current, { opacity: 0.5, scale: 0.96, duration: 0.5 }, '<')
-          .fromTo(step3Ref.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1 })
+        // Progress 0.08 -> 0.12: Reveal Node 0 & Label 0
+        tl.fromTo(node0Ref.current, { scale: 0 }, { scale: 1, ease: 'none' }, 0.08)
+          .fromTo(label0Ref.current, { x: 20, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.08)
 
-        // Step 3 -> 4: Graph Traversal to Root Cause Confirmed
-        tl.to(traceLineRef.current, { height: '100%', duration: 1 })
-          .to(step3Ref.current, { opacity: 0.5, scale: 0.96, duration: 0.5 }, '<')
-          .fromTo(step4Ref.current, { opacity: 0, scale: 1.02 }, { opacity: 1, scale: 1, duration: 1 })
+        // Progress 0.12 -> 0.35: Draw line towards Node 1
+        tl.to(
+          traceLineRef.current,
+          {
+            strokeDashoffset: pathLength * 0.35,
+            ease: 'none',
+          },
+          0.12
+        )
+
+        // Progress 0.35 -> 0.39: Reveal Node 1 & Label 1
+        tl.fromTo(node1Ref.current, { scale: 0 }, { scale: 1, ease: 'none' }, 0.35)
+          .fromTo(label1Ref.current, { x: 20, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.35)
+
+        // Progress 0.39 -> 0.55: Draw line towards Node 2
+        tl.to(
+          traceLineRef.current,
+          {
+            strokeDashoffset: pathLength * 0.1,
+            ease: 'none',
+          },
+          0.39
+        )
+
+        // Progress 0.55 -> 0.59: Reveal Node 2 & Label 2
+        tl.fromTo(node2Ref.current, { scale: 0 }, { scale: 1, ease: 'none' }, 0.55)
+          .fromTo(label2Ref.current, { x: 20, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.55)
+
+        // Progress 0.59 -> 0.75: Finish line draw
+        tl.to(
+          traceLineRef.current,
+          {
+            strokeDashoffset: 0,
+            ease: 'none',
+          },
+          0.59
+        )
+
+        // Progress 0.75 -> 0.85: Resolution Beat (Node 1 turns Green, Node 0 & 2 dim)
+        tl.to([label0Ref.current, label2Ref.current], { opacity: 0.25, ease: 'none' }, 0.75)
+          .to(
+            [node0Ref.current, node2Ref.current],
+            { opacity: 0.25, fill: '#52525b', ease: 'none' },
+            0.75
+          )
+          .to(node1Ref.current, { scale: 1.3, fill: '#22c55e', ease: 'none' }, 0.75)
+          .to(traceLineRef.current, { stroke: '#22c55e', ease: 'none' }, 0.75)
+          .to(alertDotRef.current, { fill: '#22c55e', ease: 'none' }, 0.75)
+          .fromTo(
+            checkmark1Ref.current,
+            { scale: 0, opacity: 0 },
+            { scale: 1, opacity: 1, ease: 'none' },
+            0.75
+          )
+
+        // Progress 0.85 -> 1.00: Headline & Subhead & CTA Reveal
+        tl.to(eyebrowRef.current, { opacity: 0, ease: 'none' }, 0.85)
+          .fromTo(headlineRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, ease: 'none' }, 0.85)
+          .fromTo(subheadRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, ease: 'none' }, 0.9)
+          .fromTo(ctaRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, ease: 'none' }, 0.95)
       }
 
-      // 4. Numerical Metrics Counter
-      if (latencyNumRef.current) {
+      // 3. Rest of Page Restrained Scroll Reveals
+      const revealElements = gsap.utils.toArray('.gsap-section-reveal')
+      revealElements.forEach((el: any) => {
         gsap.fromTo(
-          latencyNumRef.current,
-          { textContent: '0.0' },
+          el,
+          { y: 16, opacity: 0 },
           {
-            textContent: '2.8',
-            duration: 1.5,
-            ease: 'power1.out',
-            snap: { textContent: 0.1 },
+            y: 0,
+            opacity: 1,
+            duration: 0.6,
+            ease: 'power2.out',
             scrollTrigger: {
-              trigger: '#metrics-section',
-              start: 'top 75%',
+              trigger: el,
+              start: 'top 85%',
+              toggleActions: 'play none none reverse',
             },
           }
         )
-      }
-    }, mainContentRef)
+      })
 
-    return () => ctx.revert()
+      // 4. Staggered Panels in Section 3
+      gsap.fromTo(
+        '.gsap-panel-stagger',
+        { y: 20, opacity: 0 },
+        {
+          y: 0,
+          opacity: 1,
+          duration: 0.6,
+          stagger: 0.12,
+          ease: 'power2.out',
+          scrollTrigger: {
+            trigger: '.gsap-panels-grid',
+            start: 'top 80%',
+            toggleActions: 'play none none reverse',
+          },
+        }
+      )
+    })
+
+    return () => {
+      window.removeEventListener('resize', checkMobile)
+      ctx.revert()
+    }
   }, [])
 
-  const currentScenario = SANDBOX_SCENARIOS.find((s) => s.id === activeScenarioId) || SANDBOX_SCENARIOS[0]
-
-  const handleSandboxConfirm = () => {
-    setSandboxFeedback('confirmed')
-    setLearningProgress((prev) => Math.min(99.9, parseFloat((prev + 0.3).toFixed(1))))
-  }
-
-  const handleSandboxReject = () => {
-    setSandboxFeedback('rejected')
-  }
-
   return (
-    <div className="bg-black text-white min-h-[160vh] md:min-h-[200vh] selection:bg-blue-600/30 selection:text-blue-400">
-      {/* ALWAYS VISIBLE PURE BLACK TOP NAVIGATION BAR */}
-      <nav className="fixed top-0 w-full z-50 flex justify-between items-center px-6 md:px-12 py-4 max-w-container-max mx-auto left-0 right-0 bg-black/90 backdrop-blur-md border-b border-zinc-800/80">
-        {/* Logo docking placeholder target */}
-        <div
-          ref={logoTargetRef}
-          id="logo-target"
-          className="font-extrabold text-2xl tracking-tight text-transparent select-none flex items-center gap-2"
-        >
-          <NexOpsLogo size="lg" className="h-12" />
-        </div>
+    <div className="bg-[#0c0d12] text-zinc-100 min-h-screen selection:bg-blue-600/30 selection:text-blue-400 font-sans">
+      {/* PERSISTENT UTILITY TOP NAVIGATION */}
+      <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#0c0d12]/90 backdrop-blur-md border-b border-zinc-800/80 px-6 md:px-12 flex items-center justify-between">
+        {/* Left: Wordmark Logo */}
+        <Link href="/" className="flex items-center gap-2" prefetch={false}>
+          <NexOpsLogo size="md" />
+        </Link>
 
-        <div className="flex gap-6 md:gap-8 items-center">
+        {/* Center/Right Nav Links */}
+        <div className="flex items-center gap-6 md:gap-8">
           <a
-            href="#engine"
-            className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+            href="#how-it-works"
+            className="text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
           >
-            Engine
+            How it works
           </a>
           <a
-            href="#trace"
-            className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+            href="#pilot"
+            className="text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-white transition-colors hidden sm:inline-block"
           >
-            Trace
-          </a>
-          <a
-            href="#features"
-            className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
-          >
-            Methodology
-          </a>
-          <a
-            href="#sandbox"
-            className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors hidden sm:inline-block"
-          >
-            Sandbox
-          </a>
-          <a
-            href="#faq"
-            className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors hidden md:inline-block"
-          >
-            FAQ
+            Pilot
           </a>
 
           <Link href="/login" prefetch={false}>
-            <Button size="sm" className="font-semibold gap-2 bg-blue-600 hover:bg-blue-500 text-white shadow-lg shadow-blue-600/25">
-              Request Pilot Access <ArrowRight className="w-4 h-4" />
+            <Button size="sm" className="font-semibold text-xs gap-1.5 bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20">
+              Join the pilot <ArrowRight className="w-3.5 h-3.5" />
             </Button>
           </Link>
         </div>
       </nav>
 
-      {/* THE ANIMATING INTRO LOGO */}
-      <div
-        ref={introLogoRef}
-        id="intro-logo"
-        className="font-extrabold text-white tracking-tight transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] select-none drop-shadow-2xl flex items-center gap-3 z-40"
-        style={{
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          fontSize: '68px',
-        }}
+      {/* HERO SECTION — GSAP SCROLL-PINNED TRACE ANIMATION */}
+      <section
+        id="hero"
+        ref={heroPinRef}
+        className="relative min-h-screen pt-24 pb-16 px-6 md:px-12 flex flex-col justify-between max-w-6xl mx-auto overflow-hidden"
       >
-        <div className="w-12 h-12 rounded-xl bg-blue-600 flex items-center justify-center font-black text-white text-3xl shadow-xl shadow-blue-600/30">
-          N
+        {/* Static Background Radial Glow */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/15 via-transparent to-transparent pointer-events-none -z-10" />
+
+        {/* Eyebrow Label */}
+        <div ref={eyebrowRef} className="pt-4 flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
+          <span className="font-mono text-xs text-amber-500/90 tracking-widest font-semibold uppercase">
+            INCIDENT CORRELATION ENGINE
+          </span>
         </div>
-        <span>NexOps</span>
-      </div>
 
-      {/* MAIN CONTENT WRAPPER */}
-      <div
-        ref={mainContentRef}
-        id="main-content"
-        className={cn(
-          'transition-all duration-700 ease-out',
-          isScrolled ? 'opacity-100 translate-y-0 pointer-events-auto' : 'opacity-0 translate-y-8 pointer-events-none'
-        )}
-      >
-        <main className="max-w-container-max mx-auto px-6 md:px-12 pt-28">
-          {/* HERO SECTION */}
-          <section id="engine" className="pt-12 md:pt-16 pb-20 border-b border-zinc-800/80">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-              <div className="lg:col-span-7 space-y-8">
-                <div className="gsap-hero-reveal">
-                  <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 px-3 py-1.5 gap-2 text-xs font-semibold">
-                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                    [ LIVE PILOT ] Autonomous Incident Correlation Engine
-                  </Badge>
+        {/* CENTRAL SVG TRACE DIAGRAM & CANDIDATE NODES */}
+        <div className="my-auto py-8 relative flex flex-col md:flex-row items-start justify-between gap-8 md:gap-16">
+          {/* SVG Trace Line */}
+          <div className="relative w-full md:w-1/2 h-[340px] md:h-[400px]">
+            <svg ref={traceSvgRef} className="w-full h-full overflow-visible" viewBox="0 0 300 400" fill="none">
+              {/* Trace Path */}
+              <path
+                ref={traceLineRef}
+                d="M 50 20 L 50 120 L 50 240 L 50 360"
+                stroke="#f59e0b"
+                strokeWidth="3"
+                strokeLinecap="round"
+                className="transition-colors duration-500"
+              />
+
+              {/* Alert Top Dot */}
+              <circle ref={alertDotRef} cx="50" cy="20" r="7" fill="#f59e0b" className="transition-colors duration-500" />
+
+              {/* Candidate Node 0 */}
+              <circle
+                ref={node0Ref}
+                cx="50"
+                cy="120"
+                r="6"
+                fill="#f59e0b"
+                className="transition-transform transition-colors duration-500 origin-center"
+                style={{ transform: reducedMotion ? 'scale(1)' : 'scale(0)', opacity: reducedMotion ? 0.25 : 1 }}
+              />
+
+              {/* Candidate Node 1 (Middle - Confirmed Cause) */}
+              <circle
+                ref={node1Ref}
+                cx="50"
+                cy="240"
+                r="6"
+                fill={reducedMotion ? '#22c55e' : '#f59e0b'}
+                className="transition-transform transition-colors duration-500 origin-center"
+                style={{ transform: reducedMotion ? 'scale(1.2)' : 'scale(0)' }}
+              />
+
+              {/* Candidate Node 2 */}
+              <circle
+                ref={node2Ref}
+                cx="50"
+                cy="360"
+                r="6"
+                fill="#f59e0b"
+                className="transition-transform transition-colors duration-500 origin-center"
+                style={{ transform: reducedMotion ? 'scale(1)' : 'scale(0)', opacity: reducedMotion ? 0.25 : 1 }}
+              />
+            </svg>
+
+            {/* DOM CANDIDATE LABELS LAYER (Positioned alongside SVG nodes) */}
+            <div className="absolute inset-0 pl-20 flex flex-col justify-between py-2">
+              {/* Node 0 Label */}
+              <div
+                ref={label0Ref}
+                className="space-y-0.5 transition-opacity duration-300"
+                style={{ opacity: reducedMotion ? 0.25 : 0 }}
+              >
+                <div className="font-mono text-xs font-semibold text-zinc-300">
+                  07:42:11 · deploy to payments-api
                 </div>
-
-                <h1 className="gsap-hero-reveal text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
-                  What caused this incident, and how do we know?
-                </h1>
-
-                <p className="gsap-hero-reveal text-base md:text-lg text-zinc-400 max-w-xl leading-relaxed">
-                  NexOps ingests your deployments and incident alerts in real time, ranks candidate causes using dependency graph traversal, and explains its reasoning line-by-line — so your team isn't guessing at 2 a.m.
-                </p>
-
-                <div className="gsap-hero-reveal flex flex-wrap items-center gap-4 pt-2">
-                  <Link href="/login" prefetch={false}>
-                    <Button size="lg" className="font-bold gap-2 px-8 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
-                      Request Pilot Access <ArrowRight className="w-5 h-5" />
-                    </Button>
-                  </Link>
-
-                  <a href="#sandbox">
-                    <Button size="lg" variant="outline" className="font-semibold gap-2 border-zinc-800 bg-zinc-900/60 text-zinc-200 hover:bg-zinc-800">
-                      Explore Live Sandbox <Terminal className="w-4 h-4 text-zinc-400" />
-                    </Button>
-                  </a>
-                </div>
-
-                {/* Hero Guarantees */}
-                <div className="gsap-hero-reveal pt-4 flex flex-wrap gap-6 text-xs text-zinc-400 font-medium">
-                  <div className="flex items-center gap-1.5">
-                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>0% Raw Source Code Access</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-400" />
-                    <span>Sub-3s Correlation Speed</span>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-blue-400" />
-                    <span>100% Deterministic Scores</span>
-                  </div>
-                </div>
+                <div className="text-[11px] text-zinc-400">12 min before the alert</div>
               </div>
 
-              {/* HERO SCENARIO CARD */}
-              <div className="lg:col-span-5 relative mt-4 lg:mt-0 gsap-hero-reveal">
-                <Card className="p-6 md:p-8 bg-[#09090b] border-zinc-800 shadow-2xl relative z-10 space-y-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2.5">
-                      <AlertTriangle className="w-5 h-5 text-rose-500" />
-                      <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest font-semibold">
-                        Active Incident
-                      </span>
-                    </div>
-                    <Badge variant="outline" className="bg-emerald-950/60 text-emerald-400 border-emerald-800/60 font-mono text-xs font-bold">
-                      86.2% Confident
-                    </Badge>
+              {/* Node 1 Label (Confirmed Cause) */}
+              <div
+                ref={label1Ref}
+                className="space-y-0.5 relative transition-opacity duration-300"
+                style={{ opacity: reducedMotion ? 1 : 0 }}
+              >
+                <div className="flex items-center gap-2">
+                  <div className="font-mono text-xs font-bold text-white">
+                    07:31:04 · config change · user-service
                   </div>
-
-                  <div className="space-y-4">
-                    <h3 className="font-mono text-lg text-white font-bold leading-snug">
-                      Scenario: Database Pool Exhausted
-                    </h3>
-
-                    <div className="h-px bg-zinc-800/80 w-full my-4" />
-
-                    <div className="space-y-3 font-mono text-xs md:text-sm">
-                      <div className="flex justify-between items-center text-zinc-400">
-                        <span>Traffic spike on checkout-v3</span>
-                        <span className="text-emerald-400 font-semibold">+35.0</span>
-                      </div>
-                      <div className="flex justify-between items-center text-zinc-400">
-                        <span>Active pool config change #492</span>
-                        <span className="text-emerald-400 font-semibold">+25.0</span>
-                      </div>
-                      <div className="flex justify-between items-center text-zinc-400">
-                        <span>Upstream dependency latency</span>
-                        <span className="text-emerald-400 font-semibold">+11.2</span>
-                      </div>
-                    </div>
-
-                    <div className="pt-6 grid grid-cols-2 gap-3">
-                      <Link href="/login" prefetch={false}>
-                        <Button variant="secondary" size="sm" className="w-full font-mono text-xs uppercase tracking-wider font-semibold bg-zinc-800 text-white hover:bg-zinc-700">
-                          Analyze Cause
-                        </Button>
-                      </Link>
-                      <Link href="/login" prefetch={false}>
-                        <Button variant="outline" size="sm" className="w-full font-mono text-xs uppercase tracking-wider font-semibold border-zinc-800 text-zinc-300 hover:bg-zinc-800">
-                          Open Playbook
-                        </Button>
-                      </Link>
-                    </div>
-                  </div>
-                </Card>
-                {/* Visual Glow Backdrop */}
-                <div className="absolute -top-4 -right-4 w-full h-full border border-zinc-800/40 rounded-xl -z-0 bg-blue-600/10 blur-xl" />
-              </div>
-            </div>
-          </section>
-
-          {/* GSAP SCROLL-PINNED INCIDENT TRACE SEQUENCE */}
-          <section id="trace" ref={traceSectionRef} className="py-24 border-b border-zinc-800/80 relative overflow-hidden">
-            <div className="max-w-4xl mx-auto space-y-12">
-              <div className="text-center space-y-3">
-                <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 text-xs font-semibold uppercase tracking-widest">
-                  [ SCROLL-PINNED DEMO ] The Incident Trace
-                </Badge>
-                <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">
-                  Watch Real-Time Correlation in Action
-                </h2>
-                <p className="text-sm md:text-base text-zinc-400">
-                  Scroll down to step through how NexOps connects an incoming PagerDuty alert to the exact commit SHA in seconds.
-                </p>
-              </div>
-
-              {/* TRACE TIMELINE CONTAINER */}
-              <div className="relative pl-8 md:pl-12 border-l-2 border-zinc-800 space-y-12 min-h-[480px]">
-                {/* Active Animating Trace Line */}
-                <div
-                  ref={traceLineRef}
-                  className="absolute left-[-2px] top-0 w-0.5 bg-gradient-to-b from-rose-500 via-amber-400 to-emerald-400 h-0 transition-all duration-100 shadow-[0_0_12px_rgba(34,197,94,0.6)]"
-                />
-
-                {/* Step 1: Alert Fired */}
-                <div ref={step1Ref} className="relative space-y-3">
-                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-rose-400 uppercase tracking-widest">
-                      01:02:14 UTC — Alert Ingested
-                    </span>
-                    <Badge variant="outline" className="bg-rose-950/60 text-rose-400 border-rose-800/60 font-mono text-[10px]">
-                      HIGH SEVERITY
-                    </Badge>
-                  </div>
-                  <h4 className="text-lg md:text-xl font-bold text-white">
-                    PagerDuty Alert: P99 Latency &gt; 1800ms on <code className="text-amber-300 font-mono bg-zinc-900 px-2 py-0.5 rounded">checkout-v3</code>
-                  </h4>
-                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-                    Automatic alert ingestion parses incoming webhook payload and initializes dependency graph traversal.
-                  </p>
-                </div>
-
-                {/* Step 2: Deploy Correlated */}
-                <div ref={step2Ref} className="relative space-y-3 opacity-30">
-                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-amber-400" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-amber-400 uppercase tracking-widest">
-                      01:02:15 UTC — Deploy Match
-                    </span>
-                    <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 font-mono text-[10px]">
-                      TEMPORAL MATCH
-                    </Badge>
-                  </div>
-                  <h4 className="text-lg md:text-xl font-bold text-white">
-                    Deploy #492: Commit <code className="text-blue-400 font-mono bg-zinc-900 px-2 py-0.5 rounded">a1b2c3d4</code> deployed 8 minutes prior
-                  </h4>
-                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-                    Matched GitHub deployment metadata: <code className="text-zinc-300 font-mono">Active DB Pool max_connections updated (100 -&gt; 20)</code>.
-                  </p>
-                </div>
-
-                {/* Step 3: Graph Traversal */}
-                <div ref={step3Ref} className="relative space-y-3 opacity-30">
-                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-blue-400" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-blue-400 uppercase tracking-widest">
-                      01:02:16 UTC — Topology Traversal
-                    </span>
-                    <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 font-mono text-[10px]">
-                      GRAPH TRAVERSAL
-                    </Badge>
-                  </div>
-                  <h4 className="text-lg md:text-xl font-bold text-white">
-                    Upstream / Downstream Traversal: <code className="text-zinc-200 font-mono">payment-service → checkout-v3 → postgres-db</code>
-                  </h4>
-                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-                    Evaluated 3 levels of service dependencies, CODEOWNERS ownership, and historical recalibration weights.
-                  </p>
-                </div>
-
-                {/* Step 4: Cause Confirmed */}
-                <div ref={step4Ref} className="relative space-y-3 opacity-30">
-                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
-                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <span className="font-mono text-xs font-bold text-emerald-400 uppercase tracking-widest">
-                      01:02:17 UTC — Cause Confirmed
-                    </span>
-                    <Badge variant="outline" className="bg-emerald-950/60 text-emerald-400 border-emerald-800/60 font-mono text-[10px] font-bold">
-                      86.2% CONFIDENCE
-                    </Badge>
-                  </div>
-                  <h4 className="text-lg md:text-xl font-bold text-white">
-                    Root Cause Confirmed: DB Connection Pool Exhaustion on <code className="text-emerald-400 font-mono bg-zinc-900 px-2 py-0.5 rounded">checkout-v3</code>
-                  </h4>
-                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
-                    Incident cause confirmed with line-by-line score breakdown ready for post-mortem export.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          {/* TELEMETRY INTEGRATIONS MARQUEE BANNER */}
-          <section className="py-12 border-b border-zinc-800/80 bg-[#050505]">
-            <div className="text-center space-y-4 max-w-4xl mx-auto">
-              <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest font-semibold">
-                Seamless Telemetry Integration
-              </span>
-              <p className="text-sm text-zinc-300 font-medium">
-                Connects with your existing DevOps and observability stack in under 5 minutes:
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12 pt-2 text-zinc-300 font-mono text-xs md:text-sm font-semibold">
-                <span className="flex items-center gap-2 hover:text-white transition-colors"><GitCommitHorizontal className="w-4 h-4 text-blue-400" /> GitHub Actions</span>
-                <span className="flex items-center gap-2 hover:text-white transition-colors"><AlertTriangle className="w-4 h-4 text-rose-500" /> PagerDuty</span>
-                <span className="flex items-center gap-2 hover:text-white transition-colors"><Activity className="w-4 h-4 text-amber-400" /> Datadog</span>
-                <span className="flex items-center gap-2 hover:text-white transition-colors"><Server className="w-4 h-4 text-emerald-400" /> Kubernetes</span>
-                <span className="flex items-center gap-2 hover:text-white transition-colors"><Layers className="w-4 h-4 text-blue-400" /> Prometheus</span>
-                <span className="flex items-center gap-2 hover:text-white transition-colors"><Zap className="w-4 h-4 text-sky-400" /> Vercel</span>
-              </div>
-            </div>
-          </section>
-
-          {/* PLATFORM METRICS TICKER */}
-          <section id="metrics-section" className="py-16 border-b border-zinc-800/80">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-2">
-                <div className="flex items-center gap-2 text-blue-400 font-mono text-xs uppercase tracking-widest font-semibold">
-                  <Zap className="w-4 h-4" /> Sub-3s Analysis Latency
-                </div>
-                <div className="text-3xl font-extrabold text-white">
-                  &lt; <span ref={latencyNumRef}>2.8</span>s
-                </div>
-                <p className="text-xs text-zinc-400">Average time from alert webhook ingestion to candidate cause ranking.</p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-2">
-                <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs uppercase tracking-widest font-semibold">
-                  <ShieldCheck className="w-4 h-4" /> Zero Code Inspection
-                </div>
-                <div className="text-3xl font-extrabold text-white">0% Code</div>
-                <p className="text-xs text-zinc-400">Only deploy metadata and CODEOWNERS parsed — source files are never read.</p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-2">
-                <div className="flex items-center gap-2 text-amber-400 font-mono text-xs uppercase tracking-widest font-semibold">
-                  <CheckCircle2 className="w-4 h-4" /> Deterministic Transparency
-                </div>
-                <div className="text-3xl font-extrabold text-white">100% Logic</div>
-                <p className="text-xs text-zinc-400">Every confidence score displays an explicit, audited weight breakdown.</p>
-              </Card>
-            </div>
-          </section>
-
-          {/* PROBLEM & SOLUTION SECTION */}
-          <section className="py-20 border-b border-zinc-800/80">
-            <div className="max-w-4xl mb-14 space-y-3">
-              <Badge variant="outline" className="bg-rose-950/60 text-rose-400 border-rose-800/60 text-xs font-semibold uppercase tracking-widest">
-                The 2 A.M. Incident Dilemma
-              </Badge>
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
-                Incident Response is Broken by Alert Noise and Tribal Knowledge
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 gsap-cards-grid">
-              {/* Pain Point 1 */}
-              <Card className="gsap-card-reveal p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-rose-500 font-mono text-xs uppercase tracking-widest font-semibold">
-                    <XCircle className="w-4 h-4" /> Traditional Triage
-                  </div>
-                  <h4 className="text-xl font-bold text-white">Alert Storms</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    On-call engineers are buried in hundreds of disconnected logs and traces during a microservice failure.
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-zinc-800/80 space-y-1">
-                  <span className="font-mono text-xs text-emerald-400 uppercase tracking-widest font-semibold block">
-                    The NexOps Solution
-                  </span>
-                  <p className="text-white text-sm font-medium">
-                    Automatic signal de-noising through temporal and topological correlation.
-                  </p>
-                </div>
-              </Card>
-
-              {/* Pain Point 2 */}
-              <Card className="gsap-card-reveal p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-rose-500 font-mono text-xs uppercase tracking-widest font-semibold">
-                    <XCircle className="w-4 h-4" /> Traditional Triage
-                  </div>
-                  <h4 className="text-xl font-bold text-white">Black Box AI</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    Legacy AIOps tools give "insights" without explaining the underlying logic, leading to team distrust.
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-zinc-800/80 space-y-1">
-                  <span className="font-mono text-xs text-emerald-400 uppercase tracking-widest font-semibold block">
-                    The NexOps Solution
-                  </span>
-                  <p className="text-white text-sm font-medium">
-                    Deterministic engine providing step-by-step reasoning for every correlation score.
-                  </p>
-                </div>
-              </Card>
-
-              {/* Pain Point 3 */}
-              <Card className="gsap-card-reveal p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2 text-rose-500 font-mono text-xs uppercase tracking-widest font-semibold">
-                    <XCircle className="w-4 h-4" /> Traditional Triage
-                  </div>
-                  <h4 className="text-xl font-bold text-white">Manual Postmortems</h4>
-                  <p className="text-zinc-400 text-sm leading-relaxed">
-                    Tracing the sequence of events manually takes hours of archaeology after the incident is resolved.
-                  </p>
-                </div>
-                <div className="pt-4 border-t border-zinc-800/80 space-y-1">
-                  <span className="font-mono text-xs text-emerald-400 uppercase tracking-widest font-semibold block">
-                    The NexOps Solution
-                  </span>
-                  <p className="text-white text-sm font-medium">
-                    Real-time graph traversal generates the incident timeline automatically.
-                  </p>
-                </div>
-              </Card>
-            </div>
-          </section>
-
-          {/* HOW IT WORKS & RESPONSIVE PIPELINE SVG */}
-          <section id="features" className="py-20 border-b border-zinc-800/80">
-            <div className="text-center max-w-3xl mx-auto mb-14 space-y-3">
-              <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 text-xs font-semibold uppercase tracking-widest">
-                Architecture & Workflow
-              </Badge>
-              <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
-                From Webhook Trigger to Root Cause in Under 3 Seconds
-              </h2>
-            </div>
-
-            {/* RESPONSIVE PIPELINE SVG / FLEX PIPELINE */}
-            <div className="mb-14 p-6 md:p-8 rounded-2xl bg-[#09090b] border border-zinc-800">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-center text-center">
-                <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2">
-                  <div className="inline-flex p-2 rounded-lg bg-blue-950 text-blue-400">
-                    <GitCommitHorizontal className="w-5 h-5" />
-                  </div>
-                  <div className="font-mono text-xs font-bold text-white uppercase">1. Webhook Trigger</div>
-                  <p className="text-[11px] text-zinc-400">GitHub Deploys & PagerDuty Alerts</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2">
-                  <div className="inline-flex p-2 rounded-lg bg-amber-950 text-amber-400">
-                    <Activity className="w-5 h-5" />
-                  </div>
-                  <div className="font-mono text-xs font-bold text-white uppercase">2. Stream Ingestion</div>
-                  <p className="text-[11px] text-zinc-400">CODEOWNERS & Deploy Metadata</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2">
-                  <div className="inline-flex p-2 rounded-lg bg-emerald-950 text-emerald-400">
-                    <Layers className="w-5 h-5" />
-                  </div>
-                  <div className="font-mono text-xs font-bold text-white uppercase">3. Graph Traversal</div>
-                  <p className="text-[11px] text-zinc-400">Temporal & Topological Weights</p>
-                </div>
-
-                <div className="p-4 rounded-xl bg-blue-950/60 border border-blue-800/60 space-y-2">
-                  <div className="inline-flex p-2 rounded-lg bg-blue-600 text-white">
-                    <CheckCircle2 className="w-5 h-5" />
-                  </div>
-                  <div className="font-mono text-xs font-bold text-blue-400 uppercase">4. Root Cause (86.2%)</div>
-                  <p className="text-[11px] text-zinc-400">Ranked Candidate Cause & Reasoning</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <span className="font-mono text-blue-400 text-2xl font-bold">01</span>
-                <h4 className="text-lg font-bold text-white">Zero-Config Ingestion</h4>
-                <p className="text-zinc-400 text-sm leading-relaxed">
-                  Connect GitHub, PagerDuty, and APM data sources. NexOps builds your system's dependency graph automatically.
-                </p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <span className="font-mono text-blue-400 text-2xl font-bold">02</span>
-                <h4 className="text-lg font-bold text-white">Dynamic Graph Traversal</h4>
-                <p className="text-zinc-400 text-sm leading-relaxed">
-                  When an alert fires, our engine traverses up to 3 levels of upstream & downstream service dependencies.
-                </p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <span className="font-mono text-blue-400 text-2xl font-bold">03</span>
-                <h4 className="text-lg font-bold text-white">Explainable Recalibration</h4>
-                <p className="text-zinc-400 text-sm leading-relaxed">
-                  Engineers confirm or reject suggestions to continuously tune correlation weights for their team's specific stack.
-                </p>
-              </Card>
-            </div>
-          </section>
-
-          {/* MULTI-SCENARIO INTERACTIVE SANDBOX */}
-          <section id="sandbox" className="py-20 border-b border-zinc-800/80">
-            <div className="max-w-5xl mx-auto space-y-8">
-              <div className="space-y-2">
-                <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 text-xs font-semibold uppercase tracking-widest">
-                  Interactive Sandbox
-                </Badge>
-                <h2 className="text-3xl md:text-4xl font-extrabold tracking-tight text-white">
-                  Test the Correlation Engine Logic
-                </h2>
-                <p className="text-sm text-zinc-400">
-                  Select a simulated incident scenario below to preview how NexOps computes weights and natural language reasoning:
-                </p>
-              </div>
-
-              {/* Scenario Tab Buttons */}
-              <div className="flex flex-wrap gap-3">
-                {SANDBOX_SCENARIOS.map((sc) => (
-                  <Button
-                    key={sc.id}
-                    variant={activeScenarioId === sc.id ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => {
-                      setActiveScenarioId(sc.id)
-                      setSandboxFeedback(null)
-                    }}
-                    className={cn(
-                      'font-mono text-xs font-semibold gap-2',
-                      activeScenarioId === sc.id
-                        ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                        : 'border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800'
-                    )}
+                  <div
+                    ref={checkmark1Ref}
+                    className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.5 rounded-full"
+                    style={{ opacity: reducedMotion ? 1 : 0 }}
                   >
-                    <Activity className="w-3.5 h-3.5" />
-                    {sc.title}
-                  </Button>
-                ))}
-              </div>
-
-              {/* Sandbox Card Widget */}
-              <Card className="bg-[#09090b] border-zinc-800 overflow-hidden shadow-2xl">
-                <div className="bg-zinc-900/80 px-6 py-4 border-b border-zinc-800 flex items-center justify-between">
-                  <div className="flex gap-2">
-                    <div className="w-3 h-3 rounded-full bg-rose-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-amber-500/60" />
-                    <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
-                  </div>
-                  <span className="font-mono text-xs text-zinc-400 tracking-widest font-semibold">
-                    NEXOPS_CONSOLE_V4
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-12">
-                  <div className="lg:col-span-8 p-6 md:p-8 border-r border-zinc-800 space-y-6">
-                    <div className="p-6 rounded-xl bg-black border border-zinc-800 space-y-4">
-                      <div className="flex items-center justify-between">
-                        <h5 className="font-mono text-sm md:text-base font-bold text-white">
-                          {currentScenario.causeTitle}
-                        </h5>
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            'font-mono text-xs font-bold',
-                            currentScenario.matchVariant === 'success'
-                              ? 'bg-emerald-950/60 text-emerald-400 border-emerald-800/60'
-                              : 'bg-amber-950/60 text-amber-400 border-amber-800/60'
-                          )}
-                        >
-                          Match: {currentScenario.score}
-                        </Badge>
-                      </div>
-
-                      <div className="text-xs text-zinc-400 font-mono">
-                        Target Service: <span className="text-white font-semibold">{currentScenario.service}</span> • Repository: <span className="text-white font-semibold">{currentScenario.repo}</span> ({currentScenario.commit})
-                      </div>
-
-                      <div className="space-y-2.5 pt-2">
-                        {currentScenario.reasoning.map((item, idx) => (
-                          <div key={idx} className="flex justify-between items-center text-xs font-mono">
-                            <span className="text-zinc-400">{item.label}</span>
-                            <span className="text-emerald-400 font-bold">{item.delta}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="lg:col-span-4 p-6 md:p-8 flex flex-col justify-center text-center space-y-6">
-                    <div className="space-y-1">
-                      <h4 className="text-base font-bold text-white">Is this cause correct?</h4>
-                      <p className="text-xs text-zinc-400">
-                        Your confirm/reject feedback recalibrates weights for your workspace.
-                      </p>
-                    </div>
-
-                    <div className="space-y-3">
-                      <Button
-                        onClick={handleSandboxConfirm}
-                        className={cn(
-                          'w-full font-mono text-xs font-bold uppercase tracking-wider',
-                          sandboxFeedback === 'confirmed'
-                            ? 'bg-emerald-600 text-white'
-                            : 'bg-emerald-500 hover:bg-emerald-600 text-emerald-950'
-                        )}
-                      >
-                        {sandboxFeedback === 'confirmed' ? '✓ Feedback Saved' : 'Confirm Cause'}
-                      </Button>
-
-                      <Button
-                        onClick={handleSandboxReject}
-                        variant="outline"
-                        className={cn(
-                          'w-full font-mono text-xs font-semibold uppercase tracking-wider border-zinc-800 bg-zinc-900 text-zinc-300 hover:bg-zinc-800',
-                          sandboxFeedback === 'rejected' && 'bg-rose-950/60 text-rose-400 border-rose-800/60'
-                        )}
-                      >
-                        {sandboxFeedback === 'rejected' ? '✕ Suggestion Rejected' : 'Reject Suggestion'}
-                      </Button>
-                    </div>
+                    <Check className="w-3 h-3" /> CONFIRMED CAUSE
                   </div>
                 </div>
-              </Card>
-            </div>
-          </section>
-
-          {/* FEATURE CARDS & CONTINUOUS LEARNING MOAT */}
-          <section className="py-20 border-b border-zinc-800/80">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 text-[10px] font-mono uppercase tracking-widest font-semibold">
-                  Real-Time Topology
-                </Badge>
-                <h4 className="text-white font-bold text-base">Live Infrastructure Mapping</h4>
-                <p className="text-zinc-400 text-xs leading-relaxed">
-                  Container and service relationships updated continuously in real-time.
-                </p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <Badge variant="outline" className="bg-emerald-950/60 text-emerald-400 border-emerald-800/60 text-[10px] font-mono uppercase tracking-widest font-semibold">
-                  Deterministic Engine
-                </Badge>
-                <h4 className="text-white font-bold text-base">Causal Inference Model</h4>
-                <p className="text-zinc-400 text-xs leading-relaxed">
-                  Built on logic, not LLM guesswork. No hallucinations, only evidence.
-                </p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 text-[10px] font-mono uppercase tracking-widest font-semibold">
-                  Automated Governance
-                </Badge>
-                <h4 className="text-white font-bold text-base">Post-Mortem Automation</h4>
-                <p className="text-zinc-400 text-xs leading-relaxed">
-                  Generates event timeline and incident evidence reports automatically.
-                </p>
-              </Card>
-
-              <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-3">
-                <Badge variant="outline" className="bg-zinc-900 text-zinc-400 border-zinc-800 text-[10px] font-mono uppercase tracking-widest font-semibold">
-                  Enterprise Grade
-                </Badge>
-                <h4 className="text-white font-bold text-base">SOC2 & VPC Ready</h4>
-                <p className="text-zinc-400 text-xs leading-relaxed">
-                  Row level security guarantees complete per-workspace tenant isolation.
-                </p>
-              </Card>
-            </div>
-
-            {/* Continuous Learning Moat Card */}
-            <Card className="p-8 md:p-12 bg-[#09090b] border-zinc-800 flex flex-col md:flex-row items-center gap-8 md:gap-12">
-              <div className="md:w-1/2 space-y-3">
-                <h3 className="text-2xl md:text-3xl font-extrabold text-white">
-                  The Moat: Continuous Learning
-                </h3>
-                <p className="text-zinc-400 text-sm md:text-base leading-relaxed">
-                  Every confirm/reject action is remembered permanently per workspace. NexOps gets more accurate for your specific architecture the longer your team uses it. We don't just solve incidents; we map institutional knowledge.
-                </p>
+                <div className="text-[11px] text-zinc-400">touches 2 of 3 alerting dependencies</div>
               </div>
 
-              <div className="md:w-1/2 w-full flex justify-center">
-                <div className="bg-black border border-zinc-800 p-6 md:p-8 w-full max-w-md rounded-xl space-y-4 shadow-xl">
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-xs text-zinc-400 uppercase tracking-widest font-semibold">
-                      Neural Scoring Weights
-                    </span>
-                    <span className="text-emerald-400 font-mono text-xs font-semibold animate-pulse">
-                      Learning...
-                    </span>
-                  </div>
-                  <div className="space-y-2.5">
-                    <div className="h-3 bg-zinc-900 rounded-full overflow-hidden">
-                      <div
-                        className="bg-blue-600 h-full transition-all duration-700 ease-out"
-                        style={{ width: `${learningProgress}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between font-mono text-xs text-white">
-                      <span className="text-zinc-400">Team Specific Accuracy</span>
-                      <span className="font-bold">{learningProgress.toFixed(1)}%</span>
-                    </div>
-                  </div>
+              {/* Node 2 Label */}
+              <div
+                ref={label2Ref}
+                className="space-y-0.5 transition-opacity duration-300"
+                style={{ opacity: reducedMotion ? 0.25 : 0 }}
+              >
+                <div className="font-mono text-xs font-semibold text-zinc-300">
+                  06:58:47 · deploy to auth-service
                 </div>
+                <div className="text-[11px] text-zinc-400">same service, lower historical match rate</div>
               </div>
-            </Card>
-          </section>
-
-          {/* TECHNICAL FAQ ACCORDION */}
-          <section id="faq" className="py-20 border-b border-zinc-800/80">
-            <div className="max-w-4xl mx-auto space-y-10">
-              <div className="text-center space-y-2">
-                <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 text-xs font-semibold uppercase tracking-widest">
-                  Got Questions?
-                </Badge>
-                <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-                  Technical FAQ
-                </h2>
-              </div>
-
-              <div className="space-y-4">
-                <Card className="bg-[#09090b] border-zinc-800 overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaq(openFaq === 0 ? null : 0)}
-                    className="w-full p-6 text-left flex justify-between items-center font-bold text-base md:text-lg text-white"
-                  >
-                    <span>How does the correlation engine work without manual tagging?</span>
-                    <ChevronDown className={cn('w-5 h-5 text-zinc-400 transition-transform', openFaq === 0 && 'rotate-180')} />
-                  </button>
-                  {openFaq === 0 && (
-                    <div className="px-6 pb-6 text-zinc-400 text-sm leading-relaxed border-t border-zinc-800/80 pt-4">
-                      NexOps ingests Kubernetes manifests, commit hashes, and service mesh telemetry to infer relationships. We combine this topological data with temporal analysis to find common deltas across your stack without requiring manual code instrumentation.
-                    </div>
-                  )}
-                </Card>
-
-                <Card className="bg-[#09090b] border-zinc-800 overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaq(openFaq === 1 ? null : 1)}
-                    className="w-full p-6 text-left flex justify-between items-center font-bold text-base md:text-lg text-white"
-                  >
-                    <span>Does NexOps replace my existing monitoring tools?</span>
-                    <ChevronDown className={cn('w-5 h-5 text-zinc-400 transition-transform', openFaq === 1 && 'rotate-180')} />
-                  </button>
-                  {openFaq === 1 && (
-                    <div className="px-6 pb-6 text-zinc-400 text-sm leading-relaxed border-t border-zinc-800/80 pt-4">
-                      No. NexOps sits on top of Datadog, PagerDuty, and GitHub. We ingest alert events and deployment webhooks to provide the "Why" behind the signals your existing tools capture.
-                    </div>
-                  )}
-                </Card>
-
-                <Card className="bg-[#09090b] border-zinc-800 overflow-hidden">
-                  <button
-                    onClick={() => setOpenFaq(openFaq === 2 ? null : 2)}
-                    className="w-full p-6 text-left flex justify-between items-center font-bold text-base md:text-lg text-white"
-                  >
-                    <span>What is the latency between an incident alert and NexOps analysis?</span>
-                    <ChevronDown className={cn('w-5 h-5 text-zinc-400 transition-transform', openFaq === 2 && 'rotate-180')} />
-                  </button>
-                  {openFaq === 2 && (
-                    <div className="px-6 pb-6 text-zinc-400 text-sm leading-relaxed border-t border-zinc-800/80 pt-4">
-                      Sub-second. Our processing pipeline is built on a real-time stream architecture. Candidate cause rankings are computed and surfaced within 3 seconds of the alert payload reaching our webhook endpoint.
-                    </div>
-                  )}
-                </Card>
-              </div>
-            </div>
-          </section>
-
-          {/* HIGH-CONVERTING BOTTOM CTA */}
-          <section className="py-24 text-center space-y-8">
-            <div className="max-w-3xl mx-auto space-y-4">
-              <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-                Ready to Pinpoint Root Causes in Seconds?
-              </h2>
-              <p className="text-base text-zinc-400">
-                Join engineering teams running the NexOps Starter Pilot. Zero code access required.
-              </p>
-            </div>
-
-            <div className="flex justify-center gap-4">
-              <Link href="/login" prefetch={false}>
-                <Button size="lg" className="font-bold gap-2 px-10 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
-                  Request Pilot Access <ArrowRight className="w-5 h-5" />
-                </Button>
-              </Link>
-            </div>
-          </section>
-        </main>
-
-        {/* FOOTER */}
-        <footer className="border-t border-zinc-800 bg-[#050505] py-12 px-6 md:px-12 text-zinc-400 text-xs">
-          <div className="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-3">
-              <NexOpsLogo size="sm" />
-              <span>© {new Date().getFullYear()} NexOps Inc. All rights reserved.</span>
-            </div>
-
-            <div className="flex gap-6 font-medium">
-              <Link href="/terms" prefetch={false} className="hover:text-white transition-colors">
-                Terms of Service
-              </Link>
-              <Link href="/privacy" prefetch={false} className="hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-              <Link href="/login" prefetch={false} className="hover:text-white transition-colors">
-                Sign In
-              </Link>
             </div>
           </div>
-        </footer>
-      </div>
+
+          {/* HEADLINE & PAYOFF BLOCK (Reveals at end of trace sequence) */}
+          <div className="w-full md:w-1/2 space-y-6 pt-4 md:pt-12">
+            <h1
+              ref={headlineRef}
+              className="text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight"
+              style={{ opacity: reducedMotion ? 1 : 0 }}
+            >
+              What caused this incident, and how do we know?
+            </h1>
+
+            <p
+              ref={subheadRef}
+              className="text-sm md:text-base text-zinc-400 leading-relaxed max-w-lg"
+              style={{ opacity: reducedMotion ? 1 : 0 }}
+            >
+              NexOps reads your deploys and alerts, ranks the likely cause, and shows its reasoning — so you're not guessing at 2 a.m.
+            </p>
+
+            <div
+              ref={ctaRef}
+              className="flex items-center gap-4 pt-2"
+              style={{ opacity: reducedMotion ? 1 : 0 }}
+            >
+              <Link href="/login" prefetch={false}>
+                <Button size="lg" className="font-bold gap-2 px-6 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
+                  Join the pilot <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+
+              <a href="#how-it-works" className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors">
+                See how it works ↓
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 2 — PROBLEM STATEMENT */}
+      <section className="gsap-section-reveal py-24 border-t border-zinc-800/80 bg-[#08090d]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6 text-center">
+          <h2 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-snug">
+            Every incident starts the same way: five tabs, one guess.
+          </h2>
+          <p className="text-sm md:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+            GitHub. PagerDuty. Slack. A growing sense that whatever you find first is what you'll blame. Most of the first several minutes of an incident go to figuring out what changed — before anyone's even started fixing it.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION 3 — HOW IT WORKS (3 STAGGERED PANELS) */}
+      <section id="how-it-works" className="py-24 border-t border-zinc-800/80">
+        <div className="max-w-6xl mx-auto px-6 md:px-12 space-y-12">
+          <div className="gsap-section-reveal space-y-3">
+            <span className="font-mono text-xs font-semibold text-blue-400 uppercase tracking-widest">
+              METHODOLOGY
+            </span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+              One question. A real answer.
+            </h2>
+          </div>
+
+          <div className="gsap-panels-grid grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Panel 1 */}
+            <div className="gsap-panel-stagger p-6 md:p-8 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
+              <div className="w-10 h-10 rounded-lg bg-blue-950/80 border border-blue-800/60 flex items-center justify-center text-blue-400">
+                <Zap className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Reads what changed</h3>
+              <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
+                Connects to GitHub and PagerDuty — no new agents, no new tabs.
+              </p>
+            </div>
+
+            {/* Panel 2 */}
+            <div className="gsap-panel-stagger p-6 md:p-8 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
+              <div className="w-10 h-10 rounded-lg bg-amber-950/80 border border-amber-800/60 flex items-center justify-center text-amber-400">
+                <Terminal className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Ranks likely causes</h3>
+              <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
+                Scores every recent deploy against the incident using deploy timing, dependency distance, and history — every score comes with the reasons behind it.
+              </p>
+            </div>
+
+            {/* Panel 3 */}
+            <div className="gsap-panel-stagger p-6 md:p-8 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
+              <div className="w-10 h-10 rounded-lg bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+                <CheckCircle2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-lg font-bold text-white">Learns what you confirm</h3>
+              <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
+                Mark a cause confirmed or ruled out, and NexOps remembers — the ranking gets sharper for your team over time.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 4 — THE MOAT (ENGINEERING MEMORY) */}
+      <section className="gsap-section-reveal py-24 border-t border-zinc-800/80 bg-[#08090d]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6">
+          <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-widest">
+            ENGINEERING MEMORY
+          </span>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+            It gets smarter the longer you use it.
+          </h2>
+          <p className="text-sm md:text-base text-zinc-400 leading-relaxed">
+            Every confirmed or rejected cause is stored, permanently. Over time, NexOps builds a private, compounding record of what actually causes incidents on your systems — accuracy a new tool, or a competitor, can't start with on day one.
+          </p>
+        </div>
+      </section>
+
+      {/* SECTION 5 — SCOPE STATEMENT (WHAT WE DON'T DO) */}
+      <section className="gsap-section-reveal py-24 border-t border-zinc-800/80">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-8">
+          <div className="space-y-3">
+            <span className="font-mono text-xs font-semibold text-rose-400 uppercase tracking-widest">
+              SCOPE STATEMENT
+            </span>
+            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+              What NexOps won't try to be.
+            </h2>
+            <p className="text-sm md:text-base text-zinc-400 leading-relaxed max-w-2xl">
+              No paging. No log storage. No dashboard for the sake of having a dashboard. NexOps does one thing — trace an incident back to its cause — and stays out of the tools you already trust for everything else.
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-3 pt-2">
+            <span className="text-xs font-mono font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full">
+              Not a paging system
+            </span>
+            <span className="text-xs font-mono font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full">
+              Not a log/metrics platform
+            </span>
+            <span className="text-xs font-mono font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full">
+              Not another catalog to maintain
+            </span>
+          </div>
+        </div>
+      </section>
+
+      {/* SECTION 6 — PILOT / SOCIAL PROOF */}
+      <section id="pilot" className="gsap-section-reveal py-24 border-t border-zinc-800/80 bg-[#08090d]">
+        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6">
+          <span className="font-mono text-xs font-semibold text-blue-400 uppercase tracking-widest">
+            STARTER PILOT PROGRAM
+          </span>
+          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
+            Built in the open, early.
+          </h2>
+          <p className="text-sm md:text-base text-zinc-400 leading-relaxed">
+            NexOps is in an unpaid pilot with real engineering teams right now. If you want a second opinion the next time something breaks, we'd like yours to be one of them.
+          </p>
+        </div>
+      </section>
+
+      {/* FINAL CTA SECTION */}
+      <section className="gsap-section-reveal py-28 border-t border-zinc-800/80 text-center space-y-8">
+        <div className="max-w-3xl mx-auto px-6 space-y-4">
+          <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+            Next incident, know why.
+          </h2>
+        </div>
+
+        <div className="flex flex-col items-center gap-4">
+          <Link href="/login" prefetch={false}>
+            <Button size="lg" className="font-bold gap-2 px-10 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
+              Join the pilot <ArrowRight className="w-5 h-5" />
+            </Button>
+          </Link>
+
+          <a
+            href="mailto:akaashgithub21@gmail.com"
+            className="text-xs text-zinc-400 hover:text-white transition-colors"
+          >
+            Questions? Contact engineering team
+          </a>
+        </div>
+      </section>
+
+      {/* FOOTER */}
+      <footer className="border-t border-zinc-800/80 bg-[#06070a] py-12 px-6 md:px-12 text-zinc-400 text-xs">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="flex items-center gap-3">
+            <NexOpsLogo size="sm" />
+            <span>© NexOps</span>
+          </div>
+
+          <div className="flex gap-6 font-medium">
+            <Link href="/terms" prefetch={false} className="hover:text-white transition-colors">
+              Terms of Service
+            </Link>
+            <Link href="/privacy" prefetch={false} className="hover:text-white transition-colors">
+              Privacy Policy
+            </Link>
+            <Link href="/login" prefetch={false} className="hover:text-white transition-colors">
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </footer>
     </div>
   )
 }
