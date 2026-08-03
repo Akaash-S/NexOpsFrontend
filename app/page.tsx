@@ -114,67 +114,57 @@ export default function LandingPage() {
         tl.to(
           traceLineRef.current,
           {
-            strokeDashoffset: pathLength * 0.65,
+            height: '33%',
             ease: 'none',
           },
           0.00
         )
 
         // Progress 0.08 -> 0.12: Reveal Node 0 & Label 0
-        tl.fromTo(node0Ref.current, { scale: 0 }, { scale: 1, ease: 'none' }, 0.08)
-          .fromTo(label0Ref.current, { x: 20, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.08)
+        tl.fromTo(node0Ref.current, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, ease: 'none' }, 0.08)
+          .fromTo(label0Ref.current, { x: 16, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.08)
 
         // Progress 0.12 -> 0.35: Draw line towards Node 1
         tl.to(
           traceLineRef.current,
           {
-            strokeDashoffset: pathLength * 0.35,
+            height: '66%',
             ease: 'none',
           },
           0.12
         )
 
         // Progress 0.35 -> 0.39: Reveal Node 1 & Label 1
-        tl.fromTo(node1Ref.current, { scale: 0 }, { scale: 1, ease: 'none' }, 0.35)
-          .fromTo(label1Ref.current, { x: 20, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.35)
+        tl.fromTo(node1Ref.current, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, ease: 'none' }, 0.35)
+          .fromTo(label1Ref.current, { x: 16, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.35)
 
         // Progress 0.39 -> 0.55: Draw line towards Node 2
         tl.to(
           traceLineRef.current,
           {
-            strokeDashoffset: pathLength * 0.1,
+            height: '100%',
             ease: 'none',
           },
           0.39
         )
 
         // Progress 0.55 -> 0.59: Reveal Node 2 & Label 2
-        tl.fromTo(node2Ref.current, { scale: 0 }, { scale: 1, ease: 'none' }, 0.55)
-          .fromTo(label2Ref.current, { x: 20, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.55)
-
-        // Progress 0.59 -> 0.75: Finish line draw
-        tl.to(
-          traceLineRef.current,
-          {
-            strokeDashoffset: 0,
-            ease: 'none',
-          },
-          0.59
-        )
+        tl.fromTo(node2Ref.current, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, ease: 'none' }, 0.55)
+          .fromTo(label2Ref.current, { x: 16, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.55)
 
         // Progress 0.75 -> 0.85: Resolution Beat (Node 1 turns Green, Node 0 & 2 dim)
         tl.to([label0Ref.current, label2Ref.current], { opacity: 0.25, ease: 'none' }, 0.75)
           .to(
             [node0Ref.current, node2Ref.current],
-            { opacity: 0.25, fill: '#52525b', ease: 'none' },
+            { opacity: 0.25, backgroundColor: '#52525b', ease: 'none' },
             0.75
           )
-          .to(node1Ref.current, { scale: 1.3, fill: '#22c55e', ease: 'none' }, 0.75)
-          .to(traceLineRef.current, { stroke: '#22c55e', ease: 'none' }, 0.75)
-          .to(alertDotRef.current, { fill: '#22c55e', ease: 'none' }, 0.75)
+          .to(node1Ref.current, { scale: 1.3, backgroundColor: '#22c55e', ease: 'none' }, 0.75)
+          .to(traceLineRef.current, { backgroundColor: '#22c55e', ease: 'none' }, 0.75)
+          .to(alertDotRef.current, { backgroundColor: '#22c55e', ease: 'none' }, 0.75)
           .fromTo(
             checkmark1Ref.current,
-            { scale: 0, opacity: 0 },
+            { scale: 0.8, opacity: 0 },
             { scale: 1, opacity: 1, ease: 'none' },
             0.75
           )
@@ -280,104 +270,69 @@ export default function LandingPage() {
           </span>
         </div>
 
-        {/* CENTRAL SVG TRACE DIAGRAM & CANDIDATE NODES */}
+        {/* CENTRAL TRACE DIAGRAM & CANDIDATE NODES (Clean Left Spine Layout) */}
         <div className="my-auto py-8 relative flex flex-col md:flex-row items-start justify-between gap-8 md:gap-16">
-          {/* SVG Trace Line */}
-          <div className="relative w-full md:w-1/2 h-[340px] md:h-[400px]">
-            <svg ref={traceSvgRef} className="w-full h-full overflow-visible" viewBox="0 0 300 400" fill="none">
-              {/* Trace Path */}
-              <path
-                ref={traceLineRef}
-                d="M 50 20 L 50 120 L 50 240 L 50 360"
-                stroke="#f59e0b"
-                strokeWidth="3"
-                strokeLinecap="round"
-                className="transition-colors duration-500"
-              />
+          {/* Left Spine Timeline Diagram */}
+          <div className="relative w-full md:w-1/2 min-h-[340px] pl-10 md:pl-12 border-l-2 border-zinc-800 space-y-12">
+            {/* Active Animating Trace Line Overlay */}
+            <div
+              ref={traceLineRef as any}
+              className="absolute left-[-2px] top-0 w-0.5 bg-amber-500 h-0 transition-colors duration-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+            />
 
-              {/* Alert Top Dot */}
-              <circle ref={alertDotRef} cx="50" cy="20" r="7" fill="#f59e0b" className="transition-colors duration-500" />
-
-              {/* Candidate Node 0 */}
-              <circle
-                ref={node0Ref}
-                cx="50"
-                cy="120"
-                r="6"
-                fill="#f59e0b"
-                className="transition-transform transition-colors duration-500 origin-center"
-                style={{ transform: reducedMotion ? 'scale(1)' : 'scale(0)', opacity: reducedMotion ? 0.25 : 1 }}
-              />
-
-              {/* Candidate Node 1 (Middle - Confirmed Cause) */}
-              <circle
-                ref={node1Ref}
-                cx="50"
-                cy="240"
-                r="6"
-                fill={reducedMotion ? '#22c55e' : '#f59e0b'}
-                className="transition-transform transition-colors duration-500 origin-center"
-                style={{ transform: reducedMotion ? 'scale(1.2)' : 'scale(0)' }}
-              />
-
-              {/* Candidate Node 2 */}
-              <circle
-                ref={node2Ref}
-                cx="50"
-                cy="360"
-                r="6"
-                fill="#f59e0b"
-                className="transition-transform transition-colors duration-500 origin-center"
-                style={{ transform: reducedMotion ? 'scale(1)' : 'scale(0)', opacity: reducedMotion ? 0.25 : 1 }}
-              />
-            </svg>
-
-            {/* DOM CANDIDATE LABELS LAYER (Positioned alongside SVG nodes) */}
-            <div className="absolute inset-0 pl-20 flex flex-col justify-between py-2">
-              {/* Node 0 Label */}
-              <div
-                ref={label0Ref}
-                className="space-y-0.5 transition-opacity duration-300"
-                style={{ opacity: reducedMotion ? 0.25 : 0 }}
-              >
-                <div className="font-mono text-xs font-semibold text-zinc-300">
-                  07:42:11 · deploy to payments-api
-                </div>
-                <div className="text-[11px] text-zinc-400">12 min before the alert</div>
+            {/* Alert Top Node */}
+            <div className="relative">
+              <div className="absolute -left-[49px] md:-left-[57px] top-0 w-5 h-5 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center">
+                <div ref={alertDotRef as any} className="w-2 h-2 rounded-full bg-amber-500" />
               </div>
-
-              {/* Node 1 Label (Confirmed Cause) */}
-              <div
-                ref={label1Ref}
-                className="space-y-0.5 relative transition-opacity duration-300"
-                style={{ opacity: reducedMotion ? 1 : 0 }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="font-mono text-xs font-bold text-white">
-                    07:31:04 · config change · user-service
-                  </div>
-                  <div
-                    ref={checkmark1Ref}
-                    className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-800/80 px-2 py-0.5 rounded-full"
-                    style={{ opacity: reducedMotion ? 1 : 0 }}
-                  >
-                    <Check className="w-3 h-3" /> CONFIRMED CAUSE
-                  </div>
-                </div>
-                <div className="text-[11px] text-zinc-400">touches 2 of 3 alerting dependencies</div>
+              <div className="text-[11px] font-mono font-semibold text-amber-400 uppercase tracking-widest">
+                07:42:11 · ALERT INGESTED
               </div>
+            </div>
 
-              {/* Node 2 Label */}
+            {/* Candidate Node 0 */}
+            <div ref={label0Ref} className="relative space-y-1 transition-opacity duration-300" style={{ opacity: reducedMotion ? 0.25 : 0 }}>
               <div
-                ref={label2Ref}
-                className="space-y-0.5 transition-opacity duration-300"
-                style={{ opacity: reducedMotion ? 0.25 : 0 }}
-              >
-                <div className="font-mono text-xs font-semibold text-zinc-300">
-                  06:58:47 · deploy to auth-service
-                </div>
-                <div className="text-[11px] text-zinc-400">same service, lower historical match rate</div>
+                ref={node0Ref as any}
+                className="absolute -left-[48px] md:-left-[56px] top-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-zinc-950"
+              />
+              <div className="font-mono text-xs font-bold text-zinc-200">
+                07:42:11 · deploy to payments-api
               </div>
+              <div className="text-[11px] text-zinc-400">12 min before the alert</div>
+            </div>
+
+            {/* Candidate Node 1 (Middle - Confirmed Cause) */}
+            <div ref={label1Ref} className="relative space-y-1.5 transition-opacity duration-300" style={{ opacity: reducedMotion ? 1 : 0 }}>
+              <div
+                ref={node1Ref as any}
+                className="absolute -left-[48px] md:-left-[56px] top-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-zinc-950"
+              />
+              <div className="flex flex-wrap items-center gap-2.5">
+                <div className="font-mono text-xs font-bold text-white">
+                  07:31:04 · config change · user-service
+                </div>
+                <div
+                  ref={checkmark1Ref}
+                  className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/90 border border-emerald-800/80 px-2 py-0.5 rounded-md shadow-md shadow-emerald-950/50"
+                  style={{ opacity: reducedMotion ? 1 : 0 }}
+                >
+                  <Check className="w-3 h-3" /> CONFIRMED CAUSE
+                </div>
+              </div>
+              <div className="text-[11px] text-zinc-400">touches 2 of 3 alerting dependencies</div>
+            </div>
+
+            {/* Candidate Node 2 */}
+            <div ref={label2Ref} className="relative space-y-1 transition-opacity duration-300" style={{ opacity: reducedMotion ? 0.25 : 0 }}>
+              <div
+                ref={node2Ref as any}
+                className="absolute -left-[48px] md:-left-[56px] top-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-zinc-950"
+              />
+              <div className="font-mono text-xs font-bold text-zinc-200">
+                06:58:47 · deploy to auth-service
+              </div>
+              <div className="text-[11px] text-zinc-400">same service, lower historical match rate</div>
             </div>
           </div>
 
