@@ -20,6 +20,8 @@ import {
   Check,
   Zap,
   ShieldCheck,
+  AlertTriangle,
+  GitCommitHorizontal,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -268,69 +270,109 @@ export default function LandingPage() {
           </span>
         </div>
 
-        {/* CENTRAL TRACE DIAGRAM & CANDIDATE NODES (Clean Left Spine Layout) */}
-        <div className="my-auto py-8 relative flex flex-col md:flex-row items-start justify-between gap-8 md:gap-16">
+        {/* CENTRAL TRACE DIAGRAM & CANDIDATE NODES (Enterprise Glassmorphic Spine Cards) */}
+        <div className="my-auto py-6 relative flex flex-col md:flex-row items-start justify-between gap-8 md:gap-16">
           {/* Left Spine Timeline Diagram */}
-          <div className="relative w-full md:w-1/2 min-h-[340px] pl-10 md:pl-12 border-l-2 border-zinc-800 space-y-12">
+          <div className="relative w-full md:w-1/2 min-h-[380px] pl-8 md:pl-10 border-l-2 border-zinc-800/80 space-y-6">
             {/* Active Animating Trace Line Overlay */}
             <div
               ref={traceLineRef as any}
-              className="absolute left-[-2px] top-0 w-0.5 bg-amber-500 h-0 transition-colors duration-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]"
+              className="absolute left-[-2px] top-0 w-0.5 bg-amber-500 h-0 transition-colors duration-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]"
             />
 
-            {/* Alert Top Node */}
-            <div className="relative">
-              <div className="absolute -left-[49px] md:-left-[57px] top-0 w-5 h-5 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center">
-                <div ref={alertDotRef as any} className="w-2 h-2 rounded-full bg-amber-500" />
+            {/* Alert Top Node Item */}
+            <div className="relative pl-2">
+              <div className="absolute -left-[41px] md:-left-[49px] top-1 w-6 h-6 rounded-full bg-amber-950/80 border-2 border-amber-500 flex items-center justify-center shadow-lg shadow-amber-950/60">
+                <AlertTriangle className="w-3 h-3 text-amber-400" />
               </div>
-              <div className="text-[11px] font-mono font-semibold text-amber-400 uppercase tracking-widest">
-                07:42:11 · ALERT INGESTED
+              <div className="p-3.5 rounded-xl bg-[#0d0e14]/90 border border-amber-900/40 space-y-1">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] font-bold text-amber-400 uppercase tracking-widest">
+                    07:42:11 UTC · ALERT INGESTED
+                  </span>
+                  <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 text-[10px] font-mono">
+                    P99 SPIKE
+                  </Badge>
+                </div>
+                <div className="text-xs text-zinc-300 font-medium">
+                  PagerDuty: High Latency & 500 Cascade on <code className="text-amber-300 font-mono">checkout-v3</code>
+                </div>
               </div>
             </div>
 
-            {/* Candidate Node 0 */}
-            <div ref={label0Ref} className="relative space-y-1 transition-opacity duration-300" style={{ opacity: reducedMotion ? 0.25 : 0 }}>
+            {/* Candidate Node 0 Card */}
+            <div
+              ref={label0Ref}
+              className="relative pl-2 transition-all duration-300"
+              style={{ opacity: reducedMotion ? 0.25 : 0 }}
+            >
               <div
                 ref={node0Ref as any}
-                className="absolute -left-[48px] md:-left-[56px] top-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-zinc-950"
-              />
-              <div className="font-mono text-xs font-bold text-zinc-200">
-                07:42:11 · deploy to payments-api
+                className="absolute -left-[41px] md:-left-[49px] top-3 w-5 h-5 rounded-full bg-zinc-900 border-2 border-amber-500/80 flex items-center justify-center"
+              >
+                <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
               </div>
-              <div className="text-[11px] text-zinc-400">12 min before the alert</div>
+              <div className="p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
+                <div className="font-mono text-xs font-bold text-zinc-200">
+                  07:42:11 · deploy to payments-api
+                </div>
+                <div className="text-[11px] text-zinc-400">
+                  12 min before alert • Rule-out: No dependency match
+                </div>
+              </div>
             </div>
 
-            {/* Candidate Node 1 (Middle - Confirmed Cause) */}
-            <div ref={label1Ref} className="relative space-y-1.5 transition-opacity duration-300" style={{ opacity: reducedMotion ? 1 : 0 }}>
+            {/* Candidate Node 1 Card (Middle - Confirmed Cause) */}
+            <div
+              ref={label1Ref}
+              className="relative pl-2 transition-all duration-300"
+              style={{ opacity: reducedMotion ? 1 : 0 }}
+            >
               <div
                 ref={node1Ref as any}
-                className="absolute -left-[48px] md:-left-[56px] top-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-zinc-950"
-              />
-              <div className="flex flex-wrap items-center gap-2.5">
-                <div className="font-mono text-xs font-bold text-white">
-                  07:31:04 · config change · user-service
+                className="absolute -left-[41px] md:-left-[49px] top-3 w-5 h-5 rounded-full bg-zinc-900 border-2 border-amber-500 flex items-center justify-center transition-colors duration-500"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+              </div>
+              <div className="p-4 rounded-xl bg-gradient-to-r from-emerald-950/30 via-[#0d0e14] to-[#0d0e14] border border-emerald-800/60 space-y-2 shadow-xl shadow-emerald-950/30">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="font-mono text-xs font-bold text-white">
+                    07:31:04 · config change · user-service
+                  </div>
+                  <div
+                    ref={checkmark1Ref}
+                    className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-400 bg-emerald-950/90 border border-emerald-700/80 px-2.5 py-0.5 rounded-full shadow-md shadow-emerald-950/60"
+                    style={{ opacity: reducedMotion ? 1 : 0 }}
+                  >
+                    <Check className="w-3 h-3" /> CONFIRMED (86.2%)
+                  </div>
                 </div>
-                <div
-                  ref={checkmark1Ref}
-                  className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-950/90 border border-emerald-800/80 px-2 py-0.5 rounded-md shadow-md shadow-emerald-950/50"
-                  style={{ opacity: reducedMotion ? 1 : 0 }}
-                >
-                  <Check className="w-3 h-3" /> CONFIRMED CAUSE
+                <div className="text-[11px] text-zinc-400">
+                  touches 2 of 3 alerting dependencies • CODEOWNERS: @infra-team
                 </div>
               </div>
-              <div className="text-[11px] text-zinc-400">touches 2 of 3 alerting dependencies</div>
             </div>
 
-            {/* Candidate Node 2 */}
-            <div ref={label2Ref} className="relative space-y-1 transition-opacity duration-300" style={{ opacity: reducedMotion ? 0.25 : 0 }}>
+            {/* Candidate Node 2 Card */}
+            <div
+              ref={label2Ref}
+              className="relative pl-2 transition-all duration-300"
+              style={{ opacity: reducedMotion ? 0.25 : 0 }}
+            >
               <div
                 ref={node2Ref as any}
-                className="absolute -left-[48px] md:-left-[56px] top-1 w-3.5 h-3.5 rounded-full bg-amber-500 border-2 border-zinc-950"
-              />
-              <div className="font-mono text-xs font-bold text-zinc-200">
-                06:58:47 · deploy to auth-service
+                className="absolute -left-[41px] md:-left-[49px] top-3 w-5 h-5 rounded-full bg-zinc-900 border-2 border-amber-500/80 flex items-center justify-center"
+              >
+                <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
               </div>
-              <div className="text-[11px] text-zinc-400">same service, lower historical match rate</div>
+              <div className="p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
+                <div className="font-mono text-xs font-bold text-zinc-200">
+                  06:58:47 · deploy to auth-service
+                </div>
+                <div className="text-[11px] text-zinc-400">
+                  same service, lower historical match rate
+                </div>
+              </div>
             </div>
           </div>
 
