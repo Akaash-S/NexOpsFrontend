@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import gsap from 'gsap'
+import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { NexOpsLogo } from '@/components/ui/nexops-logo'
 import { Badge } from '@/components/ui/badge'
@@ -27,8 +29,15 @@ import {
   Server,
   RefreshCw,
   ExternalLink,
+  GitBranch,
+  Search,
+  Check,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+
+if (typeof window !== 'undefined') {
+  gsap.registerPlugin(ScrollTrigger)
+}
 
 // Sandbox Scenarios Data
 const SANDBOX_SCENARIOS = [
@@ -102,6 +111,20 @@ export default function LandingPage() {
   const [isScrolled, setIsScrolled] = useState(false)
   const introLogoRef = useRef<HTMLDivElement>(null)
   const logoTargetRef = useRef<HTMLDivElement>(null)
+  const mainContentRef = useRef<HTMLDivElement>(null)
+
+  // GSAP Trace Sequence Refs
+  const traceSectionRef = useRef<HTMLDivElement>(null)
+  const traceLineRef = useRef<HTMLDivElement>(null)
+  const step1Ref = useRef<HTMLDivElement>(null)
+  const step2Ref = useRef<HTMLDivElement>(null)
+  const step3Ref = useRef<HTMLDivElement>(null)
+  const step4Ref = useRef<HTMLDivElement>(null)
+
+  // GSAP Counter Refs
+  const latencyNumRef = useRef<HTMLSpanElement>(null)
+  const codePrivacyNumRef = useRef<HTMLSpanElement>(null)
+  const logicNumRef = useRef<HTMLSpanElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -140,6 +163,84 @@ export default function LandingPage() {
     }
   }, [])
 
+  // GSAP Animations Context
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+
+    const ctx = gsap.context(() => {
+      // 1. Hero Text Reveal
+      gsap.from('.gsap-hero-reveal', {
+        y: 30,
+        opacity: 0,
+        duration: 0.8,
+        stagger: 0.15,
+        ease: 'power3.out',
+        delay: 0.2,
+      })
+
+      // 2. Feature Cards Stagger Reveal
+      gsap.from('.gsap-card-reveal', {
+        scrollTrigger: {
+          trigger: '.gsap-cards-grid',
+          start: 'top 80%',
+        },
+        y: 40,
+        opacity: 0,
+        duration: 0.6,
+        stagger: 0.12,
+        ease: 'power2.out',
+      })
+
+      // 3. Incident Trace Pinned Sequence
+      if (traceSectionRef.current) {
+        const tl = gsap.timeline({
+          scrollTrigger: {
+            trigger: traceSectionRef.current,
+            start: 'top 20%',
+            end: '+=1200',
+            pin: true,
+            scrub: 0.8,
+          },
+        })
+
+        // Step 1 -> 2: Alert Fired to Commit Correlated
+        tl.to(traceLineRef.current, { height: '33%', duration: 1 })
+          .to(step1Ref.current, { opacity: 0.5, scale: 0.96, duration: 0.5 }, '<')
+          .fromTo(step2Ref.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1 })
+
+        // Step 2 -> 3: Commit Correlated to Graph Traversal
+        tl.to(traceLineRef.current, { height: '66%', duration: 1 })
+          .to(step2Ref.current, { opacity: 0.5, scale: 0.96, duration: 0.5 }, '<')
+          .fromTo(step3Ref.current, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 1 })
+
+        // Step 3 -> 4: Graph Traversal to Root Cause Confirmed
+        tl.to(traceLineRef.current, { height: '100%', duration: 1 })
+          .to(step3Ref.current, { opacity: 0.5, scale: 0.96, duration: 0.5 }, '<')
+          .fromTo(step4Ref.current, { opacity: 0, scale: 1.02 }, { opacity: 1, scale: 1, duration: 1 })
+      }
+
+      // 4. Numerical Metrics Counter
+      if (latencyNumRef.current) {
+        gsap.fromTo(
+          latencyNumRef.current,
+          { textContent: '0.0' },
+          {
+            textContent: '2.8',
+            duration: 1.5,
+            ease: 'power1.out',
+            snap: { textContent: 0.1 },
+            scrollTrigger: {
+              trigger: '#metrics-section',
+              start: 'top 75%',
+            },
+          }
+        )
+      }
+    }, mainContentRef)
+
+    return () => ctx.revert()
+  }, [])
+
   const currentScenario = SANDBOX_SCENARIOS.find((s) => s.id === activeScenarioId) || SANDBOX_SCENARIOS[0]
 
   const handleSandboxConfirm = () => {
@@ -172,6 +273,12 @@ export default function LandingPage() {
             Engine
           </a>
           <a
+            href="#trace"
+            className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
+          >
+            Trace
+          </a>
+          <a
             href="#features"
             className="text-xs font-medium uppercase tracking-widest text-zinc-400 hover:text-white transition-colors"
           >
@@ -202,7 +309,7 @@ export default function LandingPage() {
       <div
         ref={introLogoRef}
         id="intro-logo"
-        className="font-extrabold text-white tracking-tight transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] select-none drop-shadow-2xl flex items-center gap-3"
+        className="font-extrabold text-white tracking-tight transition-all duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)] select-none drop-shadow-2xl flex items-center gap-3 z-40"
         style={{
           top: '50%',
           left: '50%',
@@ -218,6 +325,7 @@ export default function LandingPage() {
 
       {/* MAIN CONTENT WRAPPER */}
       <div
+        ref={mainContentRef}
         id="main-content"
         className={cn(
           'transition-all duration-700 ease-out',
@@ -229,20 +337,22 @@ export default function LandingPage() {
           <section id="engine" className="pt-12 md:pt-16 pb-20 border-b border-zinc-800/80">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
               <div className="lg:col-span-7 space-y-8">
-                <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 px-3 py-1.5 gap-2 text-xs font-semibold">
-                  <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                  [ LIVE PILOT ] Autonomous Incident Correlation Engine
-                </Badge>
+                <div className="gsap-hero-reveal">
+                  <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 px-3 py-1.5 gap-2 text-xs font-semibold">
+                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
+                    [ LIVE PILOT ] Autonomous Incident Correlation Engine
+                  </Badge>
+                </div>
 
-                <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
+                <h1 className="gsap-hero-reveal text-4xl md:text-6xl font-extrabold tracking-tight leading-[1.15] text-white">
                   What caused this incident, and how do we know?
                 </h1>
 
-                <p className="text-base md:text-lg text-zinc-400 max-w-xl leading-relaxed">
+                <p className="gsap-hero-reveal text-base md:text-lg text-zinc-400 max-w-xl leading-relaxed">
                   NexOps ingests your deployments and incident alerts in real time, ranks candidate causes using dependency graph traversal, and explains its reasoning line-by-line — so your team isn't guessing at 2 a.m.
                 </p>
 
-                <div className="flex flex-wrap items-center gap-4 pt-2">
+                <div className="gsap-hero-reveal flex flex-wrap items-center gap-4 pt-2">
                   <Link href="/login" prefetch={false}>
                     <Button size="lg" className="font-bold gap-2 px-8 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
                       Request Pilot Access <ArrowRight className="w-5 h-5" />
@@ -257,7 +367,7 @@ export default function LandingPage() {
                 </div>
 
                 {/* Hero Guarantees */}
-                <div className="pt-4 flex flex-wrap gap-6 text-xs text-zinc-400 font-medium">
+                <div className="gsap-hero-reveal pt-4 flex flex-wrap gap-6 text-xs text-zinc-400 font-medium">
                   <div className="flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
                     <span>0% Raw Source Code Access</span>
@@ -274,7 +384,7 @@ export default function LandingPage() {
               </div>
 
               {/* HERO SCENARIO CARD */}
-              <div className="lg:col-span-5 relative mt-4 lg:mt-0">
+              <div className="lg:col-span-5 relative mt-4 lg:mt-0 gsap-hero-reveal">
                 <Card className="p-6 md:p-8 bg-[#09090b] border-zinc-800 shadow-2xl relative z-10 space-y-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2.5">
@@ -311,12 +421,12 @@ export default function LandingPage() {
                     </div>
 
                     <div className="pt-6 grid grid-cols-2 gap-3">
-                      <Link href="/incidents" prefetch={false}>
+                      <Link href="/login" prefetch={false}>
                         <Button variant="secondary" size="sm" className="w-full font-mono text-xs uppercase tracking-wider font-semibold bg-zinc-800 text-white hover:bg-zinc-700">
                           Analyze Cause
                         </Button>
                       </Link>
-                      <Link href="/dashboard" prefetch={false}>
+                      <Link href="/login" prefetch={false}>
                         <Button variant="outline" size="sm" className="w-full font-mono text-xs uppercase tracking-wider font-semibold border-zinc-800 text-zinc-300 hover:bg-zinc-800">
                           Open Playbook
                         </Button>
@@ -330,7 +440,117 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* INTEGRATIONS MARQUEE BANNER */}
+          {/* GSAP SCROLL-PINNED INCIDENT TRACE SEQUENCE */}
+          <section id="trace" ref={traceSectionRef} className="py-24 border-b border-zinc-800/80 relative overflow-hidden">
+            <div className="max-w-4xl mx-auto space-y-12">
+              <div className="text-center space-y-3">
+                <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 text-xs font-semibold uppercase tracking-widest">
+                  [ SCROLL-PINNED DEMO ] The Incident Trace
+                </Badge>
+                <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">
+                  Watch Real-Time Correlation in Action
+                </h2>
+                <p className="text-sm md:text-base text-zinc-400">
+                  Scroll down to step through how NexOps connects an incoming PagerDuty alert to the exact commit SHA in seconds.
+                </p>
+              </div>
+
+              {/* TRACE TIMELINE CONTAINER */}
+              <div className="relative pl-8 md:pl-12 border-l-2 border-zinc-800 space-y-12 min-h-[480px]">
+                {/* Active Animating Trace Line */}
+                <div
+                  ref={traceLineRef}
+                  className="absolute left-[-2px] top-0 w-0.5 bg-gradient-to-b from-rose-500 via-amber-400 to-emerald-400 h-0 transition-all duration-100 shadow-[0_0_12px_rgba(34,197,94,0.6)]"
+                />
+
+                {/* Step 1: Alert Fired */}
+                <div ref={step1Ref} className="relative space-y-3">
+                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-rose-500/20 border-2 border-rose-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-rose-400 uppercase tracking-widest">
+                      01:02:14 UTC — Alert Ingested
+                    </span>
+                    <Badge variant="outline" className="bg-rose-950/60 text-rose-400 border-rose-800/60 font-mono text-[10px]">
+                      HIGH SEVERITY
+                    </Badge>
+                  </div>
+                  <h4 className="text-lg md:text-xl font-bold text-white">
+                    PagerDuty Alert: P99 Latency &gt; 1800ms on <code className="text-amber-300 font-mono bg-zinc-900 px-2 py-0.5 rounded">checkout-v3</code>
+                  </h4>
+                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
+                    Automatic alert ingestion parses incoming webhook payload and initializes dependency graph traversal.
+                  </p>
+                </div>
+
+                {/* Step 2: Deploy Correlated */}
+                <div ref={step2Ref} className="relative space-y-3 opacity-30">
+                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-amber-500/20 border-2 border-amber-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-amber-400" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-amber-400 uppercase tracking-widest">
+                      01:02:15 UTC — Deploy Match
+                    </span>
+                    <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 font-mono text-[10px]">
+                      TEMPORAL MATCH
+                    </Badge>
+                  </div>
+                  <h4 className="text-lg md:text-xl font-bold text-white">
+                    Deploy #492: Commit <code className="text-blue-400 font-mono bg-zinc-900 px-2 py-0.5 rounded">a1b2c3d4</code> deployed 8 minutes prior
+                  </h4>
+                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
+                    Matched GitHub deployment metadata: <code className="text-zinc-300 font-mono">Active DB Pool max_connections updated (100 -&gt; 20)</code>.
+                  </p>
+                </div>
+
+                {/* Step 3: Graph Traversal */}
+                <div ref={step3Ref} className="relative space-y-3 opacity-30">
+                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-blue-500/20 border-2 border-blue-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-blue-400" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-blue-400 uppercase tracking-widest">
+                      01:02:16 UTC — Topology Traversal
+                    </span>
+                    <Badge variant="outline" className="bg-blue-950/60 text-blue-400 border-blue-800/60 font-mono text-[10px]">
+                      GRAPH TRAVERSAL
+                    </Badge>
+                  </div>
+                  <h4 className="text-lg md:text-xl font-bold text-white">
+                    Upstream / Downstream Traversal: <code className="text-zinc-200 font-mono">payment-service → checkout-v3 → postgres-db</code>
+                  </h4>
+                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
+                    Evaluated 3 levels of service dependencies, CODEOWNERS ownership, and historical recalibration weights.
+                  </p>
+                </div>
+
+                {/* Step 4: Cause Confirmed */}
+                <div ref={step4Ref} className="relative space-y-3 opacity-30">
+                  <div className="absolute -left-[41px] md:-left-[57px] top-0 w-6 h-6 rounded-full bg-emerald-500/20 border-2 border-emerald-500 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(34,197,94,0.8)]" />
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-xs font-bold text-emerald-400 uppercase tracking-widest">
+                      01:02:17 UTC — Cause Confirmed
+                    </span>
+                    <Badge variant="outline" className="bg-emerald-950/60 text-emerald-400 border-emerald-800/60 font-mono text-[10px] font-bold">
+                      86.2% CONFIDENCE
+                    </Badge>
+                  </div>
+                  <h4 className="text-lg md:text-xl font-bold text-white">
+                    Root Cause Confirmed: DB Connection Pool Exhaustion on <code className="text-emerald-400 font-mono bg-zinc-900 px-2 py-0.5 rounded">checkout-v3</code>
+                  </h4>
+                  <p className="text-xs md:text-sm text-zinc-400 leading-relaxed max-w-2xl">
+                    Incident cause confirmed with line-by-line score breakdown ready for post-mortem export.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* TELEMETRY INTEGRATIONS MARQUEE BANNER */}
           <section className="py-12 border-b border-zinc-800/80 bg-[#050505]">
             <div className="text-center space-y-4 max-w-4xl mx-auto">
               <span className="text-xs font-mono text-zinc-400 uppercase tracking-widest font-semibold">
@@ -351,13 +571,15 @@ export default function LandingPage() {
           </section>
 
           {/* PLATFORM METRICS TICKER */}
-          <section className="py-16 border-b border-zinc-800/80">
+          <section id="metrics-section" className="py-16 border-b border-zinc-800/80">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <Card className="p-6 bg-[#09090b] border-zinc-800 space-y-2">
                 <div className="flex items-center gap-2 text-blue-400 font-mono text-xs uppercase tracking-widest font-semibold">
                   <Zap className="w-4 h-4" /> Sub-3s Analysis Latency
                 </div>
-                <div className="text-3xl font-extrabold text-white">&lt; 2.8s</div>
+                <div className="text-3xl font-extrabold text-white">
+                  &lt; <span ref={latencyNumRef}>2.8</span>s
+                </div>
                 <p className="text-xs text-zinc-400">Average time from alert webhook ingestion to candidate cause ranking.</p>
               </Card>
 
@@ -390,9 +612,9 @@ export default function LandingPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 gsap-cards-grid">
               {/* Pain Point 1 */}
-              <Card className="p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
+              <Card className="gsap-card-reveal p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-rose-500 font-mono text-xs uppercase tracking-widest font-semibold">
                     <XCircle className="w-4 h-4" /> Traditional Triage
@@ -413,7 +635,7 @@ export default function LandingPage() {
               </Card>
 
               {/* Pain Point 2 */}
-              <Card className="p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
+              <Card className="gsap-card-reveal p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-rose-500 font-mono text-xs uppercase tracking-widest font-semibold">
                     <XCircle className="w-4 h-4" /> Traditional Triage
@@ -434,7 +656,7 @@ export default function LandingPage() {
               </Card>
 
               {/* Pain Point 3 */}
-              <Card className="p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
+              <Card className="gsap-card-reveal p-6 bg-[#09090b] border-zinc-800 flex flex-col justify-between h-full space-y-6">
                 <div className="space-y-3">
                   <div className="flex items-center gap-2 text-rose-500 font-mono text-xs uppercase tracking-widest font-semibold">
                     <XCircle className="w-4 h-4" /> Traditional Triage
@@ -799,68 +1021,46 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* FINAL CTA & TRUST BADGES */}
-          <section className="py-20 relative overflow-hidden">
-            <Card className="p-10 md:p-16 text-center relative z-10 border-zinc-800 max-w-4xl mx-auto space-y-8 bg-[#09090b] shadow-2xl">
-              <div className="space-y-4">
-                <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight text-white">
-                  Enter the Limited Pilot Program
-                </h2>
+          {/* HIGH-CONVERTING BOTTOM CTA */}
+          <section className="py-24 text-center space-y-8">
+            <div className="max-w-3xl mx-auto space-y-4">
+              <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
+                Ready to Pinpoint Root Causes in Seconds?
+              </h2>
+              <p className="text-base text-zinc-400">
+                Join engineering teams running the NexOps Starter Pilot. Zero code access required.
+              </p>
+            </div>
 
-                <p className="text-sm md:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                  We're onboarding a small number of engineering teams into an unpaid pilot. In exchange for early access, we ask for real usage and honest feedback to harden the engine.
-                </p>
-              </div>
-
-              <div className="flex flex-col sm:flex-row justify-center gap-4">
-                <Link href="/login" prefetch={false}>
-                  <Button size="lg" className="font-bold gap-2 px-10 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
-                    Request Pilot Access <ArrowRight className="w-5 h-5" />
-                  </Button>
-                </Link>
-
-                <a href="#engine">
-                  <Button size="lg" variant="outline" className="font-semibold border-zinc-800 bg-zinc-900 text-zinc-200 hover:bg-zinc-800">
-                    View Architecture Specs
-                  </Button>
-                </a>
-              </div>
-
-              {/* Compliance & Security Micro-Badges */}
-              <div className="pt-6 border-t border-zinc-800/80 flex flex-wrap justify-center gap-6 text-xs text-zinc-400 font-medium">
-                <span>🔒 AES-256 Secret Encryption</span>
-                <span>•</span>
-                <span>🛡️ PostgreSQL RLS Tenant Isolation</span>
-                <span>•</span>
-                <span>⚡ Sub-3s Telemetry Stream</span>
-              </div>
-            </Card>
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[500px] h-[250px] bg-blue-600/10 blur-[120px] rounded-full -z-0" />
+            <div className="flex justify-center gap-4">
+              <Link href="/login" prefetch={false}>
+                <Button size="lg" className="font-bold gap-2 px-10 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
+                  Request Pilot Access <ArrowRight className="w-5 h-5" />
+                </Button>
+              </Link>
+            </div>
           </section>
         </main>
 
         {/* FOOTER */}
-        <footer className="max-w-container-max mx-auto px-6 md:px-12 py-12 border-t border-zinc-800/80 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-zinc-400">
-          <div className="flex items-center gap-2">
-            <NexOpsLogo size="md" className="h-10" />
-          </div>
+        <footer className="border-t border-zinc-800 bg-[#050505] py-12 px-6 md:px-12 text-zinc-400 text-xs">
+          <div className="max-w-container-max mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-3">
+              <NexOpsLogo size="sm" />
+              <span>© {new Date().getFullYear()} NexOps Inc. All rights reserved.</span>
+            </div>
 
-          <div className="flex flex-col md:flex-row gap-6 md:gap-10 items-center">
-            <div className="flex gap-6">
-              <Link href="/terms" prefetch={false} className="hover:text-white transition-colors font-medium">
+            <div className="flex gap-6 font-medium">
+              <Link href="/terms" prefetch={false} className="hover:text-white transition-colors">
                 Terms of Service
               </Link>
-              <Link href="/privacy" prefetch={false} className="hover:text-white transition-colors font-medium">
-                Privacy Notice
+              <Link href="/privacy" prefetch={false} className="hover:text-white transition-colors">
+                Privacy Policy
               </Link>
-              <Link href="/dashboard" prefetch={false} className="hover:text-white transition-colors font-medium">
-                Dashboard
-              </Link>
-              <Link href="/integrations" prefetch={false} className="hover:text-white transition-colors font-medium">
-                Integrations
+              <Link href="/login" prefetch={false} className="hover:text-white transition-colors">
+                Sign In
               </Link>
             </div>
-            <p>© 2026 NexOps Platform. All rights reserved.</p>
           </div>
         </footer>
       </div>
