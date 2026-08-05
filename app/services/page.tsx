@@ -125,24 +125,23 @@ function ServicesPageContent() {
           health = storedHealth
         }
 
-        // Calculate MTTR from resolved incidents or derive baseline DORA recovery metric
+        // Calculate 100% real MTTR strictly from resolved incidents in the database
         const resolvedRepoIncidents = repoIncidents.filter((inc: any) => inc.status === 'resolved' || inc.resolved_at)
         let mttrDisplay = 'N/A'
 
-        if (status === 'disconnected') {
-          mttrDisplay = 'N/A'
-        } else if (resolvedRepoIncidents.length > 0) {
+        if (resolvedRepoIncidents.length > 0) {
           const totalDurationMs = resolvedRepoIncidents.reduce((acc: number, inc: any) => {
             const start = new Date(inc.created_at).getTime()
             const end = new Date(inc.resolved_at || inc.updated_at || nowMs).getTime()
             return acc + Math.max(60000, end - start)
           }, 0)
           const avgMinutes = Math.round(totalDurationMs / (resolvedRepoIncidents.length * 60000))
-          mttrDisplay = `${Math.min(120, Math.max(4, avgMinutes))}m`
-        } else {
-          // Derive DORA recovery SLA metric based on health score and change failure rate
-          const baseMttr = Math.round(12 + (100 - health) * 0.25 + cfr * 0.2)
-          mttrDisplay = `${Math.min(60, Math.max(8, baseMttr))}m`
+          if (avgMinutes >= 60) {
+            const hours = (avgMinutes / 60).toFixed(1)
+            mttrDisplay = `${hours}h`
+          } else {
+            mttrDisplay = `${Math.max(1, avgMinutes)}m`
+          }
         }
 
         return {
