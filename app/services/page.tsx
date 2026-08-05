@@ -17,11 +17,11 @@ function ServicesPageContent() {
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedService, setSelectedService] = useState<string | null>(
-    searchParams?.get('selected') || null
+    searchParams?.get('selected') || searchParams?.get('id') || null
   )
 
   useEffect(() => {
-    const selected = searchParams?.get('selected')
+    const selected = searchParams?.get('selected') || searchParams?.get('id')
     if (selected) {
       setSelectedService(selected)
     }
@@ -221,7 +221,14 @@ function ServicesPageContent() {
       }
     })
 
-  const selectedServiceData = services.find((s) => s.id === selectedService) as any
+  const selectedServiceData = selectedService
+    ? (services.find((s) => 
+        s.id === selectedService || 
+        s.name === selectedService || 
+        (s.id && s.id.toLowerCase() === selectedService.toLowerCase()) ||
+        (s.name && s.name.toLowerCase() === selectedService.toLowerCase())
+      ) as any)
+    : null
 
   if (loading) {
     return (

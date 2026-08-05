@@ -169,14 +169,18 @@ export function CommandPalette() {
       },
     ];
 
-    const serviceCommands: Command[] = services.slice(0, 5).map((svc) => ({
-      id: `service-${svc.id}`,
+    const serviceCommands: Command[] = services.slice(0, 8).map((svc) => ({
+      id: `service-${svc.id || svc.name}`,
       title: `Service: ${svc.name}`,
       description: `${svc.ci_status === 'passing' || svc.status === 'passing' ? 'Healthy' : 'Degraded'} • Owner: ${svc.owner || 'infra-team'}`,
       category: 'Services',
       icon: <FileText className="w-4 h-4 text-blue-400" />,
-      keywords: [svc.name.toLowerCase(), (svc.owner || '').toLowerCase()],
-      action: () => { router.push(`/services?id=${svc.id}`); onClose() }
+      keywords: [(svc.name || '').toLowerCase(), (svc.owner || '').toLowerCase(), (svc.id || '').toLowerCase()],
+      action: () => { 
+        const param = svc.id || svc.name
+        router.push(`/services?selected=${encodeURIComponent(param)}`)
+        onClose() 
+      }
     }));
 
     const incidentCommands: Command[] = incidents.slice(0, 5).map((inc) => ({
