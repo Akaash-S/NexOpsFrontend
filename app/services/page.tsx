@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { PageContent, PageHeader, EmptyState } from '@/components/layout'
 import { ServiceCatalog } from '@/components/services/service-catalog'
 import { ServiceDetailsDrawer } from '@/components/services/service-details-drawer'
@@ -13,6 +13,7 @@ import { formatISTShort } from '@/lib/utils'
 
 function ServicesPageContent() {
   const searchParams = useSearchParams()
+  const router = useRouter()
   const isEmpty = searchParams?.get('empty') === 'true'
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
@@ -26,6 +27,15 @@ function ServicesPageContent() {
       setSelectedService(null)
     }
   }, [searchParams])
+
+  const handleSelectService = (id: string | null) => {
+    setSelectedService(id)
+    if (id) {
+      router.replace(`/services?selected=${encodeURIComponent(id)}`, { scroll: false })
+    } else {
+      router.replace('/services', { scroll: false })
+    }
+  }
 
   async function loadServices() {
     try {
@@ -304,7 +314,7 @@ function ServicesPageContent() {
           <ServiceCatalog
             services={filteredServices}
             selectedService={selectedService}
-            onSelectService={setSelectedService}
+            onSelectService={handleSelectService}
           />
         </div>
       </PageContent>
@@ -313,7 +323,7 @@ function ServicesPageContent() {
       {selectedServiceData && (
         <ServiceDetailsDrawer
           service={selectedServiceData}
-          onClose={() => setSelectedService(null)}
+          onClose={() => handleSelectService(null)}
         />
       )}
     </>
