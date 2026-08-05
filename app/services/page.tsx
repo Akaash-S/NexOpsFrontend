@@ -16,14 +16,14 @@ function ServicesPageContent() {
   const isEmpty = searchParams?.get('empty') === 'true'
   const [services, setServices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
-  const [selectedService, setSelectedService] = useState<string | null>(
-    searchParams?.get('selected') || searchParams?.get('id') || null
-  )
+  const [selectedService, setSelectedService] = useState<string | null>(null)
 
   useEffect(() => {
-    const selected = searchParams?.get('selected') || searchParams?.get('id')
+    const selected = searchParams?.get('selected')
     if (selected) {
       setSelectedService(selected)
+    } else {
+      setSelectedService(null)
     }
   }, [searchParams])
 
