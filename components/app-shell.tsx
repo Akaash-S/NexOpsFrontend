@@ -14,6 +14,7 @@ import { useRealtime } from '@/lib/hooks/use-realtime'
  * Handles authentication redirection, top navigation, sidebar, and layout structure
  */
 import { NexOpsLogo } from '@/components/ui/nexops-logo'
+import { NexOpsLoader } from '@/components/ui/nexops-loader'
 
 export function AppShell({ children }: { children: ReactNode }) {
   const pathname = usePathname()
@@ -72,9 +73,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   if (isRedirecting || checkingAuth) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4">
-        <NexOpsLogo size="xl" />
-        <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
-        <p className="text-xs text-muted-foreground">Redirecting...</p>
+        <NexOpsLoader size="lg" showText label="Redirecting to NexOps..." />
       </div>
     )
   }
