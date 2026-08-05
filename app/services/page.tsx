@@ -23,18 +23,14 @@ function ServicesPageContent() {
     const selected = searchParams?.get('selected')
     if (selected) {
       setSelectedService(selected)
-    } else {
-      setSelectedService(null)
+      if (typeof window !== 'undefined') {
+        window.history.replaceState(null, '', window.location.pathname)
+      }
     }
   }, [searchParams])
 
   const handleSelectService = (id: string | null) => {
     setSelectedService(id)
-    if (id) {
-      router.replace(`/services?selected=${encodeURIComponent(id)}`, { scroll: false })
-    } else {
-      router.replace('/services', { scroll: false })
-    }
   }
 
   async function loadServices() {
