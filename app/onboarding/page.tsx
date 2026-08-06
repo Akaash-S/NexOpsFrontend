@@ -88,7 +88,7 @@ export default function OnboardingPage() {
             body: JSON.stringify({
               provider: 'github',
               token: 'use_stored_token',
-              workspaceId: 'default-workspace'
+              workspaceId: currentUser?.workspace_id || ''
             })
           })
 

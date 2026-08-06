@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { CheckCircle2, AlertCircle, AlertTriangle, Loader2, RefreshCw, Link2, Unlink, ExternalLink, ShieldCheck, Lock } from 'lucide-react'
 import { IntegrationFilters } from '@/components/integrations/integration-filters'
 import { CardSkeleton } from '@/components/loading-state'
+import { useAppState } from '@/lib/hooks/use-app-state'
 
 interface IntegrationStatus {
   connected: boolean
@@ -59,6 +60,7 @@ function formatTimeAgo(iso: string | null): string {
 }
 
 export default function IntegrationsPage() {
+  const { currentUser } = useAppState()
   const [status, setStatus] = useState<StatusResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -299,7 +301,7 @@ export default function IntegrationsPage() {
         body: JSON.stringify({
           provider: 'github',
           token: 'use_stored_token',
-          workspaceId: 'default-workspace',
+          workspaceId: currentUser?.workspace_id || '',
         }),
       })
       const data = await apiFetch('/integrations/status') as StatusResponse
