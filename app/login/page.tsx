@@ -1,14 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Github, Chrome, ArrowRight, ShieldAlert, Loader2 } from 'lucide-react'
+import { Github, Chrome, ArrowRight, ShieldAlert, Loader2, ArrowLeft, Mail, RefreshCw, KeyRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { signInWithPopup, signInWithEmailAndPassword, createUserWithEmailAndPassword } from 'firebase/auth'
+import { signInWithPopup, signInWithCustomToken } from 'firebase/auth'
 import { auth, githubProvider, googleProvider } from '@/lib/firebase'
 
 import { TermsGateModal } from '@/components/terms-gate-modal'
@@ -25,7 +25,25 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState('')
   const [showTermsModal, setShowTermsModal] = useState(false)
 
-  const loading = activeProvider !== null
+  // 2-Step OTP State
+  const [otpStep, setOtpStep] = useState<'email' | 'code'>('email')
+  const [otpCode, setOtpCode] = useState('')
+  const [sendingOtp, setSendingOtp] = useState(false)
+  const [verifyingOtp, setVerifyingOtp] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
+
+  const loading = activeProvider !== null || sendingOtp || verifyingOtp
+
+  const timerRef = useRef<NodeJS.Timeout | null>(null)
+
+  useEffect(() => {
+    if (cooldown > 0) {
+      timerRef.current = setTimeout(() => setCooldown((c) => c - 1), 1000)
+    }
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current)
+    }
+  }, [cooldown])
 
   const proceedToApp = (isComplete: boolean) => {
     if (isComplete) {
@@ -88,38 +106,66 @@ export default function LoginPage() {
     }
   }
 
-  const handleSubmitEmail = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleRequestOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
     setEmailError('')
 
-    if (!email.trim()) {
-      setEmailError('Please enter your work email to continue.')
+    const emailTrimmed = email.trim().toLowerCase()
+    if (!emailTrimmed || !emailTrimmed.includes('@')) {
+      setEmailError('Please enter a valid work email address.')
       return
     }
 
+    setSendingOtp(true)
+    try {
+      const { apiFetch } = await import('@/lib/api-client')
+      const res = await apiFetch('/auth/otp/request', {
+        method: 'POST',
+        body: JSON.stringify({ email: emailTrimmed })
+      }) as { status: string; cooldown_seconds: number; dev_code?: string }
+
+      setOtpStep('code')
+      setCooldown(res.cooldown_seconds || 60)
+      if (res.dev_code) {
+        console.log(`[Dev OTP Code for ${emailTrimmed}]: ${res.dev_code}`)
+      }
+    } catch (err: any) {
+      console.error('Failed to request OTP:', err)
+      setEmailError(err.message || 'Failed to send verification code. Please check your email.')
+    } finally {
+      setSendingOtp(false)
+    }
+  }
+
+  const handleVerifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setEmailError('')
+
+    const codeTrimmed = otpCode.trim()
+    if (codeTrimmed.length !== 6 || !/^\d+$/.test(codeTrimmed)) {
+      setEmailError('Please enter the 6-digit numeric verification code.')
+      return
+    }
+
+    setVerifyingOtp(true)
     setActiveProvider('email')
     try {
-      // Try signing in with a default local development password
-      await signInWithEmailAndPassword(auth, email, 'password123')
-    } catch (signInErr: any) {
-      // If user doesn't exist or credentials fail, try to sign them up automatically
-      if (
-        signInErr.code === 'auth/user-not-found' ||
-        signInErr.code === 'auth/invalid-credential' ||
-        signInErr.code === 'auth/invalid-email'
-      ) {
-        try {
-          await createUserWithEmailAndPassword(auth, email, 'password123')
-        } catch (signUpErr: any) {
-          console.error('Email sign up failed:', signUpErr)
-          setEmailError(signUpErr.message || 'Auto-registration failed.')
-          setActiveProvider(null)
-        }
-      } else {
-        console.error('Email sign in failed:', signInErr)
-        setEmailError(signInErr.message || 'Email authentication failed.')
-        setActiveProvider(null)
-      }
+      const { apiFetch } = await import('@/lib/api-client')
+      const res = await apiFetch('/auth/otp/verify', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.trim().toLowerCase(),
+          code: codeTrimmed
+        })
+      }) as { custom_token: string }
+
+      await signInWithCustomToken(auth, res.custom_token)
+    } catch (err: any) {
+      console.error('OTP Verification failed:', err)
+      setEmailError(err.message || 'Invalid or expired verification code.')
+      setActiveProvider(null)
+    } finally {
+      setVerifyingOtp(false)
     }
   }
 
@@ -155,107 +201,194 @@ export default function LoginPage() {
 
         {/* Auth card */}
         <Card className="p-6 border border-border/80 backdrop-blur-md bg-card/50 shadow-2xl space-y-6">
-          <div className="space-y-3">
-            {/* Github SSO */}
-            <Button
-              variant="outline"
-              className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
-              onClick={() => handleLogin('GitHub')}
-              disabled={loading}
-            >
-              {activeProvider === 'GitHub' ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Connecting to GitHub…</span>
-                </>
-              ) : (
-                <>
-                  <Github className="w-5 h-5 text-foreground" />
-                  Continue with GitHub
-                </>
-              )}
-            </Button>
+          {otpStep === 'email' ? (
+            <>
+              <div className="space-y-3">
+                {/* Github SSO */}
+                <Button
+                  variant="outline"
+                  className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
+                  onClick={() => handleLogin('GitHub')}
+                  disabled={loading}
+                >
+                  {activeProvider === 'GitHub' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      <span className="text-muted-foreground">Connecting to GitHub…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Github className="w-5 h-5 text-foreground" />
+                      Continue with GitHub
+                    </>
+                  )}
+                </Button>
 
-            {/* Google SSO */}
-            <Button
-              variant="outline"
-              className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
-              onClick={() => handleLogin('Google')}
-              disabled={loading}
-            >
-              {activeProvider === 'Google' ? (
-                <>
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Connecting to Google…</span>
-                </>
-              ) : (
-                <>
-                  <Chrome className="w-5 h-5 text-foreground" />
-                  Continue with Google
-                </>
-              )}
-            </Button>
-          </div>
+                {/* Google SSO */}
+                <Button
+                  variant="outline"
+                  className="w-full h-11 justify-center gap-3 font-medium border-border hover:bg-muted/80 transition-all"
+                  onClick={() => handleLogin('Google')}
+                  disabled={loading}
+                >
+                  {activeProvider === 'Google' ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+                      <span className="text-muted-foreground">Connecting to Google…</span>
+                    </>
+                  ) : (
+                    <>
+                      <Chrome className="w-5 h-5 text-foreground" />
+                      Continue with Google
+                    </>
+                  )}
+                </Button>
+              </div>
 
-          <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-border/60"></div>
-            <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase font-semibold tracking-wider">
-              or continue with
-            </span>
-            <div className="flex-grow border-t border-border/60"></div>
-          </div>
+              <div className="relative flex py-2 items-center">
+                <div className="flex-grow border-t border-border/60"></div>
+                <span className="flex-shrink mx-4 text-xs text-muted-foreground uppercase font-semibold tracking-wider">
+                  or continue with
+                </span>
+                <div className="flex-grow border-t border-border/60"></div>
+              </div>
 
-          {/* Email Form Option */}
-          <form onSubmit={handleSubmitEmail} className="space-y-4">
-            <div className="space-y-1">
-              <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                Work Email
-              </label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="name@company.com"
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value)
-                  if (emailError) setEmailError('')
-                }}
-                className={cn(
-                  "h-11 bg-background/50 border-border",
-                  emailError && "border-destructive focus-visible:ring-destructive/30"
-                )}
-                disabled={loading}
-              />
-              {emailError && (
-                <p className="text-xs text-destructive mt-1.5 flex items-center gap-1">
-                  {emailError}
+              {/* Email Form Step 1: Request OTP */}
+              <form onSubmit={handleRequestOtp} className="space-y-4">
+                <div className="space-y-1">
+                  <label htmlFor="email" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                    Work Email
+                  </label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => {
+                      setEmail(e.target.value)
+                      if (emailError) setEmailError('')
+                    }}
+                    className={cn(
+                      "h-11 bg-background/50 border-border",
+                      emailError && "border-destructive focus-visible:ring-destructive/30"
+                    )}
+                    disabled={loading}
+                  />
+                  {emailError && (
+                    <p className="text-xs text-destructive mt-1.5 flex items-center gap-1 font-medium">
+                      {emailError}
+                    </p>
+                  )}
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-11 font-medium gap-2 text-sm shadow-lg shadow-primary/10"
+                  disabled={loading}
+                >
+                  {sendingOtp ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      Sending Code…
+                    </>
+                  ) : (
+                    <>
+                      Send Verification Code
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
+            </>
+          ) : (
+            /* Email Form Step 2: Verify 6-digit OTP */
+            <form onSubmit={handleVerifyOtp} className="space-y-5 animate-in fade-in slide-in-from-right-4 duration-200">
+              <div className="space-y-2 text-center">
+                <div className="inline-flex p-2.5 rounded-full bg-primary/10 text-primary mb-1">
+                  <KeyRound className="w-6 h-6" />
+                </div>
+                <h3 className="font-bold text-lg text-foreground">Enter Verification Code</h3>
+                <p className="text-xs text-muted-foreground">
+                  We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span>.
                 </p>
-              )}
-            </div>
-            <Button
-              type="submit"
-              className="w-full h-11 font-medium gap-2 text-sm shadow-lg shadow-primary/10"
-              disabled={loading}
-            >
-              {activeProvider === 'email' ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Authenticating…
-                </>
-              ) : (
-                <>
-                  Sign In with Email
-                  <ArrowRight className="w-4 h-4" />
-                </>
-              )}
-            </Button>
-          </form>
+              </div>
+
+              <div className="space-y-1.5">
+                <Input
+                  type="text"
+                  maxLength={6}
+                  placeholder="849201"
+                  value={otpCode}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 6)
+                    setOtpCode(val)
+                    if (emailError) setEmailError('')
+                  }}
+                  className={cn(
+                    "h-12 text-center text-xl font-mono tracking-[0.5em] bg-background/50 border-border font-bold",
+                    emailError && "border-destructive focus-visible:ring-destructive/30"
+                  )}
+                  disabled={loading}
+                  autoFocus
+                />
+                {emailError && (
+                  <p className="text-xs text-destructive text-center mt-1.5 font-medium">
+                    {emailError}
+                  </p>
+                )}
+              </div>
+
+              <Button
+                type="submit"
+                className="w-full h-11 font-medium gap-2 text-sm shadow-lg shadow-primary/10"
+                disabled={loading || otpCode.length !== 6}
+              >
+                {verifyingOtp ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Verifying Code…
+                  </>
+                ) : (
+                  <>
+                    Verify & Sign In
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
+              </Button>
+
+              <div className="flex items-center justify-between pt-2 text-xs">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOtpStep('email')
+                    setOtpCode('')
+                    setEmailError('')
+                  }}
+                  className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 font-medium"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" /> Change email
+                </button>
+
+                <button
+                  type="button"
+                  disabled={cooldown > 0 || sendingOtp}
+                  onClick={() => handleRequestOtp()}
+                  className={cn(
+                    "inline-flex items-center gap-1 font-medium",
+                    cooldown > 0 ? "text-muted-foreground/60 cursor-not-allowed" : "text-primary hover:underline"
+                  )}
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  {cooldown > 0 ? `Resend in ${cooldown}s` : 'Resend code'}
+                </button>
+              </div>
+            </form>
+          )}
         </Card>
 
         {/* Bottom helper info */}
         <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 p-2 bg-muted/20 border border-border/30 rounded-lg">
           <ShieldAlert className="w-3.5 h-3.5 text-primary" />
-          <span>Real Firebase Auth integration is active.</span>
+          <span>Real Email OTP & Firebase Custom Token Auth active.</span>
         </div>
       </div>
 
@@ -267,4 +400,3 @@ export default function LoginPage() {
     </div>
   )
 }
-
