@@ -10,14 +10,14 @@ const geist = Geist({ subsets: ["latin"] })
 const geistMono = Geist_Mono({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://nexops-frontend.vercel.app'),
+  metadataBase: new URL('https://nexops.asolvitra.tech'),
   title: 'NexOps — Incident Correlation Engine',
   description: "What caused this incident, and how do we know? NexOps reads your deploys and alerts, ranks the likely cause, and shows its reasoning — so you're not guessing at 2 a.m.",
   generator: 'v0.app',
   openGraph: {
     title: 'NexOps — Incident Correlation Engine',
     description: "What caused this incident, and how do we know? NexOps reads your deploys and alerts, ranks the likely cause, and shows its reasoning — so you're not guessing at 2 a.m.",
-    url: 'https://nexops-frontend.vercel.app',
+    url: 'https://nexops.asolvitra.tech',
     siteName: 'NexOps',
     images: [
       {
