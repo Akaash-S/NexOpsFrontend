@@ -29,10 +29,10 @@ export function FlagshipProductShowcase() {
 
   return (
     <section id="product" ref={ref} className="relative bg-black text-white pt-20 md:pt-28 lg:pt-32 border-t border-zinc-900 overflow-hidden px-4 sm:px-8 lg:px-12">
-      {/* Contained Boxed Panel with Consistent max-w-6xl, Visible Side Margins & Shade-Shifted Surface */}
+      {/* Contained Boxed Panel with Lighter Surface Tone (bg-zinc-900), Crisp Borders & Top Glow Seam */}
       <motion.div
         style={prefersReducedMotion ? undefined : { y, opacity }}
-        className="max-w-6xl mx-auto rounded-t-[48px] sm:rounded-t-[56px] lg:rounded-t-[64px] rounded-b-none bg-zinc-950 border-t border-x border-zinc-800/90 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] p-6 sm:p-12 lg:p-16"
+        className="max-w-6xl mx-auto rounded-t-[48px] sm:rounded-t-[56px] lg:rounded-t-[64px] rounded-b-none bg-zinc-900 border-t border-x border-zinc-700/80 shadow-[0_-15px_60px_rgba(59,130,246,0.12),0_20px_80px_rgba(0,0,0,0.8)] p-6 sm:p-12 lg:p-16"
       >
         {/* Text Header */}
         <div className="max-w-3xl mb-12 sm:mb-16">
@@ -59,7 +59,7 @@ export function FlagshipProductShowcase() {
         </div>
 
         {/* Large Visual Showcase (Fidelity Mockup of Investigation Workspace) */}
-        <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden">
+        <div className="rounded-2xl border border-zinc-800 bg-zinc-950/90 shadow-2xl overflow-hidden">
           {/* Top Navbar Simulation */}
           <div className="px-6 py-4 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -75,7 +75,7 @@ export function FlagshipProductShowcase() {
           {/* Body Content */}
           <div className="p-6 sm:p-10 space-y-8">
             {/* Title & Metadata */}
-            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-xl bg-zinc-950/60 border border-zinc-800/80">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
               <div>
                 <h3 className="text-2xl font-bold text-white mb-2">
                   Database Connection Pool Exhaustion on auth-service
@@ -98,7 +98,7 @@ export function FlagshipProductShowcase() {
                 Ranked Candidate Root Causes (1 of 3)
               </h4>
 
-              <div className="p-6 rounded-xl bg-zinc-950/90 border border-primary/50 shadow-xl space-y-4">
+              <div className="p-6 rounded-xl bg-zinc-900/90 border border-primary/50 shadow-xl space-y-4">
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
