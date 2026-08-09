@@ -20,10 +20,10 @@ export function FlagshipProductShowcase() {
 
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start 95%', 'start 65%'],
+    offset: ['start 90%', 'center 45%'],
   })
 
-  // Fast, smooth scroll-linked transforms: side inset, top margin & radius all reduce to 0
+  // Balanced, smooth scroll-linked transforms as user scrolls into the section
   const inset = useTransform(scrollYProgress, [0, 1], [48, 0])
   const topPad = useTransform(scrollYProgress, [0, 1], [60, 0])
   const radius = useTransform(scrollYProgress, [0, 1], [56, 0])
@@ -32,7 +32,7 @@ export function FlagshipProductShowcase() {
 
   return (
     <section id="product" ref={ref} className="relative bg-black text-white border-t border-zinc-900 overflow-hidden">
-      {/* Outer Motion Wrapper handling fast, smooth inset & top margin reduction to 0 */}
+      {/* Outer Motion Wrapper handling smooth inset & top margin reduction to 0 */}
       <motion.div
         style={
           prefersReducedMotion
