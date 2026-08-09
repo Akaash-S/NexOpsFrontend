@@ -1,33 +1,21 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import gsap from 'gsap'
-import { ScrollTrigger } from 'gsap/ScrollTrigger'
 import { useAppState } from '@/lib/hooks/use-app-state'
-import { NexOpsLogo } from '@/components/ui/nexops-logo'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import {
-  ArrowRight,
-  CheckCircle2,
-  XCircle,
-  HelpCircle,
-  ChevronDown,
-  Terminal,
-  ExternalLink,
-  Check,
-  Zap,
-  ShieldCheck,
-  AlertTriangle,
-  GitCommitHorizontal,
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
 
-if (typeof window !== 'undefined') {
-  gsap.registerPlugin(ScrollTrigger)
-}
+import { SiteHeader } from '@/components/landing/site-header'
+import { HeroPrimary } from '@/components/landing/hero-primary'
+import { BenefitGrid } from '@/components/landing/benefit-grid'
+import { FlagshipProductShowcase } from '@/components/landing/flagship-product-showcase'
+import { BackwardCorrelationBand } from '@/components/landing/backward-correlation-band'
+import { BlastRadiusBand } from '@/components/landing/blast-radius-band'
+import { ProductPreviewRail } from '@/components/landing/product-preview-rail'
+import { HowItWorksStrip } from '@/components/landing/how-it-works-strip'
+import { IntegrationMarks } from '@/components/landing/integration-marks'
+import { FaqAccordion } from '@/components/landing/faq-accordion'
+import { FinalCtaBanner } from '@/components/landing/final-cta-banner'
+import { SlimFooter } from '@/components/landing/slim-footer'
 
 export default function LandingPage() {
   const router = useRouter()
@@ -40,559 +28,43 @@ export default function LandingPage() {
     }
   }, [isAuthenticated, router])
 
-  const [reducedMotion, setReducedMotion] = useState(false)
-  const [isMobile, setIsMobile] = useState(false)
-
-  const heroPinRef = useRef<HTMLDivElement>(null)
-  const traceSvgRef = useRef<SVGSVGElement>(null)
-  const traceLineRef = useRef<SVGPathElement>(null)
-  const alertDotRef = useRef<SVGCircleElement>(null)
-
-  const node0Ref = useRef<SVGCircleElement>(null)
-  const node1Ref = useRef<SVGCircleElement>(null)
-  const node2Ref = useRef<SVGCircleElement>(null)
-
-  const label0Ref = useRef<HTMLDivElement>(null)
-  const label1Ref = useRef<HTMLDivElement>(null)
-  const label2Ref = useRef<HTMLDivElement>(null)
-  const checkmark1Ref = useRef<HTMLDivElement>(null)
-
-  const eyebrowRef = useRef<HTMLDivElement>(null)
-  const headlineRef = useRef<HTMLHeadingElement>(null)
-  const subheadRef = useRef<HTMLParagraphElement>(null)
-  const ctaRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-
-    // Detect media preferences
-    const mediaQueryMotion = window.matchMedia('(prefers-reduced-motion: reduce)')
-    setReducedMotion(mediaQueryMotion.matches)
-
-    const checkMobile = () => setIsMobile(window.innerWidth < 768)
-    checkMobile()
-    window.addEventListener('resize', checkMobile)
-
-    if (mediaQueryMotion.matches) {
-      return () => window.removeEventListener('resize', checkMobile)
-    }
-
-    const ctx = gsap.context(() => {
-      // 1. Alert Dot Infinite Pulse (Runs continuously, independent of scroll scrub)
-      if (alertDotRef.current) {
-        gsap.to(alertDotRef.current, {
-          scale: 1.18,
-          opacity: 0.6,
-          duration: 1.6,
-          ease: 'sine.inOut',
-          repeat: -1,
-          yoyo: true,
-          transformOrigin: 'center center',
-        })
-      }
-
-      // 2. Desktop Hero Scroll-Pinned Timeline
-      if (heroPinRef.current && window.innerWidth >= 768) {
-        if (traceLineRef.current) {
-          gsap.set(traceLineRef.current, {
-            height: '0%',
-          })
-        }
-
-        const tl = gsap.timeline({
-          scrollTrigger: {
-            trigger: heroPinRef.current,
-            start: 'top top',
-            end: () => '+=' + window.innerHeight * 2.5,
-            pin: true,
-            scrub: true,
-            anticipatePin: 1,
-          },
-        })
-
-        // Progress 0.00 -> 0.08: Draw line towards Node 0
-        tl.to(
-          traceLineRef.current,
-          {
-            height: '33%',
-            ease: 'none',
-          },
-          0.00
-        )
-
-        // Progress 0.08 -> 0.12: Reveal Node 0 & Label 0
-        tl.fromTo(node0Ref.current, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, ease: 'none' }, 0.08)
-          .fromTo(label0Ref.current, { x: 16, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.08)
-
-        // Progress 0.12 -> 0.35: Draw line towards Node 1
-        tl.to(
-          traceLineRef.current,
-          {
-            height: '66%',
-            ease: 'none',
-          },
-          0.12
-        )
-
-        // Progress 0.35 -> 0.39: Reveal Node 1 & Label 1
-        tl.fromTo(node1Ref.current, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, ease: 'none' }, 0.35)
-          .fromTo(label1Ref.current, { x: 16, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.35)
-
-        // Progress 0.39 -> 0.55: Draw line towards Node 2
-        tl.to(
-          traceLineRef.current,
-          {
-            height: '100%',
-            ease: 'none',
-          },
-          0.39
-        )
-
-        // Progress 0.55 -> 0.59: Reveal Node 2 & Label 2
-        tl.fromTo(node2Ref.current, { scale: 0, opacity: 0 }, { scale: 1, opacity: 1, ease: 'none' }, 0.55)
-          .fromTo(label2Ref.current, { x: 16, opacity: 0 }, { x: 0, opacity: 1, ease: 'none' }, 0.55)
-
-        // Progress 0.75 -> 0.85: Resolution Beat (Node 1 turns Green, Node 0 & 2 dim)
-        tl.to([label0Ref.current, label2Ref.current], { opacity: 0.25, ease: 'none' }, 0.75)
-          .to(
-            [node0Ref.current, node2Ref.current],
-            { opacity: 0.25, borderColor: '#52525b', ease: 'none' },
-            0.75
-          )
-          .to(node1Ref.current, { scale: 1.2, borderColor: '#22c55e', ease: 'none' }, 0.75)
-          .to(traceLineRef.current, { backgroundColor: '#22c55e', ease: 'none' }, 0.75)
-          .fromTo(
-            checkmark1Ref.current,
-            { scale: 0.8, opacity: 0 },
-            { scale: 1, opacity: 1, ease: 'none' },
-            0.75
-          )
-
-        // Progress 0.85 -> 1.00: Headline & Subhead & CTA Reveal
-        tl.to(eyebrowRef.current, { opacity: 0, ease: 'none' }, 0.85)
-          .fromTo(headlineRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, ease: 'none' }, 0.85)
-          .fromTo(subheadRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, ease: 'none' }, 0.9)
-          .fromTo(ctaRef.current, { y: 16, opacity: 0 }, { y: 0, opacity: 1, ease: 'none' }, 0.95)
-      }
-
-      // 3. Rest of Page Restrained Scroll Reveals
-      const revealElements = gsap.utils.toArray('.gsap-section-reveal')
-      revealElements.forEach((el: any) => {
-        gsap.fromTo(
-          el,
-          { y: 16, opacity: 0 },
-          {
-            y: 0,
-            opacity: 1,
-            duration: 0.6,
-            ease: 'power2.out',
-            scrollTrigger: {
-              trigger: el,
-              start: 'top 85%',
-              toggleActions: 'play none none reverse',
-            },
-          }
-        )
-      })
-
-      // 4. Staggered Panels in Section 3
-      gsap.fromTo(
-        '.gsap-panel-stagger',
-        { y: 20, opacity: 0 },
-        {
-          y: 0,
-          opacity: 1,
-          duration: 0.6,
-          stagger: 0.12,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: '.gsap-panels-grid',
-            start: 'top 80%',
-            toggleActions: 'play none none reverse',
-          },
-        }
-      )
-    })
-
-    return () => {
-      window.removeEventListener('resize', checkMobile)
-      ctx.revert()
-    }
-  }, [])
-
   return (
-    <div className="bg-[#0c0d12] text-zinc-100 min-h-screen selection:bg-blue-600/30 selection:text-blue-400 font-sans">
-      {/* PERSISTENT UTILITY TOP NAVIGATION */}
-      <nav className="fixed top-0 left-0 right-0 z-50 h-16 bg-[#0c0d12]/90 backdrop-blur-md border-b border-zinc-800/80 px-6 md:px-12 flex items-center justify-between">
-        {/* Left: Wordmark Logo */}
-        <Link href="/" className="flex items-center gap-2" prefetch={false}>
-          <NexOpsLogo size="md" />
-        </Link>
+    <div className="min-h-screen bg-black text-white selection:bg-primary selection:text-primary-foreground font-sans antialiased">
+      {/* 1. Sticky Header */}
+      <SiteHeader />
 
-        {/* Center/Right Nav Links */}
-        <div className="flex items-center gap-6 md:gap-8">
-          <a
-            href="#how-it-works"
-            className="text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-white transition-colors"
-          >
-            How it works
-          </a>
-          <a
-            href="#pilot"
-            className="text-xs font-medium uppercase tracking-wider text-zinc-400 hover:text-white transition-colors hidden sm:inline-block"
-          >
-            Pilot
-          </a>
+      <main>
+        {/* 2. Primary Hero */}
+        <HeroPrimary />
 
-          <Link href="/login" prefetch={false}>
-            <Button size="sm" className="font-semibold text-xs gap-1.5 bg-blue-600 hover:bg-blue-500 text-white shadow-md shadow-blue-600/20">
-              Join the pilot <ArrowRight className="w-3.5 h-3.5" />
-            </Button>
-          </Link>
-        </div>
-      </nav>
+        {/* 3. Benefit Grid (4 text-led cards) */}
+        <BenefitGrid />
 
-      {/* HERO SECTION — GSAP SCROLL-PINNED TRACE ANIMATION */}
-      <section
-        id="hero"
-        ref={heroPinRef}
-        className="relative min-h-screen pt-24 pb-16 px-6 md:px-12 flex flex-col justify-between max-w-6xl mx-auto overflow-hidden"
-      >
-        {/* Static Background Radial Glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-blue-900/15 via-transparent to-transparent pointer-events-none -z-10" />
+        {/* 4. Flagship Product Showcase */}
+        <FlagshipProductShowcase />
 
-        {/* Eyebrow Label */}
-        <div ref={eyebrowRef} className="pt-4 flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />
-          <span className="font-mono text-xs text-amber-500/90 tracking-widest font-semibold uppercase">
-            INCIDENT CORRELATION ENGINE
-          </span>
-        </div>
+        {/* 5. Feature Bands (Exactly 2: Backward Correlation & Blast Radius) */}
+        <BackwardCorrelationBand />
+        <BlastRadiusBand />
 
-        {/* CENTRAL TRACE DIAGRAM & CANDIDATE NODES (Pixel-Perfect Centered Spine Layout) */}
-        <div className="my-auto py-6 relative flex flex-col md:flex-row items-start justify-between gap-8 md:gap-16">
-          {/* Left Spine Timeline Container */}
-          <div className="relative w-full md:w-[54%] space-y-6">
-            {/* Background Line Segment (Perfectly Centered at x=20px) */}
-            <div className="absolute left-5 top-4 bottom-4 w-0.5 bg-zinc-800/80 -translate-x-1/2" />
+        {/* 6. Product Preview Rail */}
+        <ProductPreviewRail />
 
-            {/* Active Animating Trace Line Overlay */}
-            <div
-              ref={traceLineRef as any}
-              className="absolute left-5 top-4 w-0.5 bg-amber-500 -translate-x-1/2 transition-colors duration-500 shadow-[0_0_10px_rgba(245,158,11,0.6)]"
-              style={{ height: '0%', maxHeight: 'calc(100% - 32px)' }}
-            />
+        {/* 7. How It Works Strip (3 steps) */}
+        <HowItWorksStrip />
 
-            {/* Item 0: Alert Top Node */}
-            <div className="relative flex items-center gap-4">
-              <div className="relative z-10 w-10 flex-none flex justify-center">
-                <div className="w-7 h-7 rounded-full bg-[#0c0d12] border-2 border-amber-500 flex items-center justify-center shadow-lg shadow-amber-950/80">
-                  <AlertTriangle ref={alertDotRef as any} className="w-3.5 h-3.5 text-amber-400" />
-                </div>
-              </div>
+        {/* 8. Integration Marks (GitHub & PagerDuty) */}
+        <IntegrationMarks />
 
-              <div className="flex-1 p-3.5 rounded-xl bg-[#0d0e14]/90 border border-amber-900/40 space-y-1 shadow-lg">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[11px] font-bold text-amber-400 uppercase tracking-widest">
-                    07:42:11 UTC · ALERT INGESTED
-                  </span>
-                  <Badge variant="outline" className="bg-amber-950/60 text-amber-400 border-amber-800/60 text-[10px] font-mono">
-                    P99 SPIKE
-                  </Badge>
-                </div>
-                <div className="text-xs text-zinc-300 font-medium">
-                  PagerDuty: High Latency & 500 Cascade on <code className="text-amber-300 font-mono">checkout-v3</code>
-                </div>
-              </div>
-            </div>
+        {/* 10. FAQ Accordion (Testimonials omitted per spec) */}
+        <FaqAccordion />
 
-            {/* Item 1: Candidate Node 0 */}
-            <div
-              ref={label0Ref}
-              className="relative flex items-center gap-4 transition-all duration-300"
-              style={{ opacity: reducedMotion ? 0.25 : 0 }}
-            >
-              <div className="relative z-10 w-10 flex-none flex justify-center">
-                <div
-                  ref={node0Ref as any}
-                  className="w-6 h-6 rounded-full bg-[#0c0d12] border-2 border-amber-500/80 flex items-center justify-center shadow-md"
-                >
-                  <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
-                </div>
-              </div>
+        {/* 11. Final CTA Banner */}
+        <FinalCtaBanner />
+      </main>
 
-              <div className="flex-1 p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
-                <div className="font-mono text-xs font-bold text-zinc-200">
-                  07:42:11 · deploy to payments-api
-                </div>
-                <div className="text-[11px] text-zinc-400">
-                  12 min before alert • Rule-out: No dependency match
-                </div>
-              </div>
-            </div>
-
-            {/* Item 2: Candidate Node 1 (Middle - Confirmed Cause) */}
-            <div
-              ref={label1Ref}
-              className="relative flex items-center gap-4 transition-all duration-300"
-              style={{ opacity: reducedMotion ? 1 : 0 }}
-            >
-              <div className="relative z-10 w-10 flex-none flex justify-center">
-                <div
-                  ref={node1Ref as any}
-                  className="w-6 h-6 rounded-full bg-[#0c0d12] border-2 border-amber-500 flex items-center justify-center transition-colors duration-500 shadow-md"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                </div>
-              </div>
-
-              <div className="flex-1 p-4 rounded-xl bg-gradient-to-r from-emerald-950/30 via-[#0d0e14] to-[#0d0e14] border border-emerald-800/60 space-y-2 shadow-xl shadow-emerald-950/30">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <div className="font-mono text-xs font-bold text-white">
-                    07:31:04 · config change · user-service
-                  </div>
-                  <div
-                    ref={checkmark1Ref}
-                    className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-emerald-400 bg-emerald-950/90 border border-emerald-700/80 px-2.5 py-0.5 rounded-full shadow-md shadow-emerald-950/60"
-                    style={{ opacity: reducedMotion ? 1 : 0 }}
-                  >
-                    <Check className="w-3 h-3" /> CONFIRMED (86.2%)
-                  </div>
-                </div>
-                <div className="text-[11px] text-zinc-400">
-                  touches 2 of 3 alerting dependencies • CODEOWNERS: @infra-team
-                </div>
-              </div>
-            </div>
-
-            {/* Item 3: Candidate Node 2 */}
-            <div
-              ref={label2Ref}
-              className="relative flex items-center gap-4 transition-all duration-300"
-              style={{ opacity: reducedMotion ? 0.25 : 0 }}
-            >
-              <div className="relative z-10 w-10 flex-none flex justify-center">
-                <div
-                  ref={node2Ref as any}
-                  className="w-6 h-6 rounded-full bg-[#0c0d12] border-2 border-amber-500/80 flex items-center justify-center shadow-md"
-                >
-                  <GitCommitHorizontal className="w-3 h-3 text-amber-400" />
-                </div>
-              </div>
-
-              <div className="flex-1 p-4 rounded-xl bg-[#0d0e14]/90 border border-zinc-800/80 space-y-1 shadow-lg">
-                <div className="font-mono text-xs font-bold text-zinc-200">
-                  06:58:47 · deploy to auth-service
-                </div>
-                <div className="text-[11px] text-zinc-400">
-                  same service, lower historical match rate
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* HEADLINE & PAYOFF BLOCK (Reveals at end of trace sequence) */}
-          <div className="w-full md:w-1/2 space-y-6 pt-4 md:pt-12">
-            <h1
-              ref={headlineRef}
-              className="text-3xl md:text-5xl font-extrabold tracking-tight text-white leading-tight"
-              style={{ opacity: reducedMotion ? 1 : 0 }}
-            >
-              What caused this incident, and how do we know?
-            </h1>
-
-            <p
-              ref={subheadRef}
-              className="text-sm md:text-base text-zinc-400 leading-relaxed max-w-lg"
-              style={{ opacity: reducedMotion ? 1 : 0 }}
-            >
-              NexOps reads your deploys and alerts, ranks the likely cause, and shows its reasoning — so you're not guessing at 2 a.m.
-            </p>
-
-            <div
-              ref={ctaRef}
-              className="flex items-center gap-4 pt-2"
-              style={{ opacity: reducedMotion ? 1 : 0 }}
-            >
-              <Link href="/login" prefetch={false}>
-                <Button size="lg" className="font-bold gap-2 px-6 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
-                  Join the pilot <ArrowRight className="w-4 h-4" />
-                </Button>
-              </Link>
-
-              <a href="#how-it-works" className="text-xs font-semibold text-zinc-400 hover:text-white transition-colors">
-                See how it works ↓
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 2 — PROBLEM STATEMENT */}
-      <section className="gsap-section-reveal py-24 border-t border-zinc-800/80 bg-[#08090d]">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6 text-center">
-          <h2 className="text-2xl md:text-4xl font-extrabold text-white tracking-tight leading-snug">
-            Every incident starts the same way: five tabs, one guess.
-          </h2>
-          <p className="text-sm md:text-base text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-            GitHub. PagerDuty. Slack. A growing sense that whatever you find first is what you'll blame. Most of the first several minutes of an incident go to figuring out what changed — before anyone's even started fixing it.
-          </p>
-        </div>
-      </section>
-
-      {/* SECTION 3 — HOW IT WORKS (3 STAGGERED PANELS) */}
-      <section id="how-it-works" className="py-24 border-t border-zinc-800/80">
-        <div className="max-w-6xl mx-auto px-6 md:px-12 space-y-12">
-          <div className="gsap-section-reveal space-y-3">
-            <span className="font-mono text-xs font-semibold text-blue-400 uppercase tracking-widest">
-              METHODOLOGY
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-              One question. A real answer.
-            </h2>
-          </div>
-
-          <div className="gsap-panels-grid grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Panel 1 */}
-            <div className="gsap-panel-stagger p-6 md:p-8 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-              <div className="w-10 h-10 rounded-lg bg-blue-950/80 border border-blue-800/60 flex items-center justify-center text-blue-400">
-                <Zap className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Reads what changed</h3>
-              <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
-                Connects to GitHub and PagerDuty — no new agents, no new tabs.
-              </p>
-            </div>
-
-            {/* Panel 2 */}
-            <div className="gsap-panel-stagger p-6 md:p-8 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-              <div className="w-10 h-10 rounded-lg bg-amber-950/80 border border-amber-800/60 flex items-center justify-center text-amber-400">
-                <Terminal className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Ranks likely causes</h3>
-              <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
-                Scores every recent deploy against the incident using deploy timing, dependency distance, and history — every score comes with the reasons behind it.
-              </p>
-            </div>
-
-            {/* Panel 3 */}
-            <div className="gsap-panel-stagger p-6 md:p-8 rounded-xl bg-zinc-900/60 border border-zinc-800/80 space-y-4">
-              <div className="w-10 h-10 rounded-lg bg-emerald-950/80 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 className="w-5 h-5" />
-              </div>
-              <h3 className="text-lg font-bold text-white">Learns what you confirm</h3>
-              <p className="text-xs md:text-sm text-zinc-400 leading-relaxed">
-                Mark a cause confirmed or ruled out, and NexOps remembers — the ranking gets sharper for your team over time.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 4 — THE MOAT (ENGINEERING MEMORY) */}
-      <section className="gsap-section-reveal py-24 border-t border-zinc-800/80 bg-[#08090d]">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6">
-          <span className="font-mono text-xs font-semibold text-emerald-400 uppercase tracking-widest">
-            ENGINEERING MEMORY
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-            It gets smarter the longer you use it.
-          </h2>
-          <p className="text-sm md:text-base text-zinc-400 leading-relaxed">
-            Every confirmed or rejected cause is stored, permanently. Over time, NexOps builds a private, compounding record of what actually causes incidents on your systems — accuracy a new tool, or a competitor, can't start with on day one.
-          </p>
-        </div>
-      </section>
-
-      {/* SECTION 5 — SCOPE STATEMENT (WHAT WE DON'T DO) */}
-      <section className="gsap-section-reveal py-24 border-t border-zinc-800/80">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-8">
-          <div className="space-y-3">
-            <span className="font-mono text-xs font-semibold text-rose-400 uppercase tracking-widest">
-              SCOPE STATEMENT
-            </span>
-            <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-              What NexOps won't try to be.
-            </h2>
-            <p className="text-sm md:text-base text-zinc-400 leading-relaxed max-w-2xl">
-              No paging. No log storage. No dashboard for the sake of having a dashboard. NexOps does one thing — trace an incident back to its cause — and stays out of the tools you already trust for everything else.
-            </p>
-          </div>
-
-          <div className="flex flex-wrap gap-3 pt-2">
-            <span className="text-xs font-mono font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full">
-              Not a paging system
-            </span>
-            <span className="text-xs font-mono font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full">
-              Not a log/metrics platform
-            </span>
-            <span className="text-xs font-mono font-medium text-zinc-400 bg-zinc-900 border border-zinc-800 px-3.5 py-1.5 rounded-full">
-              Not another catalog to maintain
-            </span>
-          </div>
-        </div>
-      </section>
-
-      {/* SECTION 6 — PILOT / SOCIAL PROOF */}
-      <section id="pilot" className="gsap-section-reveal py-24 border-t border-zinc-800/80 bg-[#08090d]">
-        <div className="max-w-4xl mx-auto px-6 md:px-12 space-y-6">
-          <span className="font-mono text-xs font-semibold text-blue-400 uppercase tracking-widest">
-            STARTER PILOT PROGRAM
-          </span>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white tracking-tight">
-            Built in the open, early.
-          </h2>
-          <p className="text-sm md:text-base text-zinc-400 leading-relaxed">
-            NexOps is in an unpaid pilot with real engineering teams right now. If you want a second opinion the next time something breaks, we'd like yours to be one of them.
-          </p>
-        </div>
-      </section>
-
-      {/* FINAL CTA SECTION */}
-      <section className="gsap-section-reveal py-28 border-t border-zinc-800/80 text-center space-y-8">
-        <div className="max-w-3xl mx-auto px-6 space-y-4">
-          <h2 className="text-3xl md:text-5xl font-extrabold text-white tracking-tight">
-            Next incident, know why.
-          </h2>
-        </div>
-
-        <div className="flex flex-col items-center gap-4">
-          <Link href="/login" prefetch={false}>
-            <Button size="lg" className="font-bold gap-2 px-10 bg-blue-600 hover:bg-blue-500 text-white shadow-xl shadow-blue-600/30">
-              Join the pilot <ArrowRight className="w-5 h-5" />
-            </Button>
-          </Link>
-
-          <a
-            href="mailto:akaashgithub21@gmail.com"
-            className="text-xs text-zinc-400 hover:text-white transition-colors"
-          >
-            Questions? Contact engineering team
-          </a>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="border-t border-zinc-800/80 bg-[#06070a] py-12 px-6 md:px-12 text-zinc-400 text-xs">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div className="flex items-center gap-3">
-            <NexOpsLogo size="sm" />
-            <span>© NexOps</span>
-          </div>
-
-          <div className="flex gap-6 font-medium">
-            <Link href="/terms" prefetch={false} className="hover:text-white transition-colors">
-              Terms of Service
-            </Link>
-            <Link href="/privacy" prefetch={false} className="hover:text-white transition-colors">
-              Privacy Policy
-            </Link>
-            <Link href="/login" prefetch={false} className="hover:text-white transition-colors">
-              Sign In
-            </Link>
-          </div>
-        </div>
-      </footer>
+      {/* 12. Slim Footer */}
+      <SlimFooter />
     </div>
   )
 }
