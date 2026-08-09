@@ -1,13 +1,22 @@
 'use client'
 
+import { motion, useReducedMotion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 import { ShieldCheck, AlertTriangle, ArrowRight, Activity, Layers } from 'lucide-react'
 
 export function BlastRadiusBand() {
+  const prefersReducedMotion = useReducedMotion()
+
   return (
     <section className="py-20 md:py-28 lg:py-32 bg-black text-white border-t border-zinc-900 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+        <motion.div
+          initial={prefersReducedMotion ? undefined : { opacity: 0, y: 32 }}
+          whileInView={prefersReducedMotion ? undefined : { opacity: 1, y: 0 }}
+          viewport={{ once: true, amount: 0.2 }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center"
+        >
           {/* Visual Left: Illustrative UI Mockup of Pre-Deploy Blast Radius Assessment */}
           <div className="lg:col-span-7 order-2 lg:order-1">
             <div className="p-6 sm:p-8 rounded-2xl bg-zinc-950 border border-zinc-800/90 shadow-2xl space-y-6">
@@ -88,7 +97,7 @@ export function BlastRadiusBand() {
               </li>
             </ul>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )
