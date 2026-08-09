@@ -23,12 +23,13 @@ export function FlagshipProductShowcase() {
     offset: ['start 90%', 'start 40%'],
   })
 
-  // Rising panel translateY and opacity transforms
+  // Rising panel translateY and opacity entrance transforms only
   const y = useTransform(scrollYProgress, [0, 1], [80, 0])
   const opacity = useTransform(scrollYProgress, [0, 1], [0, 1])
 
   return (
-    <section id="product" ref={ref} className="relative bg-black text-white pt-20 md:pt-28 lg:pt-32 border-t border-zinc-900 overflow-hidden">
+    <section id="product" ref={ref} className="relative bg-black text-white pt-20 md:pt-28 lg:pt-32 border-t border-zinc-900 overflow-hidden px-4 sm:px-6 lg:px-8">
+      {/* Boxed Rising Panel with Consistent Max-Width, Visible Side Inset & Shade-Shifted Fill */}
       <motion.div
         style={prefersReducedMotion ? undefined : { y, opacity }}
         className="max-w-7xl mx-auto rounded-t-[48px] sm:rounded-t-[56px] lg:rounded-t-[64px] rounded-b-none bg-zinc-950 border-t border-x border-zinc-800/90 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] p-6 sm:p-12 lg:p-16"
