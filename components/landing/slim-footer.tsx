@@ -37,7 +37,7 @@ export function SlimFooter() {
 
         {/* Right: Copyright */}
         <div className="text-xs text-zinc-500 font-mono">
-          &copy; 2026 NexOps Inc. All rights reserved.
+          &copy; 2026 NexOps. All rights reserved.
         </div>
       </div>
     </footer>
