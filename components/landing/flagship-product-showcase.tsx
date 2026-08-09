@@ -28,11 +28,11 @@ export function FlagshipProductShowcase() {
   const opacity = useTransform(scrollYProgress, [0, 1], [0, 1])
 
   return (
-    <section id="product" ref={ref} className="relative bg-black text-white pt-20 md:pt-28 lg:pt-32 border-t border-zinc-900 overflow-hidden px-4 sm:px-6 lg:px-8">
-      {/* Boxed Rising Panel with Consistent Max-Width, Visible Side Inset & Shade-Shifted Fill */}
+    <section id="product" ref={ref} className="relative bg-black text-white pt-20 md:pt-28 lg:pt-32 border-t border-zinc-900 overflow-hidden px-4 sm:px-8 lg:px-12">
+      {/* Contained Boxed Panel with Consistent max-w-6xl, Visible Side Margins & Shade-Shifted Surface */}
       <motion.div
         style={prefersReducedMotion ? undefined : { y, opacity }}
-        className="max-w-7xl mx-auto rounded-t-[48px] sm:rounded-t-[56px] lg:rounded-t-[64px] rounded-b-none bg-zinc-950 border-t border-x border-zinc-800/90 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] p-6 sm:p-12 lg:p-16"
+        className="max-w-6xl mx-auto rounded-t-[48px] sm:rounded-t-[56px] lg:rounded-t-[64px] rounded-b-none bg-zinc-950 border-t border-x border-zinc-800/90 shadow-[0_-20px_80px_rgba(0,0,0,0.9)] p-6 sm:p-12 lg:p-16"
       >
         {/* Text Header */}
         <div className="max-w-3xl mb-12 sm:mb-16">
