@@ -124,7 +124,7 @@ export function ProductPreviewRail() {
               </AnimatePresence>
             </div>
 
-            {/* 4. CTA Button Reel Slot - Production Grade Primary Theme Button */}
+            {/* 4. CTA Button Reel Slot — Premium Production CTA */}
             <div className="h-14 overflow-hidden relative pt-1">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -135,15 +135,19 @@ export function ProductPreviewRail() {
                   transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0 flex items-center"
                 >
-                  <Button
-                    asChild
-                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2.5 rounded-lg transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 text-sm"
+                  <Link
+                    href="/login"
+                    className="group inline-flex items-center gap-0 rounded-lg overflow-hidden border border-primary/60 hover:border-primary transition-all duration-200 shadow-md hover:shadow-lg hover:shadow-primary/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-950"
                   >
-                    <Link href="/login" className="flex items-center gap-2">
-                      <span>{currentView.cta}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
+                    {/* Label segment */}
+                    <span className="bg-primary group-hover:bg-primary/90 text-primary-foreground text-sm font-semibold px-5 py-2.5 transition-colors duration-200 leading-none tracking-tight">
+                      {currentView.cta}
+                    </span>
+                    {/* Arrow indicator segment */}
+                    <span className="flex items-center justify-center bg-primary/15 group-hover:bg-primary/25 border-l border-primary/30 px-3 py-2.5 transition-colors duration-200 self-stretch">
+                      <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-0.5 transition-transform duration-200" />
+                    </span>
+                  </Link>
                 </motion.div>
               </AnimatePresence>
             </div>
