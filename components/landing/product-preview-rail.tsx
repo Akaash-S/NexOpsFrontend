@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useReducedMotion } from 'framer-motion'
+import { motion, useScroll, useTransform, useMotionValueEvent, useReducedMotion } from 'framer-motion'
 import { Badge } from '@/components/ui/badge'
 
 export function ProductPreviewRail() {
@@ -18,8 +18,13 @@ export function ProductPreviewRail() {
   // Map scroll progress (0..1) to active view index (0..2) on desktop
   useMotionValueEvent(scrollYProgress, 'change', (latest) => {
     if (prefersReducedMotion) return
-    const computedIndex = Math.min(2, Math.floor(latest * 3))
-    setActiveTab(computedIndex)
+    if (latest < 0.35) {
+      setActiveTab(0)
+    } else if (latest < 0.70) {
+      setActiveTab(1)
+    } else {
+      setActiveTab(2)
+    }
   })
 
   // Tab click handler: swaps view AND smoothly scrolls to that view's segment
@@ -33,9 +38,9 @@ export function ProductPreviewRail() {
     const viewportHeight = window.innerHeight
     const scrollableDistance = sectionHeight - viewportHeight
 
-    // Calculate center ratio of each view segment: 0 -> 16.6%, 1 -> 50%, 2 -> 83.3%
-    const segmentCenterRatio = (idx + 0.5) / 3
-    const targetY = sectionTop + segmentCenterRatio * scrollableDistance
+    // Calculate target ratio for each view segment: 0 -> 15%, 1 -> 52.5%, 2 -> 85%
+    const segmentRatios = [0.15, 0.525, 0.85]
+    const targetY = sectionTop + segmentRatios[idx] * scrollableDistance
 
     window.scrollTo({
       top: targetY,
@@ -43,10 +48,13 @@ export function ProductPreviewRail() {
     })
   }
 
-  // Stage expanding/scaling animation
-  const inset = useTransform(scrollYProgress, [0, 0.5, 1], [24, 0, 0])
-  const radius = useTransform(scrollYProgress, [0, 0.5, 1], [32, 12, 12])
-  const scale = useTransform(scrollYProgress, [0, 0.5, 1], [0.96, 1, 1])
+  // Card 2 (Service Topology) physical vertical slide-up over Card 1
+  const card2Y = useTransform(scrollYProgress, [0.20, 0.50], ['100%', '0%'])
+  const card2Opacity = useTransform(scrollYProgress, [0.20, 0.35], [0, 1])
+
+  // Card 3 (Pre-Deploy Risk) physical vertical slide-up over Card 2
+  const card3Y = useTransform(scrollYProgress, [0.55, 0.85], ['100%', '0%'])
+  const card3Opacity = useTransform(scrollYProgress, [0.55, 0.70], [0, 1])
 
   const views = [
     {
@@ -70,9 +78,9 @@ export function ProductPreviewRail() {
   ]
 
   return (
-    <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[300vh]">
-      {/* Desktop Pinned Viewport (Scroll-Driven 3-View Progression) */}
-      <div className="hidden md:flex sticky top-0 h-screen items-center overflow-hidden w-full">
+    <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[350vh]">
+      {/* Desktop Pinned Viewport (Scroll-Driven Stacked Card Reveal) */}
+      <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
           <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase mb-3">
             Unified Platform Interface
@@ -85,7 +93,7 @@ export function ProductPreviewRail() {
           </p>
 
           {/* Tab Controls (Click Manual Override with Scroll Position Sync) */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             {views.map((view, idx) => (
               <button
                 key={view.id}
@@ -101,16 +109,10 @@ export function ProductPreviewRail() {
             ))}
           </div>
 
-          {/* Desktop Expanding Stage Container */}
-          <motion.div
-            style={prefersReducedMotion ? undefined : { paddingLeft: inset, paddingRight: inset }}
-            className="mt-12 mx-auto max-w-5xl"
-          >
-            <motion.div
-              style={prefersReducedMotion ? undefined : { borderRadius: radius, scale }}
-              className="border border-zinc-800 bg-zinc-950 shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden text-left"
-            >
-              {/* Browser Window Bar */}
+          {/* Desktop Stacked Cards Container Stage */}
+          <div className="mt-10 mx-auto max-w-5xl relative h-[360px] sm:h-[320px]">
+            {/* CARD 1 (Base Layer - Incident Investigation) */}
+            <div className="absolute inset-0 z-10 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden text-left">
               <div className="px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-rose-500/80" />
@@ -118,89 +120,104 @@ export function ProductPreviewRail() {
                   <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 </div>
                 <div className="px-4 py-1 rounded-md bg-black/60 border border-zinc-800 text-xs font-mono text-zinc-400">
-                  nexops.asolvitra.tech/{views[activeTab].id}
+                  nexops.asolvitra.tech/investigation
                 </div>
                 <div className="w-12" />
               </div>
+              <div className="p-6 sm:p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Investigation: High Checkout Latency</h3>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
+                    Root Cause Identified
+                  </Badge>
+                </div>
+                <div className="p-5 rounded-xl bg-zinc-900/80 border border-primary/40 space-y-3">
+                  <div className="flex items-center justify-between text-sm font-semibold text-white">
+                    <span>payment-service Commit #8f92a1c</span>
+                    <span className="text-emerald-400 font-mono text-xs">94% Confidence</span>
+                  </div>
+                  <p className="text-xs font-mono text-zinc-300">
+                    Reasoning: DB connection pool decreased from 50 to 10 right before alert spike.
+                  </p>
+                </div>
+              </div>
+            </div>
 
-              {/* Dynamic Screen Content with Smooth Opacity Crossfade */}
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={activeTab}
-                  initial={prefersReducedMotion ? undefined : { opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={prefersReducedMotion ? undefined : { opacity: 0, y: -8 }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                  className="p-6 sm:p-10"
-                >
-                  {activeTab === 0 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-white">Investigation: High Checkout Latency</h3>
-                        <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-xs">
-                          Root Cause Identified
-                        </Badge>
-                      </div>
-                      <div className="p-5 rounded-xl bg-zinc-900/80 border border-primary/40 space-y-3">
-                        <div className="flex items-center justify-between text-sm font-semibold text-white">
-                          <span>payment-service Commit #8f92a1c</span>
-                          <span className="text-emerald-400 font-mono text-xs">94% Confidence</span>
-                        </div>
-                        <p className="text-xs font-mono text-zinc-300">
-                          Reasoning: DB connection pool decreased from 50 to 10 right before alert spike.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 1 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-white">Service & Dependency Topology</h3>
-                        <Badge variant="outline" className="text-zinc-400 border-zinc-700 text-xs">
-                          6 Microservices Connected
-                        </Badge>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-                        <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
-                          <div className="font-bold text-white">api-gateway</div>
-                          <div className="text-zinc-400 text-[11px]">Upstream Entry &bull; Healthy</div>
-                        </div>
-                        <div className="p-4 rounded-xl bg-zinc-900/60 border border-primary/40 space-y-2">
-                          <div className="font-bold text-primary">auth-service</div>
-                          <div className="text-amber-400 text-[11px]">Root Cause Location</div>
-                        </div>
-                        <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
-                          <div className="font-bold text-white">payment-service</div>
-                          <div className="text-rose-400 text-[11px]">Downstream Impacted</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {activeTab === 2 && (
-                    <div className="space-y-6">
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-xl font-bold text-white">Recent Changes Risk Matrix</h3>
-                        <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
-                          Pre-Deploy Analysis
-                        </Badge>
-                      </div>
-                      <div className="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-3">
-                        <div className="flex items-center justify-between text-sm font-semibold text-white">
-                          <span>PR #342: Refactor auth JWT verification</span>
-                          <span className="text-amber-400 font-mono text-xs">Risk Score: 0.78 (High)</span>
-                        </div>
-                        <p className="text-xs font-mono text-zinc-400">
-                          Risk Basis: Modifies core authentication package; impacts 4 downstream microservices.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
+            {/* CARD 2 (Middle Layer - Service Topology: Vertical Slide-Up Reveal) */}
+            <motion.div
+              style={prefersReducedMotion ? undefined : { y: card2Y, opacity: card2Opacity }}
+              className="absolute inset-0 z-20 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_25px_90px_rgba(0,0,0,0.9)] overflow-hidden text-left"
+            >
+              <div className="px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                </div>
+                <div className="px-4 py-1 rounded-md bg-black/60 border border-zinc-800 text-xs font-mono text-zinc-400">
+                  nexops.asolvitra.tech/dependencies
+                </div>
+                <div className="w-12" />
+              </div>
+              <div className="p-6 sm:p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Service & Dependency Topology</h3>
+                  <Badge variant="outline" className="text-zinc-400 border-zinc-700 text-xs">
+                    6 Microservices Connected
+                  </Badge>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
+                  <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
+                    <div className="font-bold text-white">api-gateway</div>
+                    <div className="text-zinc-400 text-[11px]">Upstream Entry &bull; Healthy</div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-900/60 border border-primary/40 space-y-2">
+                    <div className="font-bold text-primary">auth-service</div>
+                    <div className="text-amber-400 text-[11px]">Root Cause Location</div>
+                  </div>
+                  <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
+                    <div className="font-bold text-white">payment-service</div>
+                    <div className="text-rose-400 text-[11px]">Downstream Impacted</div>
+                  </div>
+                </div>
+              </div>
             </motion.div>
-          </motion.div>
+
+            {/* CARD 3 (Top Layer - Pre-Deploy Risk: Vertical Slide-Up Reveal) */}
+            <motion.div
+              style={prefersReducedMotion ? undefined : { y: card3Y, opacity: card3Opacity }}
+              className="absolute inset-0 z-30 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_30px_100px_rgba(0,0,0,0.95)] overflow-hidden text-left"
+            >
+              <div className="px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-rose-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/80" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
+                </div>
+                <div className="px-4 py-1 rounded-md bg-black/60 border border-zinc-800 text-xs font-mono text-zinc-400">
+                  nexops.asolvitra.tech/risk
+                </div>
+                <div className="w-12" />
+              </div>
+              <div className="p-6 sm:p-8 space-y-6">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-white">Recent Changes Risk Matrix</h3>
+                  <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs">
+                    Pre-Deploy Analysis
+                  </Badge>
+                </div>
+                <div className="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-3">
+                  <div className="flex items-center justify-between text-sm font-semibold text-white">
+                    <span>PR #342: Refactor auth JWT verification</span>
+                    <span className="text-amber-400 font-mono text-xs">Risk Score: 0.78 (High)</span>
+                  </div>
+                  <p className="text-xs font-mono text-zinc-400">
+                    Risk Basis: Modifies core authentication package; impacts 4 downstream microservices.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
 
