@@ -6,7 +6,7 @@ import { useAppState } from '@/lib/hooks/use-app-state'
 import { Card } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Github, Chrome, ArrowRight, ShieldAlert, Loader2, ArrowLeft, Mail, RefreshCw, KeyRound } from 'lucide-react'
+import { Github, Chrome, ArrowRight, Loader2, ArrowLeft, RefreshCw, KeyRound } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { signInWithPopup, signInWithCustomToken } from 'firebase/auth'
 import { auth, githubProvider, googleProvider } from '@/lib/firebase'
@@ -173,7 +173,7 @@ export default function LoginPage() {
   if (transitioning) {
     return (
       <div className="min-h-screen bg-background flex flex-col justify-center items-center gap-4 animate-in fade-in duration-300">
-        <NexOpsLogo size="xl" />
+        <NexOpsLogo size="xl" showText={false} />
         <Loader2 className="w-5 h-5 text-muted-foreground animate-spin" />
         <p className="text-xs text-muted-foreground">Setting up your workspace…</p>
       </div>
@@ -192,7 +192,7 @@ export default function LoginPage() {
       )}>
         {/* Brand Logo & Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <NexOpsLogo size="xl" />
+          <NexOpsLogo size="xl" showText={false} />
           <h1 className="text-2xl font-bold tracking-tight mt-4">Welcome to NexOps</h1>
           <p className="text-sm text-muted-foreground max-w-sm">
             Sign in to start correlating alerts, changes, and service graphs in real time.
@@ -384,12 +384,6 @@ export default function LoginPage() {
             </form>
           )}
         </Card>
-
-        {/* Bottom helper info */}
-        <div className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5 p-2 bg-muted/20 border border-border/30 rounded-lg">
-          <ShieldAlert className="w-3.5 h-3.5 text-primary" />
-          <span>Real Email OTP & Firebase Custom Token Auth active.</span>
-        </div>
       </div>
 
       {/* Post-Authentication Terms of Service & Privacy Notice Gate Modal */}
