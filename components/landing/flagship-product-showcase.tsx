@@ -7,11 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   ArrowRight,
-  GitCommitHorizontal,
   CheckCircle2,
-  AlertCircle,
-  FileCode,
-  ShieldCheck,
 } from 'lucide-react'
 
 export function FlagshipProductShowcase() {
@@ -45,7 +41,7 @@ export function FlagshipProductShowcase() {
         }
         className="w-full"
       >
-        {/* Full-Section Container Expanding Edge-to-Edge with 0 Margin & 0 Radius when Settled */}
+        {/* Full-Section Flagship Container with White Border Layout */}
         <motion.div
           style={
             prefersReducedMotion
@@ -56,7 +52,7 @@ export function FlagshipProductShowcase() {
                   borderRadius: radius,
                 }
           }
-          className="w-full bg-zinc-900 border-t border-zinc-700/80 shadow-[0_-15px_60px_rgba(59,130,246,0.12),0_20px_80px_rgba(0,0,0,0.8)] py-16 sm:py-24 lg:py-28 overflow-hidden"
+          className="w-full bg-zinc-900 border border-white/20 sm:border-white/30 shadow-[0_-15px_60px_rgba(255,255,255,0.05),0_20px_80px_rgba(0,0,0,0.9)] py-16 sm:py-24 lg:py-28 overflow-hidden"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Text Header */}
@@ -83,10 +79,10 @@ export function FlagshipProductShowcase() {
               </div>
             </div>
 
-            {/* Large Visual Showcase (Fidelity Mockup of Investigation Workspace) */}
-            <div className="rounded-2xl border border-zinc-800 bg-zinc-950/90 shadow-2xl overflow-hidden">
+            {/* Large Visual Showcase (White Border Layout Mockup of Investigation Workspace) */}
+            <div className="rounded-2xl border border-white/20 sm:border-white/30 bg-zinc-950/90 shadow-2xl overflow-hidden">
               {/* Top Navbar Simulation */}
-              <div className="px-6 py-4 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+              <div className="px-6 py-4 bg-zinc-900/90 border-b border-white/10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <span className="text-sm font-semibold text-white">Incident Investigation</span>
                   <span className="text-zinc-600">/</span>
@@ -100,7 +96,7 @@ export function FlagshipProductShowcase() {
               {/* Body Content */}
               <div className="p-6 sm:p-10 space-y-8">
                 {/* Title & Metadata */}
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-xl bg-zinc-900/50 border border-zinc-800/80">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-6 rounded-xl bg-zinc-900/50 border border-white/10">
                   <div>
                     <h3 className="text-2xl font-bold text-white mb-2">
                       Database Connection Pool Exhaustion on auth-service
@@ -123,7 +119,7 @@ export function FlagshipProductShowcase() {
                     Ranked Candidate Root Causes (1 of 3)
                   </h4>
 
-                  <div className="p-6 rounded-xl bg-zinc-900/90 border border-primary/50 shadow-xl space-y-4">
+                  <div className="p-6 rounded-xl bg-zinc-900/90 border border-white/20 shadow-xl space-y-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary font-bold text-sm">
