@@ -22,7 +22,8 @@ export function FlagshipProductShowcase() {
   // Gradual, slow scroll expansion progressing until section top reaches the top of browser interface
   const inset = useTransform(scrollYProgress, [0, 1], [48, 0])
   const topPad = useTransform(scrollYProgress, [0, 1], [60, 0])
-  const radius = useTransform(scrollYProgress, [0, 1], [56, 0])
+  // 50% rounded top corner initially, returning to 0% (normal flat full-width edge) when settled
+  const radius = useTransform(scrollYProgress, [0, 1], ['50%', '0%'])
   const y = useTransform(scrollYProgress, [0, 1], [60, 0])
   const opacity = useTransform(scrollYProgress, [0, 1], [0.4, 1])
 
@@ -41,7 +42,7 @@ export function FlagshipProductShowcase() {
         }
         className="w-full"
       >
-        {/* Full-Section Flagship Container with White Border Layout */}
+        {/* Full-Section Flagship Container starting with 50% rounded corners */}
         <motion.div
           style={
             prefersReducedMotion
