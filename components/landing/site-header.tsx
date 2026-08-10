@@ -1,25 +1,47 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { NexOpsLogo } from '@/components/ui/nexops-logo'
 import { Button } from '@/components/ui/button'
 import { ArrowRight } from 'lucide-react'
 
 export function SiteHeader() {
+  const [visible, setVisible] = useState(true)
   const [scrolled, setScrolled] = useState(false)
+  const lastScrollY = useRef(0)
 
   useEffect(() => {
     const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
+      const currentScrollY = window.scrollY
+
+      // Set scrolled state for background backdrop blur
+      setScrolled(currentScrollY > 20)
+
+      // Always visible near top of page
+      if (currentScrollY <= 20) {
+        setVisible(true)
+      } else {
+        // Hide when scrolling down (forward), show when scrolling up (backward)
+        if (currentScrollY > lastScrollY.current + 5) {
+          setVisible(false)
+        } else if (currentScrollY < lastScrollY.current - 5) {
+          setVisible(true)
+        }
+      }
+
+      lastScrollY.current = currentScrollY
     }
-    window.addEventListener('scroll', handleScroll)
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
     return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 transform ${
+        visible ? 'translate-y-0 opacity-100' : '-translate-y-full opacity-0'
+      } ${
         scrolled
           ? 'bg-black/80 backdrop-blur-xl border-b border-white/10 shadow-2xl py-3.5'
           : 'bg-transparent py-5'
