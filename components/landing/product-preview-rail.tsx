@@ -15,29 +15,29 @@ export function ProductPreviewRail() {
     offset: ['start start', 'end end'],
   })
 
-  // Feature 2 (Service Topology) content layer vertical slide-up inside the stage (100% solid background)
+  // Feature 2 (Service Topology) content layer vertical slide-up inside stage (100% solid distinct card)
   const feature2Y = useTransform(scrollYProgress, [0.22, 0.52], ['100%', '0%'])
 
-  // Feature 3 (Pre-Deploy Risk) content layer vertical slide-up inside the stage (100% solid background)
+  // Feature 3 (Pre-Deploy Risk) content layer vertical slide-up inside stage (100% solid distinct card)
   const feature3Y = useTransform(scrollYProgress, [0.58, 0.88], ['100%', '0%'])
 
   return (
-    <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[350vh]">
-      {/* Single Fixed Background Section Viewport (Desktop Pinned Content Stage) */}
-      <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full bg-zinc-900">
+    <section ref={sectionRef} className="relative bg-zinc-950 text-white md:h-[350vh]">
+      {/* Single Fixed Deep Background Section Viewport */}
+      <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full bg-zinc-950">
         {/* Inner Content Stage with Fixed Dimensions & Clipping */}
-        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[520px] overflow-hidden">
-          {/* FEATURE LAYER 1 (Base Layer - Incident Investigation - 100% Solid Opaque) */}
-          <div className="absolute inset-0 z-10 bg-zinc-900 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[540px] overflow-hidden">
+          {/* FEATURE LAYER 1 (Base Layer Card - Incident Investigation) */}
+          <div className="absolute inset-0 z-10 bg-zinc-900/95 border border-zinc-800 rounded-3xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] p-8 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase">
                 Unified Platform Interface
               </div>
-              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
                 Ranked root causes with plain-English evidence
               </h2>
-              <p className="text-base sm:text-lg text-zinc-400 font-normal leading-relaxed">
+              <p className="text-sm sm:text-base text-zinc-400 font-normal leading-relaxed">
                 When an alert fires, NexOps immediately analyzes recent GitHub commits, pull requests, and deployment signals. Instead of forcing your team to dig through logs, NexOps presents ranked candidate causes with clear explanations.
               </p>
               <div>
@@ -86,20 +86,20 @@ export function ProductPreviewRail() {
             </div>
           </div>
 
-          {/* FEATURE LAYER 2 (Middle Layer - Service Topology - Vertical Slide-Up Inside Stage) */}
+          {/* FEATURE LAYER 2 (Middle Layer Card - Service Topology - Physical Vertical Slide-Up) */}
           <motion.div
             style={prefersReducedMotion ? undefined : { y: feature2Y }}
-            className="absolute inset-0 z-20 bg-zinc-900 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+            className="absolute inset-0 z-20 bg-zinc-900/95 border border-zinc-700/80 rounded-3xl shadow-[0_-25px_90px_rgba(0,0,0,0.95)] p-8 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center"
           >
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase">
                 Dependency Graph & Health
               </div>
-              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
                 Map microservices and inter-service health
               </h2>
-              <p className="text-base sm:text-lg text-zinc-400 font-normal leading-relaxed">
+              <p className="text-sm sm:text-base text-zinc-400 font-normal leading-relaxed">
                 Visualize real-time upstream entry points, core service bottlenecks, and downstream degraded dependency paths to isolate cascading infrastructure failures instantly.
               </p>
               <div>
@@ -153,20 +153,20 @@ export function ProductPreviewRail() {
             </div>
           </motion.div>
 
-          {/* FEATURE LAYER 3 (Top Layer - Pre-Deploy Risk - Vertical Slide-Up Inside Stage) */}
+          {/* FEATURE LAYER 3 (Top Layer Card - Pre-Deploy Risk - Physical Vertical Slide-Up) */}
           <motion.div
             style={prefersReducedMotion ? undefined : { y: feature3Y }}
-            className="absolute inset-0 z-30 bg-zinc-900 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+            className="absolute inset-0 z-30 bg-zinc-900/95 border border-zinc-700/80 rounded-3xl shadow-[0_-30px_100px_rgba(0,0,0,0.98)] p-8 sm:p-10 grid grid-cols-1 lg:grid-cols-12 gap-10 items-center"
           >
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase">
                 Real-Time Risk Prevention
               </div>
-              <h2 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white leading-tight">
+              <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
                 Calculate blast radius before deployment
               </h2>
-              <p className="text-base sm:text-lg text-zinc-400 font-normal leading-relaxed">
+              <p className="text-sm sm:text-base text-zinc-400 font-normal leading-relaxed">
                 Prevent incidents before they reach production by automatically analyzing pull requests, calculating risk scores, and evaluating downstream dependency impacts.
               </p>
               <div>
