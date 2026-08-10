@@ -14,7 +14,7 @@ export function BenefitGrid() {
   })
 
   // Map vertical scroll progress to horizontal translateX on desktop
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-62%'])
+  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-44%'])
 
   const benefits = [
     {
@@ -44,11 +44,11 @@ export function BenefitGrid() {
       {/* Desktop Sticky Viewport */}
       <div className="hidden md:flex sticky top-0 h-screen items-center overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="mb-8">
+          <div className="mb-10">
             <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase mb-2">
               Core Capabilities
             </div>
-            <h2 className="text-3xl font-extrabold tracking-tight text-white">
+            <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight text-white">
               Built for speed, clarity, and developer trust
             </h2>
           </div>
@@ -63,19 +63,24 @@ export function BenefitGrid() {
                 return (
                   <div
                     key={idx}
-                    className="relative overflow-hidden w-[380px] lg:w-[420px] shrink-0 p-8 rounded-2xl bg-zinc-950/80 border border-zinc-800/80 hover:border-zinc-700 transition-all duration-300 group shadow-lg hover:shadow-2xl flex flex-col justify-between"
+                    className="relative overflow-hidden w-[320px] lg:w-[350px] h-[460px] lg:h-[490px] shrink-0 p-8 lg:p-10 rounded-[32px] bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all duration-300 group shadow-2xl flex flex-col justify-between"
                   >
                     {/* Background Faded Monochrome Icon Motif */}
-                    <IconComponent className="absolute -bottom-6 -right-6 w-44 h-44 text-white/[0.05] group-hover:text-primary/[0.08] transition-colors duration-300 pointer-events-none select-none" />
+                    <IconComponent className="absolute -bottom-8 -right-8 w-64 h-64 text-white/[0.04] group-hover:text-primary/[0.08] transition-colors duration-300 pointer-events-none select-none" />
 
-                    <div className="relative z-10">
-                      <div className="text-xs font-mono text-zinc-500 mb-4 font-semibold">
+                    {/* Top Content: Index Badge & Headline */}
+                    <div className="relative z-10 space-y-4">
+                      <div className="text-xs font-mono text-zinc-500 font-semibold tracking-wider">
                         0{idx + 1} &bull; BENEFIT
                       </div>
-                      <h3 className="text-xl font-bold text-white tracking-tight mb-3 group-hover:text-primary transition-colors duration-200">
+                      <h3 className="text-2xl lg:text-3xl font-extrabold text-white tracking-tight leading-snug group-hover:text-primary transition-colors duration-200">
                         {benefit.title}
                       </h3>
-                      <p className="text-sm text-zinc-400 leading-relaxed font-normal">
+                    </div>
+
+                    {/* Bottom Content: Description */}
+                    <div className="relative z-10 mt-auto pt-6 border-t border-zinc-900/80">
+                      <p className="text-sm lg:text-base text-zinc-400 leading-relaxed font-normal">
                         {benefit.description}
                       </p>
                     </div>
@@ -104,16 +109,20 @@ export function BenefitGrid() {
             return (
               <div
                 key={idx}
-                className="relative overflow-hidden snap-center shrink-0 w-[280px] p-6 rounded-2xl bg-zinc-950/80 border border-zinc-800/80"
+                className="relative overflow-hidden snap-center shrink-0 w-[280px] h-[400px] p-6 rounded-[24px] bg-zinc-950/90 border border-zinc-800/90 flex flex-col justify-between"
               >
-                <IconComponent className="absolute -bottom-4 -right-4 w-32 h-32 text-white/[0.04] pointer-events-none select-none" />
-                <div className="relative z-10">
-                  <div className="text-xs font-mono text-zinc-500 mb-3 font-semibold">
+                <IconComponent className="absolute -bottom-6 -right-6 w-48 h-48 text-white/[0.04] pointer-events-none select-none" />
+
+                <div className="relative z-10 space-y-3">
+                  <div className="text-xs font-mono text-zinc-500 font-semibold">
                     0{idx + 1} &bull; BENEFIT
                   </div>
-                  <h3 className="text-lg font-bold text-white tracking-tight mb-2">
+                  <h3 className="text-xl font-bold text-white tracking-tight leading-tight">
                     {benefit.title}
                   </h3>
+                </div>
+
+                <div className="relative z-10 mt-auto pt-4 border-t border-zinc-900/80">
                   <p className="text-xs text-zinc-400 leading-relaxed font-normal">
                     {benefit.description}
                   </p>
