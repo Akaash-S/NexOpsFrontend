@@ -48,13 +48,11 @@ export function ProductPreviewRail() {
     })
   }
 
-  // Card 2 (Service Topology) physical vertical slide-up over Card 1
+  // Card 2 (Service Topology) physical vertical slide-up over Card 1 with 100% solid opaque background
   const card2Y = useTransform(scrollYProgress, [0.20, 0.50], ['100%', '0%'])
-  const card2Opacity = useTransform(scrollYProgress, [0.20, 0.35], [0, 1])
 
-  // Card 3 (Pre-Deploy Risk) physical vertical slide-up over Card 2
+  // Card 3 (Pre-Deploy Risk) physical vertical slide-up over Card 2 with 100% solid opaque background
   const card3Y = useTransform(scrollYProgress, [0.55, 0.85], ['100%', '0%'])
-  const card3Opacity = useTransform(scrollYProgress, [0.55, 0.70], [0, 1])
 
   const views = [
     {
@@ -79,7 +77,7 @@ export function ProductPreviewRail() {
 
   return (
     <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[350vh]">
-      {/* Desktop Pinned Viewport (Scroll-Driven Stacked Card Reveal) */}
+      {/* Desktop Pinned Viewport (Scroll-Driven Stacked Opaque Card Reveal) */}
       <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
           <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase mb-3">
@@ -109,17 +107,17 @@ export function ProductPreviewRail() {
             ))}
           </div>
 
-          {/* Desktop Stacked Cards Container Stage */}
+          {/* Desktop Stacked Opaque Cards Container Stage */}
           <div className="mt-10 mx-auto max-w-5xl relative h-[360px] sm:h-[320px]">
-            {/* CARD 1 (Base Layer - Incident Investigation) */}
+            {/* CARD 1 (Base Layer - Incident Investigation - 100% Solid Opaque) */}
             <div className="absolute inset-0 z-10 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden text-left">
-              <div className="px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+              <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-rose-500/80" />
                   <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                   <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 </div>
-                <div className="px-4 py-1 rounded-md bg-black/60 border border-zinc-800 text-xs font-mono text-zinc-400">
+                <div className="px-4 py-1 rounded-md bg-black border border-zinc-800 text-xs font-mono text-zinc-400">
                   nexops.asolvitra.tech/investigation
                 </div>
                 <div className="w-12" />
@@ -131,7 +129,7 @@ export function ProductPreviewRail() {
                     Root Cause Identified
                   </Badge>
                 </div>
-                <div className="p-5 rounded-xl bg-zinc-900/80 border border-primary/40 space-y-3">
+                <div className="p-5 rounded-xl bg-zinc-900 border border-primary/40 space-y-3">
                   <div className="flex items-center justify-between text-sm font-semibold text-white">
                     <span>payment-service Commit #8f92a1c</span>
                     <span className="text-emerald-400 font-mono text-xs">94% Confidence</span>
@@ -143,18 +141,18 @@ export function ProductPreviewRail() {
               </div>
             </div>
 
-            {/* CARD 2 (Middle Layer - Service Topology: Vertical Slide-Up Reveal) */}
+            {/* CARD 2 (Middle Layer - Service Topology - 100% Solid Opaque Vertical Slide-Up) */}
             <motion.div
-              style={prefersReducedMotion ? undefined : { y: card2Y, opacity: card2Opacity }}
+              style={prefersReducedMotion ? undefined : { y: card2Y }}
               className="absolute inset-0 z-20 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_25px_90px_rgba(0,0,0,0.9)] overflow-hidden text-left"
             >
-              <div className="px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+              <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-rose-500/80" />
                   <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                   <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 </div>
-                <div className="px-4 py-1 rounded-md bg-black/60 border border-zinc-800 text-xs font-mono text-zinc-400">
+                <div className="px-4 py-1 rounded-md bg-black border border-zinc-800 text-xs font-mono text-zinc-400">
                   nexops.asolvitra.tech/dependencies
                 </div>
                 <div className="w-12" />
@@ -167,15 +165,15 @@ export function ProductPreviewRail() {
                   </Badge>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-mono text-xs">
-                  <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
+                  <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2">
                     <div className="font-bold text-white">api-gateway</div>
                     <div className="text-zinc-400 text-[11px]">Upstream Entry &bull; Healthy</div>
                   </div>
-                  <div className="p-4 rounded-xl bg-zinc-900/60 border border-primary/40 space-y-2">
+                  <div className="p-4 rounded-xl bg-zinc-900 border border-primary/40 space-y-2">
                     <div className="font-bold text-primary">auth-service</div>
                     <div className="text-amber-400 text-[11px]">Root Cause Location</div>
                   </div>
-                  <div className="p-4 rounded-xl bg-zinc-900/60 border border-zinc-800 space-y-2">
+                  <div className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 space-y-2">
                     <div className="font-bold text-white">payment-service</div>
                     <div className="text-rose-400 text-[11px]">Downstream Impacted</div>
                   </div>
@@ -183,18 +181,18 @@ export function ProductPreviewRail() {
               </div>
             </motion.div>
 
-            {/* CARD 3 (Top Layer - Pre-Deploy Risk: Vertical Slide-Up Reveal) */}
+            {/* CARD 3 (Top Layer - Pre-Deploy Risk - 100% Solid Opaque Vertical Slide-Up) */}
             <motion.div
-              style={prefersReducedMotion ? undefined : { y: card3Y, opacity: card3Opacity }}
+              style={prefersReducedMotion ? undefined : { y: card3Y }}
               className="absolute inset-0 z-30 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_30px_100px_rgba(0,0,0,0.95)] overflow-hidden text-left"
             >
-              <div className="px-4 py-3 bg-zinc-900/90 border-b border-zinc-800 flex items-center justify-between">
+              <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full bg-rose-500/80" />
                   <div className="w-3 h-3 rounded-full bg-amber-500/80" />
                   <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
                 </div>
-                <div className="px-4 py-1 rounded-md bg-black/60 border border-zinc-800 text-xs font-mono text-zinc-400">
+                <div className="px-4 py-1 rounded-md bg-black border border-zinc-800 text-xs font-mono text-zinc-400">
                   nexops.asolvitra.tech/risk
                 </div>
                 <div className="w-12" />
@@ -206,7 +204,7 @@ export function ProductPreviewRail() {
                     Pre-Deploy Analysis
                   </Badge>
                 </div>
-                <div className="p-5 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-3">
+                <div className="p-5 rounded-xl bg-zinc-900 border border-zinc-800 space-y-3">
                   <div className="flex items-center justify-between text-sm font-semibold text-white">
                     <span>PR #342: Refactor auth JWT verification</span>
                     <span className="text-amber-400 font-mono text-xs">Risk Score: 0.78 (High)</span>
