@@ -15,19 +15,20 @@ export function ProductPreviewRail() {
     offset: ['start start', 'end end'],
   })
 
-  // Slide 2 (Service Topology) vertical slide-up over Slide 1 (100% solid opaque background)
-  const slide2Y = useTransform(scrollYProgress, [0.22, 0.52], ['100%', '0%'])
+  // Feature 2 (Service Topology) content layer vertical slide-up inside the stage (100% solid background)
+  const feature2Y = useTransform(scrollYProgress, [0.22, 0.52], ['100%', '0%'])
 
-  // Slide 3 (Pre-Deploy Risk) vertical slide-up over Slide 2 (100% solid opaque background)
-  const slide3Y = useTransform(scrollYProgress, [0.58, 0.88], ['100%', '0%'])
+  // Feature 3 (Pre-Deploy Risk) content layer vertical slide-up inside the stage (100% solid background)
+  const feature3Y = useTransform(scrollYProgress, [0.58, 0.88], ['100%', '0%'])
 
   return (
     <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[350vh]">
-      {/* Desktop Pinned Viewport (Scroll-Driven RedotPay-Style Full-Screen Feature Slide Reveal) */}
-      <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full">
-        {/* SLIDE 1 (Base Layer - Incident Investigation - 100% Solid Opaque) */}
-        <div className="absolute inset-0 z-10 bg-zinc-900 flex items-center justify-center">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+      {/* Single Fixed Background Section Viewport (Desktop Pinned Content Stage) */}
+      <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full bg-zinc-900">
+        {/* Inner Content Stage with Fixed Dimensions & Clipping */}
+        <div className="relative w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[520px] overflow-hidden">
+          {/* FEATURE LAYER 1 (Base Layer - Incident Investigation - 100% Solid Opaque) */}
+          <div className="absolute inset-0 z-10 bg-zinc-900 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase">
@@ -84,14 +85,12 @@ export function ProductPreviewRail() {
               </div>
             </div>
           </div>
-        </div>
 
-        {/* SLIDE 2 (Middle Layer - Service Topology - Vertical Slide-Up Reveal) */}
-        <motion.div
-          style={prefersReducedMotion ? undefined : { y: slide2Y }}
-          className="absolute inset-0 z-20 bg-zinc-900 flex items-center justify-center"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* FEATURE LAYER 2 (Middle Layer - Service Topology - Vertical Slide-Up Inside Stage) */}
+          <motion.div
+            style={prefersReducedMotion ? undefined : { y: feature2Y }}
+            className="absolute inset-0 z-20 bg-zinc-900 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+          >
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase">
@@ -152,15 +151,13 @@ export function ProductPreviewRail() {
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
 
-        {/* SLIDE 3 (Top Layer - Pre-Deploy Risk - Vertical Slide-Up Reveal) */}
-        <motion.div
-          style={prefersReducedMotion ? undefined : { y: slide3Y }}
-          className="absolute inset-0 z-30 bg-zinc-900 flex items-center justify-center"
-        >
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          {/* FEATURE LAYER 3 (Top Layer - Pre-Deploy Risk - Vertical Slide-Up Inside Stage) */}
+          <motion.div
+            style={prefersReducedMotion ? undefined : { y: feature3Y }}
+            className="absolute inset-0 z-30 bg-zinc-900 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center"
+          >
             {/* Left Content Column */}
             <div className="lg:col-span-5 space-y-6 text-left">
               <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase">
@@ -216,8 +213,8 @@ export function ProductPreviewRail() {
                 </div>
               </div>
             </div>
-          </div>
-        </motion.div>
+          </motion.div>
+        </div>
       </div>
 
       {/* Mobile Fallback: Simple consecutive static sections */}
