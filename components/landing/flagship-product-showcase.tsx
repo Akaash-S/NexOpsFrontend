@@ -20,10 +20,10 @@ export function FlagshipProductShowcase() {
 
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start 90%', 'center 45%'],
+    offset: ['start 95%', 'start 75%'],
   })
 
-  // Balanced, smooth scroll-linked transforms as user scrolls into the section
+  // Fast, smooth expansion completing to 0 margin before section reaches upper viewport
   const inset = useTransform(scrollYProgress, [0, 1], [48, 0])
   const topPad = useTransform(scrollYProgress, [0, 1], [60, 0])
   const radius = useTransform(scrollYProgress, [0, 1], [56, 0])
