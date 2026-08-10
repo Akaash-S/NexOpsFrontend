@@ -20,10 +20,10 @@ export function FlagshipProductShowcase() {
 
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ['start 95%', 'start 75%'],
+    offset: ['start 90%', 'start 5%'],
   })
 
-  // Fast, smooth expansion completing to 0 margin before section reaches upper viewport
+  // Gradual, slow scroll expansion progressing until section top reaches the top of browser interface
   const inset = useTransform(scrollYProgress, [0, 1], [48, 0])
   const topPad = useTransform(scrollYProgress, [0, 1], [60, 0])
   const radius = useTransform(scrollYProgress, [0, 1], [56, 0])
