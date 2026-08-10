@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useScroll, useMotionValueEvent, useReducedMoti
 import Link from 'next/link'
 import { ArrowRight, CheckCircle2, Server, AlertTriangle } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 
 export function ProductPreviewRail() {
   const [activeTab, setActiveTab] = useState(0)
@@ -107,7 +108,7 @@ export function ProductPreviewRail() {
               </AnimatePresence>
             </div>
 
-            {/* 3. Description Reel Slot - Generous Height to prevent bottom text clipping */}
+            {/* 3. Description Reel Slot */}
             <div className="h-[145px] sm:h-[130px] overflow-hidden relative">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.p
@@ -123,7 +124,7 @@ export function ProductPreviewRail() {
               </AnimatePresence>
             </div>
 
-            {/* 4. CTA Button Reel Slot */}
+            {/* 4. CTA Button Reel Slot - Production Grade Primary Theme Button */}
             <div className="h-14 overflow-hidden relative pt-1">
               <AnimatePresence mode="wait" initial={false}>
                 <motion.div
@@ -134,13 +135,15 @@ export function ProductPreviewRail() {
                   transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0 flex items-center"
                 >
-                  <Link
-                    href="/login"
-                    className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-semibold text-sm hover:bg-zinc-200 transition-colors shadow-lg"
+                  <Button
+                    asChild
+                    className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-2.5 rounded-lg transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 text-sm"
                   >
-                    <span>{currentView.cta}</span>
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
+                    <Link href="/login" className="flex items-center gap-2">
+                      <span>{currentView.cta}</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
                 </motion.div>
               </AnimatePresence>
             </div>
@@ -332,13 +335,15 @@ export function ProductPreviewRail() {
             <div className="text-xs font-mono text-primary uppercase tracking-wider">{view.eyebrow}</div>
             <h2 className="text-2xl font-bold text-white">{view.headline}</h2>
             <p className="text-sm text-zinc-400 leading-relaxed">{view.description}</p>
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white text-black font-semibold text-xs"
+            <Button
+              asChild
+              className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-5 py-2 rounded-lg transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 text-xs"
             >
-              <span>{view.cta}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+              <Link href="/login" className="flex items-center gap-2">
+                <span>{view.cta}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </Button>
           </div>
         ))}
       </div>
