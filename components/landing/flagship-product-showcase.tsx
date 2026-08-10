@@ -31,7 +31,7 @@ export function FlagshipProductShowcase() {
   const opacity = useTransform(scrollYProgress, [0, 1], [0.4, 1])
 
   return (
-    <section id="product" ref={ref} className="relative bg-black text-white border-t border-zinc-900 overflow-hidden">
+    <section id="product" ref={ref} className="relative bg-black text-white overflow-hidden">
       {/* Outer Motion Wrapper handling smooth inset & top margin reduction to 0 */}
       <motion.div
         style={

@@ -40,7 +40,7 @@ export function BenefitGrid() {
   ]
 
   return (
-    <section ref={sectionRef} className="relative bg-black text-white border-t border-zinc-900 md:h-[220vh]">
+    <section ref={sectionRef} className="relative bg-zinc-950 text-white md:h-[220vh]">
       {/* Desktop Sticky Viewport */}
       <div className="hidden md:flex sticky top-0 h-screen items-center overflow-hidden">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
@@ -63,7 +63,7 @@ export function BenefitGrid() {
                 return (
                   <div
                     key={idx}
-                    className="relative overflow-hidden w-[320px] lg:w-[350px] h-[460px] lg:h-[490px] shrink-0 p-8 lg:p-10 rounded-[32px] bg-zinc-950/90 border border-zinc-800/90 hover:border-zinc-700 transition-all duration-300 group shadow-2xl flex flex-col justify-between"
+                    className="relative overflow-hidden w-[320px] lg:w-[350px] h-[460px] lg:h-[490px] shrink-0 p-8 lg:p-10 rounded-[32px] bg-zinc-900/90 border border-zinc-800/90 hover:border-zinc-700 transition-all duration-300 group shadow-2xl flex flex-col justify-between"
                   >
                     {/* Background Faded Monochrome Icon Motif */}
                     <IconComponent className="absolute -bottom-8 -right-8 w-64 h-64 text-white/[0.04] group-hover:text-primary/[0.08] transition-colors duration-300 pointer-events-none select-none" />
@@ -109,7 +109,7 @@ export function BenefitGrid() {
             return (
               <div
                 key={idx}
-                className="relative overflow-hidden snap-center shrink-0 w-[280px] h-[400px] p-6 rounded-[24px] bg-zinc-950/90 border border-zinc-800/90 flex flex-col justify-between"
+                className="relative overflow-hidden snap-center shrink-0 w-[280px] h-[400px] p-6 rounded-[24px] bg-zinc-900/90 border border-zinc-800/90 flex flex-col justify-between"
               >
                 <IconComponent className="absolute -bottom-6 -right-6 w-48 h-48 text-white/[0.04] pointer-events-none select-none" />
 

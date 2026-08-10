@@ -49,7 +49,7 @@ export function ProductPreviewRail() {
   ]
 
   return (
-    <section ref={sectionRef} className="relative bg-black text-white border-t border-zinc-900 md:h-[250vh]">
+    <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[250vh]">
       {/* Desktop Pinned Viewport (Scroll-Driven 3-View Progression) */}
       <div className="hidden md:flex sticky top-0 h-screen items-center overflow-hidden w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
@@ -72,7 +72,7 @@ export function ProductPreviewRail() {
                 className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 ${
                   activeTab === idx
                     ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                    : 'bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800'
+                    : 'bg-zinc-950/80 text-zinc-400 hover:text-white hover:bg-zinc-800'
                 }`}
               >
                 {view.label}
@@ -195,7 +195,7 @@ export function ProductPreviewRail() {
                 className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all ${
                   activeTab === idx
                     ? 'bg-primary text-primary-foreground'
-                    : 'bg-zinc-900 text-zinc-400'
+                    : 'bg-zinc-950 text-zinc-400'
                 }`}
               >
                 {view.label}
