@@ -48,11 +48,13 @@ export function ProductPreviewRail() {
     })
   }
 
-  // Card 2 (Service Topology) physical vertical slide-up over Card 1 with 100% solid opaque background
-  const card2Y = useTransform(scrollYProgress, [0.20, 0.50], ['100%', '0%'])
+  // Card 2 (Service Topology): 100% hidden (opacity 0 & 100vh offset) until scroll reaches 0.20, then slides up cleanly from 100vh
+  const card2Y = useTransform(scrollYProgress, [0.20, 0.50], ['100vh', '0px'])
+  const card2Opacity = useTransform(scrollYProgress, [0.19, 0.20], [0, 1])
 
-  // Card 3 (Pre-Deploy Risk) physical vertical slide-up over Card 2 with 100% solid opaque background
-  const card3Y = useTransform(scrollYProgress, [0.55, 0.85], ['100%', '0%'])
+  // Card 3 (Pre-Deploy Risk): 100% hidden (opacity 0 & 100vh offset) until scroll reaches 0.55, then slides up cleanly from 100vh
+  const card3Y = useTransform(scrollYProgress, [0.55, 0.85], ['100vh', '0px'])
+  const card3Opacity = useTransform(scrollYProgress, [0.54, 0.55], [0, 1])
 
   const views = [
     {
@@ -77,7 +79,7 @@ export function ProductPreviewRail() {
 
   return (
     <section ref={sectionRef} className="relative bg-zinc-900 text-white md:h-[350vh]">
-      {/* Desktop Pinned Viewport (Scroll-Driven Stacked Opaque Card Reveal) */}
+      {/* Desktop Pinned Viewport (Scroll-Driven Hidden-to-Show Card Reveal) */}
       <div className="hidden md:flex sticky top-0 h-screen items-center justify-center overflow-hidden w-full">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center w-full">
           <div className="text-xs font-mono font-semibold tracking-wider text-primary uppercase mb-3">
@@ -107,9 +109,9 @@ export function ProductPreviewRail() {
             ))}
           </div>
 
-          {/* Desktop Stacked Opaque Cards Container Stage */}
+          {/* Desktop Stacked Cards Container Stage */}
           <div className="mt-10 mx-auto max-w-5xl relative h-[360px] sm:h-[320px]">
-            {/* CARD 1 (Base Layer - Incident Investigation - 100% Solid Opaque) */}
+            {/* CARD 1 (Base Layer - Incident Investigation - Always Resting on Stage) */}
             <div className="absolute inset-0 z-10 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_20px_80px_rgba(0,0,0,0.8)] overflow-hidden text-left">
               <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -141,9 +143,9 @@ export function ProductPreviewRail() {
               </div>
             </div>
 
-            {/* CARD 2 (Middle Layer - Service Topology - 100% Solid Opaque Vertical Slide-Up) */}
+            {/* CARD 2 (Middle Layer - Service Topology - Hidden 0 opacity & 100vh until phase 2) */}
             <motion.div
-              style={prefersReducedMotion ? undefined : { y: card2Y }}
+              style={prefersReducedMotion ? undefined : { y: card2Y, opacity: card2Opacity }}
               className="absolute inset-0 z-20 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_25px_90px_rgba(0,0,0,0.9)] overflow-hidden text-left"
             >
               <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
@@ -181,9 +183,9 @@ export function ProductPreviewRail() {
               </div>
             </motion.div>
 
-            {/* CARD 3 (Top Layer - Pre-Deploy Risk - 100% Solid Opaque Vertical Slide-Up) */}
+            {/* CARD 3 (Top Layer - Pre-Deploy Risk - Hidden 0 opacity & 100vh until phase 3) */}
             <motion.div
-              style={prefersReducedMotion ? undefined : { y: card3Y }}
+              style={prefersReducedMotion ? undefined : { y: card3Y, opacity: card3Opacity }}
               className="absolute inset-0 z-30 border border-zinc-800 bg-zinc-950 rounded-2xl shadow-[0_30px_100px_rgba(0,0,0,0.95)] overflow-hidden text-left"
             >
               <div className="px-4 py-3 bg-zinc-900 border-b border-zinc-800 flex items-center justify-between">
