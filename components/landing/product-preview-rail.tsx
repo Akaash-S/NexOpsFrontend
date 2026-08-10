@@ -62,7 +62,7 @@ export function ProductPreviewRail() {
       headline: 'Calculate blast radius before deployment',
       description: 'Prevent incidents before they reach production by automatically analyzing pull requests, calculating risk scores, and evaluating downstream dependency impacts.',
       cta: 'Explore Risk Matrix',
-      url: 'nexops.asolvitra.tech/risk',
+      url: 'nexops.asolvitra.tech/recent-changes',
     },
   ]
 
