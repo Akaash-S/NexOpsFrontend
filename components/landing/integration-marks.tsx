@@ -2,7 +2,7 @@
 
 export function IntegrationMarks() {
   return (
-    <section className="py-16 md:py-20 bg-zinc-950 text-white">
+    <section className="py-16 md:py-20 bg-zinc-950 text-white border-t border-zinc-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <p className="text-xs font-mono font-semibold tracking-wider text-zinc-500 uppercase mb-8">
           Deep Native Integration with your toolchain
@@ -17,11 +17,12 @@ export function IntegrationMarks() {
             <span className="text-base font-bold tracking-tight">GitHub</span>
           </div>
 
-          {/* PagerDuty Mark */}
+          {/* Official PagerDuty Brand Mark */}
           <div className="flex items-center gap-3 text-zinc-400 hover:text-white transition-colors">
-            <div className="w-7 h-7 rounded-lg bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 font-extrabold font-mono text-sm">
-              PD
-            </div>
+            <svg className="w-7 h-7 rounded-lg shadow-sm" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect width="24" height="24" rx="6" fill="#06AC38" />
+              <path d="M7 6H13.2C15.6 6 17.5 7.6 17.5 10C17.5 12.4 15.6 14 13.2 14H10.5V18H7V6ZM10.5 8.7V11.3H13.1C13.9 11.3 14.5 10.7 14.5 10C14.5 9.3 13.9 8.7 13.1 8.7H10.5Z" fill="white" />
+            </svg>
             <span className="text-base font-bold tracking-tight">PagerDuty</span>
           </div>
         </div>
