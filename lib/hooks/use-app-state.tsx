@@ -201,6 +201,78 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     return () => unsubscribe();
   }, []);
 
+  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
+    const newNotification: Notification = {
+      ...notification,
+      id: Math.random().toString(36).substring(7),
+      timestamp: new Date().toISOString(),
+      read: false,
+    };
+    setNotifications((prev) => [newNotification, ...prev]);
+  }, []);
+
+  // Connect to Realtime WebSocket and dispatch custom events
+  useEffect(() => {
+    if (!isAuthenticated) return;
+
+    let ws: WebSocket | null = null;
+    let reconnectTimeout: NodeJS.Timeout;
+
+    function connectWS() {
+      try {
+        const token = localStorage.getItem("authToken") || "";
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+        const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
+        const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/api\/v1$/, '');
+        const wsUrl = `${wsProtocol}://${host}/ws?token=${encodeURIComponent(token)}`;
+
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = () => {
+          console.log("Connected to NexOps Realtime WebSocket");
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === "incident.created" || (data.source === "intelligence_engine" && data.payload?.incident)) {
+              console.log("Realtime incident received:", data);
+              window.dispatchEvent(new CustomEvent('nexops:incident.created', { detail: data.payload }));
+              addNotification({
+                title: 'New Incident Triggered',
+                description: data.payload?.incident?.title || 'New incident detected by correlation engine.',
+                type: 'error'
+              });
+            }
+          } catch (err) {
+            console.error("Failed to parse WebSocket message:", err);
+          }
+        };
+
+        ws.onclose = (e) => {
+          if (e.code !== 1000) {
+            reconnectTimeout = setTimeout(connectWS, 5000);
+          }
+        };
+
+        ws.onerror = (err) => {
+          console.warn("WebSocket error:", err);
+        };
+      } catch (err) {
+        console.error("WebSocket setup failed:", err);
+      }
+    }
+
+    connectWS();
+
+    return () => {
+      clearTimeout(reconnectTimeout);
+      if (ws) {
+        ws.close(1000);
+      }
+    };
+  }, [isAuthenticated, addNotification]);
+
   // Sync feedback confirmation states on startup or when user is authenticated
   useEffect(() => {
     if (!isAuthenticated) return;
@@ -276,16 +348,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
         type: 'error'
       });
     }
-  }, []);
-
-  const addNotification = useCallback((notification: Omit<Notification, 'id' | 'timestamp' | 'read'>) => {
-    const newNotification: Notification = {
-      ...notification,
-      id: Math.random().toString(36).substring(7),
-      timestamp: new Date().toISOString(),
-      read: false,
-    };
-    setNotifications((prev) => [newNotification, ...prev]);
   }, []);
 
   const markNotificationAsRead = useCallback((id: string) => {

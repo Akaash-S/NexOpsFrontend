@@ -78,6 +78,46 @@ function IncidentsPageContent() {
     loadIncidents()
   }, [isEmpty])
 
+  // Listen for realtime incident creation
+  useEffect(() => {
+    const handleIncidentCreated = (e: Event) => {
+      const customEvent = e as CustomEvent
+      const detail = customEvent.detail
+      if (detail && detail.incident) {
+        const inc = detail.incident
+        const start = parseUTCDate(inc.startedAt ?? inc.started_at ?? inc.created_at) ?? new Date()
+        const end = (inc.resolvedAt || inc.resolved_at) ? (parseUTCDate(inc.resolvedAt ?? inc.resolved_at) ?? new Date()) : new Date()
+        const durationMins = Math.round((end.getTime() - start.getTime()) / 60000)
+        const duration = durationMins < 60 ? `${durationMins}m` : `${Math.floor(durationMins / 60)}h ${durationMins % 60}m`
+
+        const newIncident = {
+          id: inc.id,
+          title: inc.title,
+          severity: (inc.severity ?? 'medium').toLowerCase(),
+          status: inc.status ?? 'open',
+          startTime: formatIST(start),
+          duration,
+          durationMins,
+          lead: inc.assignee ?? 'On-Call Bot',
+          affectedServices: ['InsightHub'],
+          affectedClusters: [],
+          rootCause: 'Under analysis',
+          impactedUsers: inc.affectedUsers ?? inc.affected_users ?? 25
+        }
+
+        setIncidents((prev) => {
+          if (prev.some((i) => i.id === newIncident.id)) return prev
+          return [newIncident, ...prev]
+        })
+      }
+    }
+
+    window.addEventListener('nexops:incident.created', handleIncidentCreated)
+    return () => {
+      window.removeEventListener('nexops:incident.created', handleIncidentCreated)
+    }
+  }, [])
+
   // Filters State
   const [filters, setFilters] = useState({
     search: '',
