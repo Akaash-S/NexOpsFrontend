@@ -109,20 +109,33 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     let unsubscribe = () => { };
 
     async function initAuth() {
-      // Check for dev/test token in localStorage
+      // Check for valid authToken in localStorage
       if (typeof window !== 'undefined') {
         const localToken = localStorage.getItem("authToken");
-        if (localToken === "mock-auth-token" || localToken === "test-token") {
-          setCurrentUser({
-            id: "lqEUnHMRWKcv6anhNOH9Bd6fhUU2",
-            workspace_id: "256296a1-55bb-4143-b2b2-31e3816fc86e",
-            name: "Matt",
-            email: "mattpersonal321@gmail.com"
-          });
-          setAuthenticated(true);
-          setOnboardingComplete(true);
-          setAuthLoading(false);
-          return;
+        if (localToken) {
+          try {
+            const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+            const res = await fetch(`${baseUrl}/users/me`, {
+              headers: { "Authorization": `Bearer ${localToken}` }
+            });
+            if (res.ok) {
+              const dbUser = await res.json();
+              setCurrentUser({
+                id: dbUser.id,
+                name: dbUser.full_name || dbUser.fullName || 'Developer',
+                email: dbUser.email || '',
+                avatar: dbUser.avatar_url || '',
+                workspace_id: dbUser.workspace_id,
+                preferences: dbUser.preferences || {}
+              });
+              setAuthenticated(true);
+              setOnboardingComplete(dbUser.onboarding_completed ?? true);
+              setAuthLoading(false);
+              return;
+            }
+          } catch (err) {
+            console.warn("Backend auth token verification fallback:", err);
+          }
         }
       }
 
@@ -210,68 +223,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
     setNotifications((prev) => [newNotification, ...prev]);
   }, []);
-
-  // Connect to Realtime WebSocket and dispatch custom events
-  useEffect(() => {
-    if (!isAuthenticated) return;
-
-    let ws: WebSocket | null = null;
-    let reconnectTimeout: NodeJS.Timeout;
-
-    function connectWS() {
-      try {
-        const token = localStorage.getItem("authToken") || "";
-        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-        const wsProtocol = baseUrl.startsWith('https') ? 'wss' : 'ws';
-        const host = baseUrl.replace(/^https?:\/\//, '').replace(/\/api\/v1$/, '');
-        const wsUrl = `${wsProtocol}://${host}/ws?token=${encodeURIComponent(token)}`;
-
-        ws = new WebSocket(wsUrl);
-
-        ws.onopen = () => {
-          console.log("Connected to NexOps Realtime WebSocket");
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const data = JSON.parse(event.data);
-            if (data.type === "incident.created" || (data.source === "intelligence_engine" && data.payload?.incident)) {
-              console.log("Realtime incident received:", data);
-              window.dispatchEvent(new CustomEvent('nexops:incident.created', { detail: data.payload }));
-              addNotification({
-                title: 'New Incident Triggered',
-                description: data.payload?.incident?.title || 'New incident detected by correlation engine.',
-                type: 'error'
-              });
-            }
-          } catch (err) {
-            console.error("Failed to parse WebSocket message:", err);
-          }
-        };
-
-        ws.onclose = (e) => {
-          if (e.code !== 1000) {
-            reconnectTimeout = setTimeout(connectWS, 5000);
-          }
-        };
-
-        ws.onerror = (err) => {
-          console.warn("WebSocket error:", err);
-        };
-      } catch (err) {
-        console.error("WebSocket setup failed:", err);
-      }
-    }
-
-    connectWS();
-
-    return () => {
-      clearTimeout(reconnectTimeout);
-      if (ws) {
-        ws.close(1000);
-      }
-    };
-  }, [isAuthenticated, addNotification]);
 
   // Sync feedback confirmation states on startup or when user is authenticated
   useEffect(() => {
