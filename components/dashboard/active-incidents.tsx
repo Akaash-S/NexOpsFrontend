@@ -15,7 +15,7 @@ import {
   Loader2,
 } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, parseUTCDate } from '@/lib/utils'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
 
@@ -33,9 +33,9 @@ const statusConfig = {
 } as const
 
 function calculateDuration(startedAt: string, endedAt?: string): string {
-  const start = new Date(startedAt)
-  const end = endedAt ? new Date(endedAt) : new Date()
-  const diffMins = Math.round((end.getTime() - start.getTime()) / 60000)
+  const start = parseUTCDate(startedAt) ?? new Date()
+  const end = endedAt ? (parseUTCDate(endedAt) ?? new Date()) : new Date()
+  const diffMins = Math.max(0, Math.round((end.getTime() - start.getTime()) / 60000))
   if (diffMins < 60) return `${diffMins}m`
   const hours = Math.floor(diffMins / 60)
   const mins = diffMins % 60
