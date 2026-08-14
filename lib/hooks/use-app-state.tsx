@@ -163,11 +163,12 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
                   id: dbUser.id,
                   name: dbUser.full_name || dbUser.fullName || fbUser.displayName || 'Developer',
                   email: dbUser.email || fbUser.email || '',
-                  avatar: dbUser.avatarUrl || fbUser.photoURL || '',
+                  avatar: dbUser.avatar_url || dbUser.avatarUrl || fbUser.photoURL || '',
+                  workspace_id: dbUser.workspace_id,
                   preferences: dbUser.preferences || {}
                 });
                 setAuthenticated(true);
-                setOnboardingComplete(dbUser.onboardingCompleted || false);
+                setOnboardingComplete(dbUser.onboarding_completed ?? dbUser.onboardingCompleted ?? true);
               } else {
                 console.error("User profile verification failed on backend");
                 localStorage.removeItem("authToken");
