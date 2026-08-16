@@ -27,6 +27,8 @@ import { cn, formatIST, formatISTShort, parseUTCDate } from '@/lib/utils'
 import { CandidateCause } from '@/lib/types'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { ScoreWithReasoning } from '@/components/score-with-reasoning'
+import { PostmortemPanel } from '@/components/postmortem-panel'
+
 
 const severityConfig = {
   critical: { bg: 'bg-destructive/10', text: 'text-destructive', border: 'border-destructive/30', label: 'Critical' },
@@ -505,8 +507,12 @@ export default function IncidentInvestigationPage() {
               )}
             </Card>
 
+            {/* Postmortem Panel (Visible for resolved incidents) */}
+            <PostmortemPanel incidentId={incident.id} incidentStatus={incident.status} />
+
             {/* Timeline */}
             <Card className="p-6">
+
               <h2 className="text-lg font-semibold mb-4">Incident Timeline</h2>
               <div className="space-y-3">
                 {incident.timeline.map((entry: { time: string; event: string }, idx: number) => (

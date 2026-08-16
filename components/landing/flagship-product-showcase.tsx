@@ -88,6 +88,9 @@ export function FlagshipProductShowcase() {
                   <span className="text-sm font-semibold text-white">Incident Investigation</span>
                   <span className="text-zinc-600">/</span>
                   <span className="text-xs font-mono text-zinc-400">INC-8942</span>
+                  <Badge variant="outline" className="bg-zinc-800/80 text-zinc-300 border-zinc-700 font-mono text-[10px] uppercase tracking-wider">
+                    Example Incident Retrospective
+                  </Badge>
                 </div>
                 <Badge className="bg-rose-500/20 text-rose-400 border-rose-500/30 text-xs uppercase font-mono">
                   Active Investigation
@@ -130,7 +133,7 @@ export function FlagshipProductShowcase() {
                           <div className="text-base font-bold text-white flex items-center gap-2">
                             <span>Deploy #DP-4819 &bull; auth-service</span>
                             <Badge className="bg-primary/20 text-primary border-primary/30 text-xs font-mono">
-                              94% Match
+                              94% Match (Evidence Chain Below)
                             </Badge>
                           </div>
                           <div className="text-xs text-zinc-400 font-mono mt-0.5">

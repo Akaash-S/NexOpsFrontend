@@ -9,13 +9,13 @@ export function HowItWorksStrip() {
     {
       step: '01',
       title: 'Alert Received',
-      description: 'Webhook fires from PagerDuty, Datadog, or Sentry when service metrics degrade.',
+      description: 'Webhook fires from PagerDuty when an incident alert is triggered.',
       icon: Zap,
     },
     {
       step: '02',
       title: 'Automated Analysis',
-      description: 'NexOps cross-references recent GitHub commits, PRs, and deployment logs instantly.',
+      description: 'NexOps cross-references recent GitHub commits, PRs, and deployment events instantly.',
       icon: GitMerge,
     },
     {

@@ -70,9 +70,14 @@ export function HeroPrimary() {
               <div className="w-3 h-3 rounded-full bg-amber-500/80" />
               <div className="w-3 h-3 rounded-full bg-emerald-500/80" />
             </div>
-            <span className="text-xs font-mono text-zinc-400 font-medium">
-              NexOps — Root Cause Investigation #INC-8942
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-mono text-zinc-400 font-medium">
+                NexOps — Root Cause Investigation #INC-8942
+              </span>
+              <Badge variant="outline" className="bg-zinc-800/80 text-zinc-300 border-zinc-700 font-mono text-[10px] uppercase">
+                Example Incident
+              </Badge>
+            </div>
             <div className="w-12" />
           </div>
 
@@ -100,7 +105,7 @@ export function HeroPrimary() {
           <div className="p-6 sm:p-8 bg-zinc-950 space-y-6">
             <div className="text-xs font-mono uppercase tracking-wider text-zinc-400 font-semibold flex items-center justify-between">
               <span>Primary Ranked Candidate Cause</span>
-              <span className="text-emerald-400 font-bold">94% Confidence Match</span>
+              <span className="text-emerald-400 font-bold">94% Confidence Match (Evidence Chain Below)</span>
             </div>
 
             <div className="p-5 sm:p-6 rounded-xl bg-zinc-900/80 border border-primary/40 shadow-lg relative overflow-hidden">

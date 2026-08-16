@@ -23,7 +23,7 @@ export function BackwardCorrelationBand() {
               Trace incident alerts backward to exact code commits
             </h2>
             <p className="mt-4 text-base sm:text-lg text-zinc-400 font-normal leading-relaxed">
-              NexOps continuously maps your active infrastructure telemetry against recent GitHub pull requests and commit histories. When latency spikes or error rates climb, NexOps isolates the specific code changes deployed right before the anomaly.
+              NexOps correlates active PagerDuty incident alerts against recent GitHub deployments and commit histories. When an alert fires, NexOps evaluates deploy timestamps and code diffs to isolate the specific change deployed right before the incident.
             </p>
 
             <div className="mt-8 space-y-4 font-mono text-sm text-zinc-300">
@@ -33,7 +33,7 @@ export function BackwardCorrelationBand() {
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-primary" />
-                <span>GitHub PR & Commit diff line-level indexing</span>
+                <span>GitHub PR &amp; Commit diff line-level indexing</span>
               </div>
               <div className="flex items-center gap-3">
                 <div className="w-2 h-2 rounded-full bg-primary" />
@@ -73,7 +73,7 @@ export function BackwardCorrelationBand() {
                   <ShieldAlert className="w-4 h-4 text-rose-400" />
                   <span>PagerDuty Alert #PD-991 firing</span>
                 </div>
-                <span className="text-rose-400 font-bold">Matched +94%</span>
+                <span className="text-rose-400 font-bold font-mono">Matched (3m deploy window)</span>
               </div>
             </div>
 

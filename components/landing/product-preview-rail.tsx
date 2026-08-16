@@ -189,6 +189,9 @@ export function ProductPreviewRail() {
                           <Badge className="bg-rose-500/20 text-rose-400 border-rose-500/30 text-xs font-mono">
                             CRITICAL INCIDENT
                           </Badge>
+                          <Badge variant="outline" className="bg-zinc-800/80 text-zinc-300 border-zinc-700 font-mono text-[10px] uppercase">
+                            Example Retrospective
+                          </Badge>
                           <span className="text-xs text-zinc-400 font-mono">Triggered by PagerDuty #PD-7819</span>
                         </div>
                         <span className="text-xs text-zinc-400 font-mono">Started 4m ago &bull; 420 users impacted</span>
@@ -201,7 +204,7 @@ export function ProductPreviewRail() {
                       <div className="p-5 rounded-xl bg-zinc-950/80 border border-white/10 space-y-4">
                         <div className="flex items-center justify-between text-xs font-mono">
                           <span className="text-zinc-400 font-semibold uppercase">Primary Ranked Candidate Cause</span>
-                          <span className="text-emerald-400 font-bold">94% CONFIDENCE MATCH</span>
+                          <span className="text-emerald-400 font-bold">94% CONFIDENCE MATCH (EVIDENCE BELOW)</span>
                         </div>
 
                         <div className="p-4 rounded-lg bg-zinc-900 border border-white/10 space-y-2">

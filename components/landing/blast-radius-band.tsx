@@ -17,13 +17,16 @@ export function BlastRadiusBand() {
             transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
             className="order-2 lg:order-1 rounded-2xl border border-zinc-800 bg-zinc-950/90 p-6 sm:p-8 shadow-2xl space-y-6"
           >
-            <div className="flex items-center justify-between border-b border-zinc-800 pb-4">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-zinc-800 pb-4">
               <div className="flex items-center gap-2">
                 <Network className="w-5 h-5 text-amber-400" />
                 <span className="text-sm font-semibold text-white">Pre-Deploy Blast Radius Simulation</span>
+                <Badge variant="outline" className="bg-zinc-800/80 text-zinc-300 border-zinc-700 font-mono text-[10px] uppercase">
+                  Example Simulation
+                </Badge>
               </div>
               <Badge className="bg-amber-500/20 text-amber-400 border-amber-500/30 text-xs font-mono">
-                Risk Score: High (0.82)
+                Simulated Risk Score: High (0.82)
               </Badge>
             </div>
 

@@ -10,7 +10,7 @@ export function FaqAccordion() {
   const faqs = [
     {
       question: 'How does NexOps identify root causes without access to raw customer logs?',
-      answer: 'NexOps analyzes deployment signals, pull request code diffs, infrastructure metrics, and alert timing. Instead of ingesting sensitive PII/log bodies, NexOps uses structural metadata and git commit correlation to determine candidate causes.',
+      answer: 'NexOps analyzes deployment signals, pull request code diffs, PagerDuty incident alerts, and event timing. Instead of ingesting sensitive PII/log bodies, NexOps uses structural metadata and git commit correlation to determine candidate causes.',
     },
     {
       question: 'Does NexOps require write access to my GitHub repositories?',
@@ -22,7 +22,7 @@ export function FaqAccordion() {
     },
     {
       question: 'What happens when multiple deployments occur simultaneously?',
-      answer: 'NexOps evaluates blast radius graphs and alert timing metrics independently across all concurrent deployments, ranking candidates by relative confidence.',
+      answer: 'NexOps evaluates blast radius graphs and alert timing independently across all concurrent deployments, ranking candidates by relative confidence.',
     },
   ]
 
