@@ -4,7 +4,7 @@ import { X, Bell, AlertTriangle, CheckCircle, Info } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Badge } from '@/components/ui/badge'
-import { cn } from '@/lib/utils'
+import { cn, formatLocalDateShort, parseUTCDate } from '@/lib/utils'
 import { useState, useMemo, useEffect } from 'react'
 import { Alert, Incident } from '@/lib/types'
 
@@ -53,7 +53,8 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
       type: 'alert' as const,
       title: alert.title,
       description: alert.message || '',
-      timestamp: new Date(alert.createdAt).toLocaleString(),
+      timestamp: formatLocalDateShort(alert.createdAt),
+      rawTime: parseUTCDate(alert.createdAt)?.getTime() || 0,
       read: readIds.has(alert.id),
     }));
 
@@ -62,13 +63,12 @@ export function NotificationCenter({ isOpen, onClose }: NotificationCenterProps)
       type: 'incident' as const,
       title: inc.title,
       description: `${inc.affectedUsers} users affected - ${inc.service}`,
-      timestamp: new Date(inc.startedAt).toLocaleString(),
+      timestamp: formatLocalDateShort(inc.startedAt),
+      rawTime: parseUTCDate(inc.startedAt)?.getTime() || 0,
       read: readIds.has(inc.id),
     }));
 
-    return [...mappedAlerts, ...mappedIncidents].sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-    );
+    return [...mappedAlerts, ...mappedIncidents].sort((a, b) => b.rawTime - a.rawTime);
   }, [alerts, incidents, readIds]);
 
   const unreadCount = notifications.filter(n => !n.read).length;

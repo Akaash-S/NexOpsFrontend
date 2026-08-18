@@ -36,16 +36,30 @@ export function parseUTCDate(dateInput: string | number | Date | null | undefine
 }
 
 /**
- * Format date into Indian Standard Time (IST) - e.g. "02 Aug 2026, 10:21:34 am IST"
+ * Get current user/browser timezone or default to UTC
  */
-export function formatIST(dateInput: string | number | Date | null | undefined): string {
+export function getBrowserTimeZone(): string {
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}
+
+/**
+ * Format date into viewer's local timezone (dynamically detected from browser/device).
+ * e.g. "16 Aug 2026, 08:00:00 PM IST" in India, or "Aug 16, 2026, 10:30:00 AM EDT" in New York.
+ */
+export function formatLocalDate(
+  dateInput: string | number | Date | null | undefined,
+  includeTimezoneName: boolean = true
+): string {
   if (!dateInput) return 'N/A'
   try {
     const dateObj = parseUTCDate(dateInput)
     if (!dateObj) return 'N/A'
 
-    return dateObj.toLocaleString('en-IN', {
-      timeZone: 'Asia/Kolkata',
+    const options: Intl.DateTimeFormatOptions = {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -53,30 +67,46 @@ export function formatIST(dateInput: string | number | Date | null | undefined):
       minute: '2-digit',
       second: '2-digit',
       hour12: true,
-    }) + ' IST'
+    }
+    if (includeTimezoneName) {
+      options.timeZoneName = 'short'
+    }
+
+    return new Intl.DateTimeFormat(undefined, options).format(dateObj)
   } catch {
     return 'N/A'
   }
 }
 
 /**
- * Format date into short Indian Standard Time (IST) - e.g. "02 Aug, 10:21 am IST"
+ * Format date into short viewer's local timezone - e.g. "16 Aug, 08:00 PM"
  */
-export function formatISTShort(dateInput: string | number | Date | null | undefined): string {
+export function formatLocalDateShort(dateInput: string | number | Date | null | undefined): string {
   if (!dateInput) return 'N/A'
   try {
     const dateObj = parseUTCDate(dateInput)
     if (!dateObj) return 'N/A'
 
-    return dateObj.toLocaleString('en-IN', {
-      timeZone: 'Asia/Kolkata',
+    return new Intl.DateTimeFormat(undefined, {
       day: '2-digit',
       month: 'short',
       hour: '2-digit',
       minute: '2-digit',
       hour12: true,
-    }) + ' IST'
+    }).format(dateObj)
   } catch {
     return 'N/A'
   }
+}
+
+/**
+ * Backwards-compatible aliases for formatIST / formatISTShort.
+ * Automatically converts UTC to viewer's actual local timezone rather than hardcoding IST.
+ */
+export function formatIST(dateInput: string | number | Date | null | undefined): string {
+  return formatLocalDate(dateInput, true)
+}
+
+export function formatISTShort(dateInput: string | number | Date | null | undefined): string {
+  return formatLocalDateShort(dateInput)
 }

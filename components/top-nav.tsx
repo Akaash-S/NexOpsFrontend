@@ -16,7 +16,7 @@ import { Sidebar } from './sidebar'
 import { CommandPalette } from './command-palette'
 import { useAppState } from '@/lib/hooks/use-app-state'
 import { NexOpsLogo } from '@/components/ui/nexops-logo'
-import { cn } from '@/lib/utils'
+import { cn, formatLocalDateShort } from '@/lib/utils'
 
 export function TopNav() {
   const router = useRouter()
@@ -171,7 +171,7 @@ export function TopNav() {
                               {n.title}
                             </p>
                             <span className="text-[9px] text-muted-foreground whitespace-nowrap">
-                              {new Intl.DateTimeFormat('en-US', { hour: 'numeric', minute: 'numeric', month: 'short', day: 'numeric' }).format(new Date(n.timestamp))}
+                              {formatLocalDateShort(n.timestamp)}
                             </span>
                           </div>
                           <p className="text-[10px] text-muted-foreground leading-normal line-clamp-2">

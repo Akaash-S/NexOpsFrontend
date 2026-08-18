@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Package, Settings, AlertTriangle, Flame } from 'lucide-react'
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn, formatLocalDateShort } from '@/lib/utils'
 import { useState, useEffect } from 'react'
 import { Loader2 } from 'lucide-react'
 
@@ -123,7 +123,7 @@ export function RecentChanges({ limit = 2 }: { limit?: number } = {}) {
               : `Isolated service. Zero downstream dependencies affected.`
 
             const changeTimeStr = change.deployedAt
-              ? new Date(change.deployedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+              ? formatLocalDateShort(change.deployedAt)
               : 'Just now'
 
             return (
