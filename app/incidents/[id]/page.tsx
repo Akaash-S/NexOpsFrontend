@@ -201,7 +201,9 @@ export default function IncidentInvestigationPage() {
           deployId: c.eventId ?? c.event_id ?? 'unknown-deploy',
           service: c.repoId ?? c.repo_id,
           matchScore: c.score ?? 0,
-          matchReasons: typeof c.reason === 'string' ? c.reason.split(/;\s*|\.\s+/).filter(Boolean).map(s => s.endsWith('.') ? s : s + '.') : (Array.isArray(c.reason) ? c.reason : [c.reason ?? '']),
+          matchReasons: Array.isArray(c.match_reasons) && c.match_reasons.length > 0 
+            ? c.match_reasons 
+            : (typeof c.reason === 'string' ? c.reason.split(/;\s*|\.\s+/).filter(Boolean).map((s: string) => s.endsWith('.') ? s : s + '.') : [c.reason ?? '']),
           confirmed: c.confirmed
         }))
 
@@ -286,7 +288,9 @@ export default function IncidentInvestigationPage() {
           deployId: c.eventId || c.event_id || 'unknown-deploy',
           service: c.repoId || c.repo_id,
           matchScore: c.score || 0,
-          matchReasons: typeof c.reason === 'string' ? c.reason.split(/;\s*|\.\s+/).filter(Boolean).map(s => s.endsWith('.') ? s : s + '.') : (Array.isArray(c.reason) ? c.reason : [c.reason || '']),
+          matchReasons: Array.isArray(c.match_reasons) && c.match_reasons.length > 0 
+            ? c.match_reasons 
+            : (typeof c.reason === 'string' ? c.reason.split(/;\s*|\.\s+/).filter(Boolean).map((s: string) => s.endsWith('.') ? s : s + '.') : [c.reason || '']),
           confirmed: c.confirmed
         }))
 
