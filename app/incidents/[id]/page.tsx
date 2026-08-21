@@ -201,7 +201,7 @@ export default function IncidentInvestigationPage() {
           deployId: c.eventId ?? c.event_id ?? 'unknown-deploy',
           service: c.repoId ?? c.repo_id,
           matchScore: c.score ?? 0,
-          matchReasons: typeof c.reason === 'string' ? c.reason.split(';') : (Array.isArray(c.reason) ? c.reason : [c.reason ?? '']),
+          matchReasons: typeof c.reason === 'string' ? c.reason.split(/;\s*|\.\s+/).filter(Boolean).map(s => s.endsWith('.') ? s : s + '.') : (Array.isArray(c.reason) ? c.reason : [c.reason ?? '']),
           confirmed: c.confirmed
         }))
 
@@ -286,7 +286,7 @@ export default function IncidentInvestigationPage() {
           deployId: c.eventId || c.event_id || 'unknown-deploy',
           service: c.repoId || c.repo_id,
           matchScore: c.score || 0,
-          matchReasons: typeof c.reason === 'string' ? c.reason.split(';') : (Array.isArray(c.reason) ? c.reason : [c.reason || '']),
+          matchReasons: typeof c.reason === 'string' ? c.reason.split(/;\s*|\.\s+/).filter(Boolean).map(s => s.endsWith('.') ? s : s + '.') : (Array.isArray(c.reason) ? c.reason : [c.reason || '']),
           confirmed: c.confirmed
         }))
 
