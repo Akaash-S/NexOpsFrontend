@@ -32,14 +32,14 @@ NexOps correlates deployments, alerts, and dependency graphs from connected syst
 ### Installation & Local Setup
 
 ```bash
-# Navigate to the frontend directory
-cd updated-frontend
+# Navigate to frontend repository
+cd NexOpsFrontend
 
-# Install dependencies
-npm install
+# Install dependencies using pnpm
+pnpm install
 
 # Start the development server
-npm run dev
+pnpm dev
 ```
 
 Visit [`http://localhost:3000`](http://localhost:3000) to view the application.
@@ -49,12 +49,28 @@ Visit [`http://localhost:3000`](http://localhost:3000) to view the application.
 
 ---
 
+## 📸 Interface Preview
+
+### Correlation Command Center (Dashboard)
+![NexOps Dashboard](docs/screenshots/dashboard.png)
+
+### Interactive Service Dependency Graph
+![Service Topology & Blast Radius](docs/screenshots/dependencies.png)
+
+### Infrastructure Clusters Overview
+![Cluster Health & Regional Status](docs/screenshots/clusters.png)
+
+### Microservices Catalog & Health Metrics
+![Microservices Catalog](docs/screenshots/services.png)
+
+---
+
 ## 📁 Project Structure
 
 The platform features **7 core correlation routes** alongside a scrollytelling landing page, onboarding sequence, and staff workspace:
 
 ```
-updated-frontend/
+.
 ├── app/
 │   ├── layout.tsx              # Root layout with providers & theme injection
 │   ├── globals.css             # OKLch design tokens & theme CSS variables
@@ -122,14 +138,14 @@ To maintain NexOps' narrow product focus as a lightweight Causal Correlation Eng
 
 ```bash
 # Run development server
-npm run dev
+pnpm dev
 
 # Type checking
-npx tsc --noEmit
+pnpm exec tsc --noEmit
 
 # Build production bundle
-npm run build
+pnpm build
 
 # Start production server
-npm start
+pnpm start
 ```

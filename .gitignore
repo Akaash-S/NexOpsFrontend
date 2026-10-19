@@ -8,18 +8,23 @@ __v0_jsx-dev-runtime.ts
 
 # Environment variables
 .env*.local
+.env
+.env.*
 
 # Common ignores
 node_modules
 .next/
 .DS_Store
 package-lock.json
-.env
-.env.*
 
-# docs
-docs/*
-docs/
+# Loose root screenshots
+/*.png
+
+# Playwright & test artifacts
+scratch_capture.spec.js
+test-results/
+
+# Build caches
+tsconfig.tsbuildinfo
 
 scratch/*
-scripts/*
