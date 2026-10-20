@@ -1,6 +1,12 @@
 # NexOps — Next.js Frontend Dashboard
 
 <p align="center">
+  <a href="https://github.com/Akaash-S/NexOpsFrontend/actions/workflows/ci.yml">
+    <img src="https://github.com/Akaash-S/NexOpsFrontend/actions/workflows/ci.yml/badge.svg" alt="CI Status" />
+  </a>
+</p>
+
+<p align="center">
   <a href="https://skillicons.dev">
     <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,css,html,firebase,vercel,git,github" alt="Frontend Tech Stack Icons" />
   </a>
@@ -35,6 +41,9 @@ NexOps correlates deployments, alerts, and dependency graphs from connected syst
 # Navigate to frontend repository
 cd NexOpsFrontend
 
+# Copy example environment configuration
+cp .env.example .env.local
+
 # Install dependencies using pnpm
 pnpm install
 
@@ -43,6 +52,20 @@ pnpm dev
 ```
 
 Visit [`http://localhost:3000`](http://localhost:3000) to view the application.
+
+### ⚙️ Environment Configuration
+
+NexOps provides a tracked [`.env.example`](.env.example) listing all client-side environment variable names. Configure these in `.env.local`:
+
+| Variable Name | Required | Default / Fallback | Description |
+| :--- | :---: | :--- | :--- |
+| `NEXT_PUBLIC_API_URL` | No | `http://localhost:8000/api/v1` | Root REST API gateway URL for backend communications. |
+| `NEXT_PUBLIC_WS_URL` | No | `ws://localhost:8000/ws` | Real-time WebSocket URL. If omitted, automatically derived from `NEXT_PUBLIC_API_URL`. |
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | No | `dummy_api_key` | Public client API key for Firebase Authentication. |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | No | `nexops-suite.firebaseapp.com` | Firebase authentication domain for OAuth redirects. |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | No | `nexops-suite` | Firebase project identifier. |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | No | `dummy_app_id` | Firebase client application identifier. |
+
 
 > [!NOTE]
 > **Production-Grade Authentication:** Backed by Firebase Auth. Ensure your backend server is running on `http://localhost:8000` to verify tokens, perform GitHub OAuth sync, and stream live incident telemetry.
