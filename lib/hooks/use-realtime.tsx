@@ -30,16 +30,18 @@ export function useRealtime() {
         return;
       }
 
-      // Derive WebSocket URL from API URL
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
-      const base = apiUrl.replace('/api/v1', '');
-      let wsUrl = '';
-      if (base.startsWith('https://')) {
-        wsUrl = base.replace('https://', 'wss://') + '/ws';
-      } else if (base.startsWith('http://')) {
-        wsUrl = base.replace('http://', 'ws://') + '/ws';
-      } else {
-        wsUrl = 'ws://localhost:8000/ws';
+      // Derive WebSocket URL from explicit variable or API URL
+      let wsUrl = process.env.NEXT_PUBLIC_WS_URL || '';
+      if (!wsUrl) {
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+        const base = apiUrl.replace('/api/v1', '');
+        if (base.startsWith('https://')) {
+          wsUrl = base.replace('https://', 'wss://') + '/ws';
+        } else if (base.startsWith('http://')) {
+          wsUrl = base.replace('http://', 'ws://') + '/ws';
+        } else {
+          wsUrl = 'ws://localhost:8000/ws';
+        }
       }
 
       const fullWsUrl = `${wsUrl}?token=${encodeURIComponent(token)}`;

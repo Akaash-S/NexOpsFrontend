@@ -1,6 +1,9 @@
 import nextConfig from "eslint-config-next";
 
 const config = [
+  {
+    ignores: [".next/**", "node_modules/**", "test-results/**", "scratch/**", "*.dump"],
+  },
   ...nextConfig,
   {
     rules: {
@@ -13,3 +16,4 @@ const config = [
 ];
 
 export default config;
+
