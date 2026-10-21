@@ -90,59 +90,85 @@ NexOps provides a tracked [`.env.example`](.env.example) listing all client-side
 
 ## 📁 Project Structure
 
-The platform features **7 core correlation routes** alongside a scrollytelling landing page, onboarding sequence, and staff workspace:
+Rebuilt directly from `git ls-files` verification:
 
 ```
 .
+├── .github/
+│   └── workflows/
+│       └── ci.yml              # GitHub Actions CI (pnpm install, lint, tsc, build)
 ├── app/
+│   ├── activity/page.tsx       # Ingested webhook event audit stream (gated)
+│   ├── analytics/page.tsx      # Incident frequency & velocity metrics (gated)
+│   ├── dashboard/page.tsx      # Correlation Command Center & suspect cause ranking
+│   ├── dependencies/page.tsx   # React Flow interactive service dependency graph
+│   ├── incidents/
+│   │   ├── page.tsx            # Incident tracking table & status filters
+│   │   └── [id]/page.tsx       # Dedicated incident investigation workspace & postmortem
+│   ├── integrations/page.tsx   # GitHub & PagerDuty webhook management
+│   ├── login/page.tsx          # Developer SSO login interface (GitHub / Google / Email)
+│   ├── onboarding/page.tsx     # Step-by-step setup & live dependency preview
+│   ├── privacy/page.tsx        # Privacy policy
+│   ├── profile/page.tsx        # Personal engineer workspace & triage history
+│   ├── recent-changes/page.tsx # Deployment change feed, blast radius & risk score grid
+│   ├── services/page.tsx       # Microservices catalog & derived health metrics
+│   ├── settings/page.tsx       # System & workspace configuration tabs
+│   ├── terms/page.tsx          # Terms of service
 │   ├── layout.tsx              # Root layout with providers & theme injection
 │   ├── globals.css             # OKLch design tokens & theme CSS variables
-│   ├── page.tsx                # Cinematic scrollytelling landing page
-│   ├── login/                  # Developer SSO login interface (GitHub / Google / Email)
-│   ├── onboarding/             # Step-by-step GitHub/PagerDuty setup & live dependency preview
-│   ├── profile/                # Personal engineer workspace & triage history
-│   ├── dashboard/              # Correlation Command Center & candidate cause ranking
-│   ├── services/               # Microservices Catalog & Derived Health metrics
-│   ├── dependencies/           # Interactive React Flow topology graphs
-│   ├── incidents/              # Operational incident tracking log
-│   │   ├── page.tsx            # Incident table & filter tabs
-│   │   └── [id]/               # Dedicated incident investigation workspace
-│   ├── recent-changes/         # Deployment change feed, blast radius & metadata grid
-│   └── settings/               # System & Workspace configuration tabs
+│   ├── error.tsx               # Root error boundary handler
+│   ├── not-found.tsx           # Custom 404 handler
+│   └── page.tsx                # Cinematic scrollytelling landing page
 ├── components/
-│   ├── ui/                     # shadcn/ui primitives (Cards, Badges, Buttons, Inputs)
-│   ├── dashboard/              # Active incidents, recent changes & topology components
-│   ├── top-nav.tsx             # Header navigation with profile & workspace state
-│   ├── sidebar.tsx             # Gated 7-route platform navigation sidebar
-│   ├── layout.tsx              # PageLayout, Grid, MetricCard, and EmptyState wrappers
-│   └── score-with-reasoning.tsx# Blast radius & risk score reasoning pills
-└── lib/
-    ├── api-client.ts           # Unified API fetch client with token handling
-    ├── graph.ts                # Service dependency graph engine
-    └── utils.ts                # Tailwind class merge helper
+│   ├── dashboard/              # Active incidents, recent changes, impact map, health overview
+│   ├── dependencies/           # React Flow dependency graph, controls, service nodes
+│   ├── incidents/              # Incident drawer, filters, tabs, postmortem editor
+│   ├── landing/                # Scrollytelling hero, product showcase, integration marks
+│   ├── services/               # Service catalog, details drawer, filters
+│   ├── ui/                     # shadcn/ui primitives (cards, dialogs, badges, buttons, inputs)
+│   ├── app-shell.tsx           # Application layout frame
+│   ├── command-palette.tsx     # Quick search and navigation shortcut palette
+│   ├── data-table.tsx          # TanStack sortable table component
+│   ├── investigation-workspace.tsx # Incident deep-dive triage panel
+│   ├── postmortem-panel.tsx    # Incident postmortem viewer & editor
+│   ├── score-with-reasoning.tsx# Blast radius & risk score pills with plain-English reasoning
+│   ├── sidebar.tsx             # Gated platform navigation sidebar (7 core + 2 extended routes)
+│   └── top-nav.tsx             # Header navigation with profile & workspace switcher
+├── docs/
+│   ├── archive/                # Historical engineering & development task reports
+│   ├── evidence/               # Incident triage proof screenshots & console logs
+│   └── screenshots/            # Embedded architecture & UI preview images
+├── hooks/                      # Root hooks (use-mobile, use-toast)
+├── lib/
+│   ├── hooks/
+│   │   ├── use-app-state.tsx   # Global application context & workspace state
+│   │   └── use-realtime.tsx    # Live WebSocket subscription client with auto-reconnect
+│   ├── api-client.ts           # Unified API fetch client with bearer token injection
+│   ├── firebase.ts             # Firebase Auth client initialization
+│   ├── types.ts                # TypeScript domain models and API response types
+│   └── utils.ts                # Tailwind class merge helper (clsx + twMerge)
+└── public/images/              # NexOps dark and light brand logos
 ```
 
 ---
 
 ## 🔒 Feature Flag & Option C Navigation Gating
 
-To maintain NexOps' narrow product focus as a lightweight Causal Correlation Engine ("What caused this incident, and how do we know?"), extended enterprise capabilities are gated per-tenant via the `show_extended_navigation` workspace feature flag (default: `False`).
+To maintain NexOps' narrow product focus as a lightweight Causal Correlation Engine ("What caused this incident, and how do we know?"), extended enterprise capabilities are gated per-tenant in `components/sidebar.tsx` via the `show_extended_navigation` workspace feature flag (default: `False`).
 
-### Core Correlation Scope (Always Active):
-- **Dashboard** (`/dashboard`): Correlation Command Center & candidate cause ranking
-- **Services Catalog** (`/services`): Microservices Catalog & derived health metrics
-- **Incident Investigation** (`/incidents`): Operational incident list & triage workspace
-- **Recent Changes** (`/recent-changes`): Deployment feed, blast radius & risk scores
-- **Settings** (`/settings`): Workspace configuration & feature flag toggles
+### Core Correlation Scope (Always Active — 7 Routes):
+1. **Dashboard** (`/dashboard`): Correlation Command Center & ranked candidate cause cards
+2. **Services Catalog** (`/services`): Microservices Catalog & derived health metrics
+3. **Dependencies** (`/dependencies`): Interactive React Flow service topology & blast radius graph
+4. **Incident Investigation** (`/incidents`): Operational incident list & triage workspace (`/incidents/[id]`)
+5. **Recent Changes** (`/recent-changes`): Deployment change feed, blast radius & risk scores
+6. **Integrations** (`/integrations`): GitHub & PagerDuty webhook management & connection status
+7. **Settings** (`/settings`): Workspace configuration, profile & feature flag toggles
 
-### Extended Navigation Features (Gated behind `show_extended_navigation = True`):
-1. **Automation Rules** (`/automation`): Event triggers, action runners & rule engine
-2. **Cluster Operations** (`/clusters`): Infrastructure cluster management
-3. **CI/CD Pipelines** (`/cicd`): Build pipeline telemetry
-4. **Topology Map** (`/dependencies` or `/graph`): Extended dependency graph visualization
-5. **Analytics Dashboard** (`/analytics`): Velocity stats & deployment outcome charts
-6. **Activity Stream** (`/activity`): Ingested webhook audit log & event telemetry
-7. **Postmortem Triage** (`/incidents/[id]/postmortem`): Detailed postmortem editor & publisher
+### Extended Navigation Features (Gated behind `show_extended_navigation = True` — 2 Routes):
+1. **Analytics Dashboard** (`/analytics`): Velocity stats, incident frequency & deployment outcome charts
+2. **Activity Stream** (`/activity`): Ingested webhook event audit log & live telemetry feed
+
 
 
 ---
