@@ -72,6 +72,15 @@ NexOps provides a tracked [`.env.example`](.env.example) listing all client-side
 
 ---
 
+## 🔌 How It Connects
+
+This frontend communicates directly with [NexOpsBackend](https://github.com/Akaash-S/NexOpsBackend):
+- **REST API**: HTTP queries and mutations are routed to `NEXT_PUBLIC_API_URL` (default: `http://localhost:8000/api/v1`).
+- **Real-Time WebSocket**: Subscribes to operational events and live incident status updates via WebSocket at `NEXT_PUBLIC_WS_URL` (default: `ws://localhost:8000/ws`, automatically derived from `NEXT_PUBLIC_API_URL` if omitted).
+- **Authentication**: Authenticates client sessions via Firebase Auth, injecting Bearer tokens into API requests for backend token verification, workspace context resolution, and PostgreSQL Row-Level Security (RLS) enforcement.
+
+---
+
 ## 📸 Interface Preview
 
 ### Correlation Command Center (Dashboard)
