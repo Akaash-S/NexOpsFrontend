@@ -41,7 +41,7 @@ const nextConfig = {
               // Images: self + data URIs + Google avatars + GitHub avatars + ui-avatars CDN
               "img-src 'self' data: blob: https://lh3.googleusercontent.com https://avatars.githubusercontent.com https://*.githubusercontent.com https://ui-avatars.com",
               // API connections: self + backend URLs + custom domain (asolvitra.tech) + Firebase + Google APIs
-              "connect-src 'self' http://localhost:8000 ws://localhost:8000 http://127.0.0.1:8000 ws://127.0.0.1:8000 https://nexopsbackend.onrender.com wss://nexopsbackend.onrender.com https://nexops-server.asolvitra.tech wss://nexops-server.asolvitra.tech https://*.asolvitra.tech wss://*.asolvitra.tech https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com",
+              "connect-src 'self' http://localhost:8000 ws://localhost:8000 http://127.0.0.1:8000 ws://127.0.0.1:8000 https://nexopsbackend.onrender.com wss://nexopsbackend.onrender.com https://nexops-server.asolvitra.tech wss://nexops-server.asolvitra.tech https://*.asolvitra.tech wss://*.asolvitra.tech https://*.googleapis.com https://*.firebaseio.com https://*.firebaseapp.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://nexopsbackend-staging.onrender.com",
               // Frames: Google accounts + Firebase auth handler popup/iframe
               "frame-src 'self' https://accounts.google.com https://*.firebaseapp.com https://nexops-suite.firebaseapp.com https://gothamcrimemanagement.firebaseapp.com",
               // No plugins
